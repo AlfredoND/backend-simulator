@@ -1,5 +1,7 @@
 # Matriz de capacidades
 
+Idiomas: **Español** | [English](capabilities.en.md)
+
 Estado real del backend, no una lista de deseos. Cada fila indica dónde se prueba y qué limitación existe.
 
 Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial** = implementado con una limitación explícita; **No** = no implementado.
