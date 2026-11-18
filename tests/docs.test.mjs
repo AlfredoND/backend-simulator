@@ -7,7 +7,10 @@ import path from 'node:path';
 const root = process.cwd();
 const docs = [
   ...fs.readdirSync(root).filter((name) => name.endsWith('.md')),
-  ...fs.readdirSync(path.join(root, 'docs')).filter((name) => name.endsWith('.md')).map((name) => `docs/${name}`),
+  ...fs
+    .readdirSync(path.join(root, 'docs'))
+    .filter((name) => name.endsWith('.md'))
+    .map((name) => `docs/${name}`),
 ];
 
 test('toda la documentación Markdown tiene versión en español e inglés', () => {

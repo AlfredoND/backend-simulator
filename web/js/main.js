@@ -38,9 +38,12 @@ const defaultApiBase = servedByBackend ? window.location.origin : 'http://127.0.
 
 const state = {
   lang: storedLanguage === 'en' || storedLanguage === 'es' ? storedLanguage : browserLanguage,
-  theme: storedTheme === 'dark' || storedTheme === 'light'
-    ? storedTheme
-    : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+  theme:
+    storedTheme === 'dark' || storedTheme === 'light'
+      ? storedTheme
+      : window.matchMedia?.('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light',
   apiBase: normalizeBaseUrl(local.getItem('bs.apiBase') || defaultApiBase),
   token: session.getItem('bs.token') ?? 'local-admin-token',
   controlToken: session.getItem('bs.controlToken') ?? 'local-control-token',
@@ -251,9 +254,10 @@ function renderDomains(stats) {
     card.className = 'domain-card';
     const header = document.createElement('header');
     const title = document.createElement('h3');
-    title.textContent = t(state.lang, `domain.${domain}`) === `domain.${domain}`
-      ? compactDomainName(domain)
-      : t(state.lang, `domain.${domain}`);
+    title.textContent =
+      t(state.lang, `domain.${domain}`) === `domain.${domain}`
+        ? compactDomainName(domain)
+        : t(state.lang, `domain.${domain}`);
     const total = document.createElement('span');
     total.className = 'domain-total';
     total.textContent = formatNumber(data.total);
@@ -286,11 +290,12 @@ function renderMode() {
   elements.modeRestore.disabled = disabled;
   elements.modeUnfreeze.disabled = disabled;
   elements.controlToken.disabled = state.modeBusy;
-  elements.modeMessage.textContent = frozen && mode?.frozen_at
-    ? t(state.lang, 'mode.frozenAt', {
-      date: new Date(mode.frozen_at).toLocaleString(state.lang === 'es' ? 'es-ES' : 'en-GB'),
-    })
-    : '';
+  elements.modeMessage.textContent =
+    frozen && mode?.frozen_at
+      ? t(state.lang, 'mode.frozenAt', {
+          date: new Date(mode.frozen_at).toLocaleString(state.lang === 'es' ? 'es-ES' : 'en-GB'),
+        })
+      : '';
 }
 
 /** Toggles the data-mode controls while an action is in flight. */
@@ -315,11 +320,8 @@ async function runModeAction(action) {
     if (!window.confirm(t(state.lang, key))) return;
   }
   if (action === 'unfreeze' && !window.confirm(t(state.lang, 'mode.confirmUnfreeze'))) return;
-  const path = action === 'freeze'
-    ? '/_control/freeze'
-    : action === 'unfreeze'
-      ? '/_control/unfreeze'
-      : '/_control/restore';
+  const path =
+    action === 'freeze' ? '/_control/freeze' : action === 'unfreeze' ? '/_control/unfreeze' : '/_control/restore';
   setModeBusy(true);
   try {
     const result = await controlRequest(state.apiBase, path, { token, method: 'POST' });
@@ -329,11 +331,14 @@ async function runModeAction(action) {
       return;
     }
     if (result.body?.data) state.mode = result.body.data;
-    const successKey = action === 'freeze'
-      ? 'mode.freezeSuccess'
-      : action === 'unfreeze'
-        ? 'mode.unfreezeSuccess'
-        : frozen ? 'mode.restoreSnapshot' : 'mode.restoreSeed';
+    const successKey =
+      action === 'freeze'
+        ? 'mode.freezeSuccess'
+        : action === 'unfreeze'
+          ? 'mode.unfreezeSuccess'
+          : frozen
+            ? 'mode.restoreSnapshot'
+            : 'mode.restoreSeed';
     showToast(t(state.lang, successKey));
     await refreshOverview();
   } catch {
@@ -446,9 +451,8 @@ function renderRequestError(error) {
   elements.responseContent.hidden = false;
   elements.responseStatus.className = 'response-status is-error';
   elements.responseStatus.textContent = 'ERR';
-  elements.responseMeta.textContent = error?.name === 'AbortError'
-    ? t(state.lang, 'lab.aborted')
-    : t(state.lang, 'lab.networkError');
+  elements.responseMeta.textContent =
+    error?.name === 'AbortError' ? t(state.lang, 'lab.aborted') : t(state.lang, 'lab.networkError');
   elements.responseUrl.textContent = elements.path.value;
   elements.responseHeaders.replaceChildren();
   elements.responseHeadersCount.textContent = '0';
@@ -609,11 +613,14 @@ function setupNavObserver() {
     for (const link of links) link.classList.remove('is-active');
     byId.get(id)?.classList.add('is-active');
   };
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) activate(entry.target.id);
-    }
-  }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) activate(entry.target.id);
+      }
+    },
+    { rootMargin: '-25% 0px -65% 0px', threshold: 0 },
+  );
   for (const section of $$('main section[id]')) observer.observe(section);
   window.addEventListener('hashchange', () => activate(window.location.hash.slice(1) || 'overview'));
   window.setTimeout(() => activate(window.location.hash.slice(1) || 'overview'), 150);

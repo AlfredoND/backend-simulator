@@ -22,25 +22,35 @@ interface RawResult {
   trailers: Record<string, string | undefined>;
 }
 
-function rawRequest(method: string, path: string, headers: Record<string, string> = {}, body?: string | Buffer): Promise<RawResult> {
+function rawRequest(
+  method: string,
+  path: string,
+  headers: Record<string, string> = {},
+  body?: string | Buffer,
+): Promise<RawResult> {
   const url = new URL(server.base);
   return new Promise((resolve, reject) => {
-    const req = httpRequest({
-      hostname: url.hostname,
-      port: url.port,
-      path,
-      method,
-      headers,
-    }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-      res.on('end', () => resolve({
-        status: res.statusCode ?? 0,
-        headers: res.headers,
-        body: Buffer.concat(chunks),
-        trailers: res.trailers as Record<string, string | undefined>,
-      }));
-    });
+    const req = httpRequest(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path,
+        method,
+        headers,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 0,
+            headers: res.headers,
+            body: Buffer.concat(chunks),
+            trailers: res.trailers as Record<string, string | undefined>,
+          }),
+        );
+      },
+    );
     req.on('error', reject);
     if (body !== undefined) req.write(body);
     req.end();
@@ -77,12 +87,18 @@ test('status configurable, HEAD sin cuerpo y OPTIONS', async () => {
   assert.equal(head.body.length, 0);
   assert.ok(Number(head.headers['content-length']) > 0);
   const options = await new Promise<number>((resolve) => {
-    const req = httpRequest({
-      hostname: new URL(server.base).hostname,
-      port: new URL(server.base).port,
-      path: '/test/echo',
-      method: 'OPTIONS',
-    }, (res) => { resolve(res.statusCode ?? 0); res.resume(); });
+    const req = httpRequest(
+      {
+        hostname: new URL(server.base).hostname,
+        port: new URL(server.base).port,
+        path: '/test/echo',
+        method: 'OPTIONS',
+      },
+      (res) => {
+        resolve(res.statusCode ?? 0);
+        res.resume();
+      },
+    );
     req.end();
   });
   assert.equal(options, 204);
@@ -294,12 +310,17 @@ test('rate limit, idempotencia, contador y concurrencia', async () => {
   assert.equal(JSON.parse(res.body.toString()).id, first.id);
 
   const concurrentStart = Date.now();
-  const responses = await Promise.all([1, 2, 3].map((id) => server.json('GET', `/test/concurrency?delay=100&id=${id}`)));
+  const responses = await Promise.all(
+    [1, 2, 3].map((id) => server.json('GET', `/test/concurrency?delay=100&id=${id}`)),
+  );
   assert.ok(Date.now() - concurrentStart < 500);
   for (const response of responses) {
     assert.equal(response.status, 200, JSON.stringify(response.body));
   }
-  assert.deepEqual(responses.map((r) => r.body.id), ['1', '2', '3']);
+  assert.deepEqual(
+    responses.map((r) => r.body.id),
+    ['1', '2', '3'],
+  );
 
   res = await rawRequest('GET', '/test/counter');
   assert.equal(res.status, 200);

@@ -188,7 +188,10 @@ export function effectiveRoles(db: Db, userId: number): Array<{ id: number; name
 }
 
 /** Group memberships with the roles each group grants. */
-export function userGroups(db: Db, userId: number): Array<{ id: number; name: string; member_role: string; roles: string[] }> {
+export function userGroups(
+  db: Db,
+  userId: number,
+): Array<{ id: number; name: string; member_role: string; roles: string[] }> {
   const rows = db.all<{ id: number; name: string; member_role: string; roles: string | null }>(
     `SELECT g.id, g.name, gm.member_role,
        (SELECT GROUP_CONCAT(r.name, ', ')

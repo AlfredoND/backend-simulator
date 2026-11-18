@@ -27,8 +27,7 @@ export class HttpError extends Error {
 }
 
 /** 400 helpers. */
-export const badRequest = (msg: string, details?: unknown) =>
-  new HttpError(400, 'BAD_REQUEST', msg, { details });
+export const badRequest = (msg: string, details?: unknown) => new HttpError(400, 'BAD_REQUEST', msg, { details });
 /** 401 helper with optional challenge headers. */
 export const unauthorized = (msg = 'Autenticación requerida', headers?: Record<string, string>) =>
   new HttpError(401, 'UNAUTHORIZED', msg, { headers });
@@ -39,15 +38,13 @@ export const forbidden = (msg = 'Permisos insuficientes') => new HttpError(403, 
 export const notFound = (msg = 'Recurso no encontrado') => new HttpError(404, 'NOT_FOUND', msg);
 
 /** 409 helper for uniqueness, state and referential conflicts. */
-export const conflict = (msg: string, details?: unknown) =>
-  new HttpError(409, 'CONFLICT', msg, { details });
+export const conflict = (msg: string, details?: unknown) => new HttpError(409, 'CONFLICT', msg, { details });
 
 /** 412 helper for failed If-Match preconditions. */
 export const preconditionFailed = (msg: string) => new HttpError(412, 'PRECONDITION_FAILED', msg);
 
 /** 413 helper for configured request limits. */
-export const payloadTooLarge = (msg = 'Payload demasiado grande') =>
-  new HttpError(413, 'PAYLOAD_TOO_LARGE', msg);
+export const payloadTooLarge = (msg = 'Payload demasiado grande') => new HttpError(413, 'PAYLOAD_TOO_LARGE', msg);
 
 /** 415 helper for unsupported request media types. */
 export const unsupportedMedia = (msg = 'Content-Type no soportado') =>

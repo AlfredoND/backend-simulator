@@ -86,13 +86,25 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
           updated_at: now(),
         });
         db.insert('id_profiles', {
-          user_id: id, first_name: 'Extra', last_name: `Usuario ${id}`, phone: null,
-          bio: 'Registro adicional generado por el endpoint de control.', avatar_url: null,
-          birth_date: null, locale: 'es-ES', timezone: 'Europe/Madrid', updated_at: now(),
+          user_id: id,
+          first_name: 'Extra',
+          last_name: `Usuario ${id}`,
+          phone: null,
+          bio: 'Registro adicional generado por el endpoint de control.',
+          avatar_url: null,
+          birth_date: null,
+          locale: 'es-ES',
+          timezone: 'Europe/Madrid',
+          updated_at: now(),
         });
         db.insert('id_preferences', {
-          user_id: id, theme: 'system', language: 'es', notifications: 1, newsletter: 0,
-          timezone: 'Europe/Madrid', updated_at: now(),
+          user_id: id,
+          theme: 'system',
+          language: 'es',
+          notifications: 1,
+          newsletter: 0,
+          timezone: 'Europe/Madrid',
+          updated_at: now(),
         });
         created++;
       }
@@ -100,10 +112,19 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
       const max = Number(db.get<{ n: number }>('SELECT COALESCE(MAX(id),0) AS n FROM pr_tasks')?.n ?? 0);
       for (let i = 1; i <= count; i++) {
         db.insert('pr_tasks', {
-          project_id: 1, parent_id: null, title: `Tarea extra ${max + i}`,
-          description: 'Tarea creada mediante /_control/seed', status_id: 2, assignee_id: 1,
-          priority: 'medium', due_date: null, estimate_minutes: 60, position: 0,
-          created_at: now(), updated_at: now(), completed_at: null,
+          project_id: 1,
+          parent_id: null,
+          title: `Tarea extra ${max + i}`,
+          description: 'Tarea creada mediante /_control/seed',
+          status_id: 2,
+          assignee_id: 1,
+          priority: 'medium',
+          due_date: null,
+          estimate_minutes: 60,
+          position: 0,
+          created_at: now(),
+          updated_at: now(),
+          completed_at: null,
         });
         created++;
       }
@@ -112,14 +133,26 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
       for (let i = 0; i < count; i++) {
         const id = ++max;
         db.insert('shop_products', {
-          sku: `EXTRA-SKU-${id}`, name: `Producto extra ${id}`, slug: `extra-producto-${id}`,
-          brand_id: null, category_id: 1, description: 'Producto generado por control',
-          price_cents: 1999, currency: 'EUR', status: 'active', rating: null,
-          created_at: now(), updated_at: now(),
+          sku: `EXTRA-SKU-${id}`,
+          name: `Producto extra ${id}`,
+          slug: `extra-producto-${id}`,
+          brand_id: null,
+          category_id: 1,
+          description: 'Producto generado por control',
+          price_cents: 1999,
+          currency: 'EUR',
+          status: 'active',
+          rating: null,
+          created_at: now(),
+          updated_at: now(),
         });
         db.insert('shop_variants', {
-          product_id: id, sku: `EXTRA-SKU-${id}-V1`, name: 'Estándar', price_cents: 1999,
-          attributes: JSON.stringify({ source: 'control' }), is_active: 1,
+          product_id: id,
+          sku: `EXTRA-SKU-${id}-V1`,
+          name: 'Estándar',
+          price_cents: 1999,
+          attributes: JSON.stringify({ source: 'control' }),
+          is_active: 1,
         });
         created++;
       }
@@ -128,9 +161,16 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
       for (let i = 0; i < count; i++) {
         const id = ++max;
         db.insert('lib_books', {
-          isbn: `978-99-${10_000 + id}`, title: `Libro extra ${id}`, subtitle: null,
-          publisher_id: 1, published_year: 2026, language: 'es', pages: 200,
-          description: 'Libro generado por control', cover_url: null, created_at: now(),
+          isbn: `978-99-${10_000 + id}`,
+          title: `Libro extra ${id}`,
+          subtitle: null,
+          publisher_id: 1,
+          published_year: 2026,
+          language: 'es',
+          pages: 200,
+          description: 'Libro generado por control',
+          cover_url: null,
+          created_at: now(),
         });
         created++;
       }
@@ -139,8 +179,11 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
       for (let i = 0; i < count; i++) {
         const id = ++max;
         db.insert('edu_students', {
-          student_code: `EXTRA-STU-${id}`, full_name: `Estudiante Extra ${id}`,
-          email: `extra.student.${id}@education.test`, birth_date: null, status: 'active',
+          student_code: `EXTRA-STU-${id}`,
+          full_name: `Estudiante Extra ${id}`,
+          email: `extra.student.${id}@education.test`,
+          birth_date: null,
+          status: 'active',
           enrolled_at: now().slice(0, 10),
         });
         created++;
@@ -150,9 +193,15 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
       for (let i = 0; i < count; i++) {
         const id = ++max;
         db.insert('hr_employees', {
-          employee_code: `EXTRA-EMP-${id}`, full_name: `Empleado Extra ${id}`,
-          email: `extra.employee.${id}@corp.example.test`, department_id: 1, position_id: 1,
-          manager_id: null, hire_date: now().slice(0, 10), termination_date: null, status: 'active',
+          employee_code: `EXTRA-EMP-${id}`,
+          full_name: `Empleado Extra ${id}`,
+          email: `extra.employee.${id}@corp.example.test`,
+          department_id: 1,
+          position_id: 1,
+          manager_id: null,
+          hire_date: now().slice(0, 10),
+          termination_date: null,
+          status: 'active',
         });
         created++;
       }
@@ -162,14 +211,21 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
         const amount = 1000 + i * 100;
         db.run('UPDATE fin_accounts SET balance_cents = balance_cents + ? WHERE id = 2', amount);
         db.insert('fin_transactions', {
-          account_id: 2, kind: 'credit', amount_cents: amount,
-          description: `Transacción extra ${i + 1}`, category: 'extra',
-          reference, occurred_at: now(), created_at: now(),
+          account_id: 2,
+          kind: 'credit',
+          amount_cents: amount,
+          description: `Transacción extra ${i + 1}`,
+          category: 'extra',
+          reference,
+          occurred_at: now(),
+          created_at: now(),
         });
         created++;
       }
     } else {
-      throw badRequest(`Entidad no soportada: ${entity}. Use users, tasks, products, books, students, employees o transactions`);
+      throw badRequest(
+        `Entidad no soportada: ${entity}. Use users, tasks, products, books, students, employees o transactions`,
+      );
     }
     return { entity, created };
   });
@@ -177,123 +233,173 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
 
 /** Registers `/_control` statistics, reset and extra-data endpoints. */
 export function registerControlRoutes(router: Router): void {
-  router.add('GET', '/_control/stats', (ctx) => {
-    sendJson(ctx, 200, { data: stats(ctx) });
-  }, { summary: 'Estadísticas de registros por tabla y dominio', tag: 'Control' });
+  router.add(
+    'GET',
+    '/_control/stats',
+    (ctx) => {
+      sendJson(ctx, 200, { data: stats(ctx) });
+    },
+    { summary: 'Estadísticas de registros por tabla y dominio', tag: 'Control' },
+  );
 
-  router.add('GET', '/_control/mode', (ctx) => {
-    sendJson(ctx, 200, { data: dbOf(ctx).state() });
-  }, {
-    summary: 'Estado del modo de datos',
-    summaryEn: 'Data mode status',
-    tag: 'Control',
-  });
+  router.add(
+    'GET',
+    '/_control/mode',
+    (ctx) => {
+      sendJson(ctx, 200, { data: dbOf(ctx).state() });
+    },
+    {
+      summary: 'Estado del modo de datos',
+      summaryEn: 'Data mode status',
+      tag: 'Control',
+    },
+  );
 
-  router.add('POST', '/_control/freeze', (ctx) => {
-    requireControl(ctx);
-    const db = dbOf(ctx);
-    if (db.mode === 'frozen') throw conflict('La base ya está congelada');
-    sendJson(ctx, 200, { data: db.freeze() });
-  }, {
-    summary: 'Congela la base actual en una copia descartable',
-    summaryEn: 'Freeze the current database into a disposable copy',
-    tag: 'Control',
-    security: [{ controlToken: [] }],
-  });
+  router.add(
+    'POST',
+    '/_control/freeze',
+    (ctx) => {
+      requireControl(ctx);
+      const db = dbOf(ctx);
+      if (db.mode === 'frozen') throw conflict('La base ya está congelada');
+      sendJson(ctx, 200, { data: db.freeze() });
+    },
+    {
+      summary: 'Congela la base actual en una copia descartable',
+      summaryEn: 'Freeze the current database into a disposable copy',
+      tag: 'Control',
+      security: [{ controlToken: [] }],
+    },
+  );
 
-  router.add('POST', '/_control/unfreeze', (ctx) => {
-    requireControl(ctx);
-    const db = dbOf(ctx);
-    if (db.mode !== 'frozen') throw conflict('La base no está congelada');
-    sendJson(ctx, 200, { data: db.unfreeze() });
-  }, {
-    summary: 'Descarta la copia congelada y vuelve a la base persistente',
-    summaryEn: 'Discard the frozen copy and return to the persistent database',
-    tag: 'Control',
-    security: [{ controlToken: [] }],
-  });
+  router.add(
+    'POST',
+    '/_control/unfreeze',
+    (ctx) => {
+      requireControl(ctx);
+      const db = dbOf(ctx);
+      if (db.mode !== 'frozen') throw conflict('La base no está congelada');
+      sendJson(ctx, 200, { data: db.unfreeze() });
+    },
+    {
+      summary: 'Descarta la copia congelada y vuelve a la base persistente',
+      summaryEn: 'Discard the frozen copy and return to the persistent database',
+      tag: 'Control',
+      security: [{ controlToken: [] }],
+    },
+  );
 
-  router.add('POST', '/_control/restore', (ctx) => {
-    requireControl(ctx);
-    const db = dbOf(ctx);
-    if (db.mode === 'frozen') {
-      sendJson(ctx, 200, { data: { ...db.restoreFrozen(), restored: 'snapshot' } });
-      return;
-    }
-    resetAll(db, (ctx as RequestContext).app.config);
-    sendJson(ctx, 200, { data: { ...db.state(), restored: 'seed' } });
-  }, {
-    summary: 'Restaura la imagen congelada o los datos semilla',
-    summaryEn: 'Restore the frozen image or seed data',
-    tag: 'Control',
-    security: [{ controlToken: [] }],
-  });
+  router.add(
+    'POST',
+    '/_control/restore',
+    (ctx) => {
+      requireControl(ctx);
+      const db = dbOf(ctx);
+      if (db.mode === 'frozen') {
+        sendJson(ctx, 200, { data: { ...db.restoreFrozen(), restored: 'snapshot' } });
+        return;
+      }
+      resetAll(db, (ctx as RequestContext).app.config);
+      sendJson(ctx, 200, { data: { ...db.state(), restored: 'seed' } });
+    },
+    {
+      summary: 'Restaura la imagen congelada o los datos semilla',
+      summaryEn: 'Restore the frozen image or seed data',
+      tag: 'Control',
+      security: [{ controlToken: [] }],
+    },
+  );
 
-  router.add('POST', '/_control/reset/:domain', (ctx) => {
-    requireControl(ctx);
-    const domain = String(ctx.params.domain);
-    if (!DOMAINS.includes(domain)) throw notFound(`Dominio desconocido: ${domain}`);
-    const db = dbOf(ctx);
-    resetDomain(db, domain, (ctx as RequestContext).app.config);
-    sendJson(ctx, 200, {
-      data: { reset: domain, mode: db.mode, tables: DOMAIN_TABLES[domain].length, stats: stats(ctx) },
-    });
-  }, { summary: 'Restaura un dominio a sus datos semilla', tag: 'Control', security: [{ controlToken: [] }] });
-
-  router.add('POST', '/_control/reset', async (ctx) => {
-    requireControl(ctx);
-    const contentType = String(ctx.req.headers['content-type'] ?? '');
-    let domain: string | undefined;
-    if (contentType.includes('application/json') && Number(ctx.req.headers['content-length'] ?? 0) > 0) {
-      const body = await readJsonBody(ctx);
-      const input = new Validator(body, ['domain']);
-      domain = input.string('domain', { maxLength: 40 }) ?? undefined;
-      input.done();
-    }
-    const db = dbOf(ctx);
-    const config = (ctx as RequestContext).app.config;
-    if (domain) {
+  router.add(
+    'POST',
+    '/_control/reset/:domain',
+    (ctx) => {
+      requireControl(ctx);
+      const domain = String(ctx.params.domain);
       if (!DOMAINS.includes(domain)) throw notFound(`Dominio desconocido: ${domain}`);
-      resetDomain(db, domain, config);
-      sendJson(ctx, 200, { data: { reset: domain, mode: db.mode, stats: stats(ctx) } });
-      return;
-    }
-    resetAll(db, config);
-    sendJson(ctx, 200, { data: { reset: 'all', mode: db.mode, stats: stats(ctx) } });
-  }, { summary: 'Restaura todos los datos o un dominio concreto', tag: 'Control', security: [{ controlToken: [] }] });
+      const db = dbOf(ctx);
+      resetDomain(db, domain, (ctx as RequestContext).app.config);
+      sendJson(ctx, 200, {
+        data: { reset: domain, mode: db.mode, tables: DOMAIN_TABLES[domain].length, stats: stats(ctx) },
+      });
+    },
+    { summary: 'Restaura un dominio a sus datos semilla', tag: 'Control', security: [{ controlToken: [] }] },
+  );
 
-  router.add('POST', '/_control/seed', async (ctx) => {
-    requireControl(ctx);
-    const body = await readJsonBody(ctx);
-    const input = new Validator(body, ['entity', 'count']);
-    const entity = input.string('entity', { required: true, maxLength: 40 })!;
-    const count = input.integer('count', { min: 1, max: 100, default: 1 }) ?? 1;
-    input.done();
-    const result = appendDemo(ctx, entity, count);
-    sendJson(ctx, 201, { data: result });
-  }, { summary: 'Añade datos demo adicionales', tag: 'Control', security: [{ controlToken: [] }] });
+  router.add(
+    'POST',
+    '/_control/reset',
+    async (ctx) => {
+      requireControl(ctx);
+      const contentType = String(ctx.req.headers['content-type'] ?? '');
+      let domain: string | undefined;
+      if (contentType.includes('application/json') && Number(ctx.req.headers['content-length'] ?? 0) > 0) {
+        const body = await readJsonBody(ctx);
+        const input = new Validator(body, ['domain']);
+        domain = input.string('domain', { maxLength: 40 }) ?? undefined;
+        input.done();
+      }
+      const db = dbOf(ctx);
+      const config = (ctx as RequestContext).app.config;
+      if (domain) {
+        if (!DOMAINS.includes(domain)) throw notFound(`Dominio desconocido: ${domain}`);
+        resetDomain(db, domain, config);
+        sendJson(ctx, 200, { data: { reset: domain, mode: db.mode, stats: stats(ctx) } });
+        return;
+      }
+      resetAll(db, config);
+      sendJson(ctx, 200, { data: { reset: 'all', mode: db.mode, stats: stats(ctx) } });
+    },
+    { summary: 'Restaura todos los datos o un dominio concreto', tag: 'Control', security: [{ controlToken: [] }] },
+  );
 
-  router.add('GET', '/_control/config', (ctx) => {
-    const app = (ctx as RequestContext).app;
-    sendJson(ctx, 200, {
-      data: {
-        host: app.config.host,
-        http_port: app.config.port,
-        https_enabled: app.config.httpsEnabled,
-        https_port: app.config.httpsPort,
-        http2_enabled: app.config.http2Enabled,
-        http2_port: app.config.http2Port,
-        max_body_bytes: app.config.maxBodyBytes,
-        max_response_bytes: app.config.maxResponseBytes,
-        max_page_size: app.config.maxPageSize,
-        max_delay_ms: app.config.maxDelayMs,
-        seed_scale: app.config.seedScale,
-        data_mode: app.db.mode,
-      },
-    });
-  }, { summary: 'Configuración pública no sensible', tag: 'Control' });
+  router.add(
+    'POST',
+    '/_control/seed',
+    async (ctx) => {
+      requireControl(ctx);
+      const body = await readJsonBody(ctx);
+      const input = new Validator(body, ['entity', 'count']);
+      const entity = input.string('entity', { required: true, maxLength: 40 })!;
+      const count = input.integer('count', { min: 1, max: 100, default: 1 }) ?? 1;
+      input.done();
+      const result = appendDemo(ctx, entity, count);
+      sendJson(ctx, 201, { data: result });
+    },
+    { summary: 'Añade datos demo adicionales', tag: 'Control', security: [{ controlToken: [] }] },
+  );
 
-  router.add('GET', '/_control/domains', (ctx) => {
-    sendJson(ctx, 200, { data: DOMAINS.map((domain) => ({ domain, tables: DOMAIN_TABLES[domain] })) });
-  }, { summary: 'Lista dominios y tablas', tag: 'Control' });
+  router.add(
+    'GET',
+    '/_control/config',
+    (ctx) => {
+      const app = (ctx as RequestContext).app;
+      sendJson(ctx, 200, {
+        data: {
+          host: app.config.host,
+          http_port: app.config.port,
+          https_enabled: app.config.httpsEnabled,
+          https_port: app.config.httpsPort,
+          http2_enabled: app.config.http2Enabled,
+          http2_port: app.config.http2Port,
+          max_body_bytes: app.config.maxBodyBytes,
+          max_response_bytes: app.config.maxResponseBytes,
+          max_page_size: app.config.maxPageSize,
+          max_delay_ms: app.config.maxDelayMs,
+          seed_scale: app.config.seedScale,
+          data_mode: app.db.mode,
+        },
+      });
+    },
+    { summary: 'Configuración pública no sensible', tag: 'Control' },
+  );
+
+  router.add(
+    'GET',
+    '/_control/domains',
+    (ctx) => {
+      sendJson(ctx, 200, { data: DOMAINS.map((domain) => ({ domain, tables: DOMAIN_TABLES[domain] })) });
+    },
+    { summary: 'Lista dominios y tablas', tag: 'Control' },
+  );
 }

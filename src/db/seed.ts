@@ -21,14 +21,63 @@ const iso = (days: number, hour = 12, minute = 0): string =>
 const date = (days: number): string => iso(days).slice(0, 10);
 
 const FIRST = [
-  'Lucía', 'Mateo', 'Sofía', 'Diego', 'Valeria', 'Kenji', 'Amara', 'Noor', 'Íñigo', 'Zoë',
-  'Hugo', 'Elena', 'Omar', 'Marta', 'Ravi', 'Chloé', 'Sara', 'Bruno', 'Aiko', 'Leandro',
-  'Nadia', 'Tomás', 'Fatima', 'Lars', 'Camila', 'Yusuf', 'Ingrid', 'Pablo', 'Mei', 'Andrés',
+  'Lucía',
+  'Mateo',
+  'Sofía',
+  'Diego',
+  'Valeria',
+  'Kenji',
+  'Amara',
+  'Noor',
+  'Íñigo',
+  'Zoë',
+  'Hugo',
+  'Elena',
+  'Omar',
+  'Marta',
+  'Ravi',
+  'Chloé',
+  'Sara',
+  'Bruno',
+  'Aiko',
+  'Leandro',
+  'Nadia',
+  'Tomás',
+  'Fatima',
+  'Lars',
+  'Camila',
+  'Yusuf',
+  'Ingrid',
+  'Pablo',
+  'Mei',
+  'Andrés',
 ];
 const LAST = [
-  'García Núñez', 'Fernández', 'Okafor', 'Tanaka', 'Haddad', 'Petrova', 'López', 'Müller',
-  'Rossi', 'Silva', 'Kowalski', 'Kim', 'Dubois', 'Navarro', 'Novak', 'Mensah', 'Ivanova',
-  'Santos', 'Andersson', 'Costa', 'Moreau', 'Rahman', 'Vega', 'Johansson', 'Yamamoto',
+  'García Núñez',
+  'Fernández',
+  'Okafor',
+  'Tanaka',
+  'Haddad',
+  'Petrova',
+  'López',
+  'Müller',
+  'Rossi',
+  'Silva',
+  'Kowalski',
+  'Kim',
+  'Dubois',
+  'Navarro',
+  'Novak',
+  'Mensah',
+  'Ivanova',
+  'Santos',
+  'Andersson',
+  'Costa',
+  'Moreau',
+  'Rahman',
+  'Vega',
+  'Johansson',
+  'Yamamoto',
 ];
 
 function rng(seed: number): () => number {
@@ -63,8 +112,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 /** Hashes opaque tokens before persistence; raw tokens are never stored. */
-export const hashToken = (token: string): string =>
-  createHash('sha256').update(token, 'utf8').digest('hex');
+export const hashToken = (token: string): string => createHash('sha256').update(token, 'utf8').digest('hex');
 
 /** Generates a prefixed, high-entropy local token. */
 export const newOpaqueToken = (prefix: string): string =>
@@ -111,9 +159,12 @@ function seedIdentity(db: Db, config: Config): void {
       first_name: first,
       last_name: last,
       phone: i % 4 === 0 ? null : `+34 6${String(10_000_000 + i * 137).slice(0, 8)}`,
-      bio: i % 10 === 0
-        ? `Perfil de prueba ${i}. Trabaja en proyectos internacionales, habla varios idiomas (日本語, العربية, español) y mantiene notas largas para verificar campos de texto extensos.`
-        : i % 3 === 0 ? null : `Miembro del equipo de simulación número ${i}.`,
+      bio:
+        i % 10 === 0
+          ? `Perfil de prueba ${i}. Trabaja en proyectos internacionales, habla varios idiomas (日本語, العربية, español) y mantiene notas largas para verificar campos de texto extensos.`
+          : i % 3 === 0
+            ? null
+            : `Miembro del equipo de simulación número ${i}.`,
       avatar_url: i % 3 === 0 ? null : `https://cdn.example.test/avatars/${i}.png`,
       birth_date: i % 6 === 0 ? null : date(-12_000 + i * 31),
       locale: i % 5 === 0 ? 'en-GB' : 'es-ES',
@@ -145,10 +196,21 @@ function seedIdentity(db: Db, config: Config): void {
   });
 
   const perms = [
-    'identity:read', 'identity:write', 'projects:read', 'projects:write',
-    'shop:read', 'shop:write', 'library:read', 'library:write',
-    'education:read', 'education:write', 'hr:read', 'hr:write',
-    'finance:read', 'finance:write', 'control:admin',
+    'identity:read',
+    'identity:write',
+    'projects:read',
+    'projects:write',
+    'shop:read',
+    'shop:write',
+    'library:read',
+    'library:write',
+    'education:read',
+    'education:write',
+    'hr:read',
+    'hr:write',
+    'finance:read',
+    'finance:write',
+    'control:admin',
   ];
   perms.forEach((code, idx) => {
     const [resource, action] = code.split(':');
@@ -188,7 +250,12 @@ function seedIdentity(db: Db, config: Config): void {
         assigned_at: iso(-400 + i),
       });
     }
-    if (i % 9 === 0 && i !== 3 && i !== 8 && !db.get('SELECT 1 AS x FROM id_user_roles WHERE user_id = ? AND role_id = 3', i)) {
+    if (
+      i % 9 === 0 &&
+      i !== 3 &&
+      i !== 8 &&
+      !db.get('SELECT 1 AS x FROM id_user_roles WHERE user_id = ? AND role_id = 3', i)
+    ) {
       db.insert('id_user_roles', { id: ++urId, user_id: i, role_id: 3, assigned_at: iso(-100 + i) });
     }
   }
@@ -348,7 +415,8 @@ function seedProjects(db: Db, config: Config): void {
     db.insert('pr_teams', {
       id: i,
       name: `${teamNames[(i - 1) % teamNames.length]} ${i}`,
-      description: i % 3 === 0 ? 'Equipo multidisciplinar con miembros en varias zonas horarias.' : `Equipo de trabajo ${i}`,
+      description:
+        i % 3 === 0 ? 'Equipo multidisciplinar con miembros en varias zonas horarias.' : `Equipo de trabajo ${i}`,
       created_at: iso(-600 + i * 5),
     });
     for (let k = 0; k < 4; k++) {
@@ -364,10 +432,21 @@ function seedProjects(db: Db, config: Config): void {
   }
 
   const projectNames = [
-    'Portal de clientes', 'Migración de datos', 'App móvil', 'Panel analítico',
-    'Automatización de facturas', 'Catálogo editorial', 'Integración de pagos',
-    'Rediseño de marca', 'API pública', 'Observabilidad', 'Marketplace', 'Onboarding',
-    'Búsqueda semántica', 'Programa de fidelización', 'Gestión documental',
+    'Portal de clientes',
+    'Migración de datos',
+    'App móvil',
+    'Panel analítico',
+    'Automatización de facturas',
+    'Catálogo editorial',
+    'Integración de pagos',
+    'Rediseño de marca',
+    'API pública',
+    'Observabilidad',
+    'Marketplace',
+    'Onboarding',
+    'Búsqueda semántica',
+    'Programa de fidelización',
+    'Gestión documental',
   ];
   for (let i = 1; i <= projectCount; i++) {
     const status = pick(['planning', 'active', 'active', 'on_hold', 'completed', 'archived'] as const, i);
@@ -375,9 +454,12 @@ function seedProjects(db: Db, config: Config): void {
       id: i,
       name: `${pick(projectNames, i)} ${i}`,
       project_key: `PRJ-${String(i).padStart(3, '0')}`,
-      description: i % 7 === 0
-        ? 'Proyecto con alcance amplio que incluye investigación, diseño, implementación, despliegue y soporte. Texto extenso para probar campos largos y búsquedas.'
-        : i % 4 === 0 ? null : `Iniciativa interna número ${i}.`,
+      description:
+        i % 7 === 0
+          ? 'Proyecto con alcance amplio que incluye investigación, diseño, implementación, despliegue y soporte. Texto extenso para probar campos largos y búsquedas.'
+          : i % 4 === 0
+            ? null
+            : `Iniciativa interna número ${i}.`,
       status,
       owner_id: ((i * 5) % userCount) + 1,
       team_id: ((i - 1) % teamCount) + 1,
@@ -412,8 +494,12 @@ function seedProjects(db: Db, config: Config): void {
   }
 
   const statuses = [
-    ['Backlog', 'todo', 1], ['Por hacer', 'todo', 2], ['En progreso', 'in_progress', 3],
-    ['En revisión', 'in_progress', 4], ['Bloqueada', 'blocked', 5], ['Hecha', 'done', 6],
+    ['Backlog', 'todo', 1],
+    ['Por hacer', 'todo', 2],
+    ['En progreso', 'in_progress', 3],
+    ['En revisión', 'in_progress', 4],
+    ['Bloqueada', 'blocked', 5],
+    ['Hecha', 'done', 6],
   ] as const;
   statuses.forEach(([name, category, order], idx) => {
     db.insert('pr_statuses', { id: idx + 1, name, category, sort_order: order });
@@ -427,9 +513,12 @@ function seedProjects(db: Db, config: Config): void {
       project_id: projectId,
       parent_id: i > 4 && i % 4 === 0 ? i - 1 : null,
       title: `${pick(['Implementar', 'Revisar', 'Diseñar', 'Documentar', 'Probar', 'Optimizar'] as const, i)} ${pick(['formulario', 'endpoint', 'panel', 'flujo', 'componente', 'informe', 'migración'] as const, i + 3)} ${i}`,
-      description: i % 11 === 0
-        ? `Descripción larga de la tarea ${i}. Incluye criterios de aceptación, dependencias, riesgos y notas de implementación con caracteres Unicode: ñ, ü, 漢字, العربية.`
-        : i % 5 === 0 ? null : `Detalle de la tarea ${i}.`,
+      description:
+        i % 11 === 0
+          ? `Descripción larga de la tarea ${i}. Incluye criterios de aceptación, dependencias, riesgos y notas de implementación con caracteres Unicode: ñ, ü, 漢字, العربية.`
+          : i % 5 === 0
+            ? null
+            : `Detalle de la tarea ${i}.`,
       status_id: done ? 6 : pick([1, 2, 3, 3, 4, 5] as const, i),
       assignee_id: i % 9 === 0 ? null : ((i * 3) % userCount) + 1,
       priority: pick(['low', 'medium', 'medium', 'high', 'critical'] as const, i),
@@ -461,10 +550,18 @@ function seedProjects(db: Db, config: Config): void {
   }
 
   const labels = [
-    ['bug', '#dc2626'], ['mejora', '#2563eb'], ['diseño', '#7c3aed'], ['backend', '#0f766e'],
-    ['frontend', '#ea580c'], ['infra', '#475569'], ['documentación', '#ca8a04'],
-    ['prioridad-alta', '#b91c1c'], ['buena-primera-tarea', '#16a34a'], ['investigación', '#0891b2'],
-    ['accesibilidad', '#9333ea'], ['rendimiento', '#c2410c'],
+    ['bug', '#dc2626'],
+    ['mejora', '#2563eb'],
+    ['diseño', '#7c3aed'],
+    ['backend', '#0f766e'],
+    ['frontend', '#ea580c'],
+    ['infra', '#475569'],
+    ['documentación', '#ca8a04'],
+    ['prioridad-alta', '#b91c1c'],
+    ['buena-primera-tarea', '#16a34a'],
+    ['investigación', '#0891b2'],
+    ['accesibilidad', '#9333ea'],
+    ['rendimiento', '#c2410c'],
   ];
   labels.forEach(([name, color], idx) => {
     db.insert('pr_labels', { id: idx + 1, name, color });
@@ -532,9 +629,16 @@ function seedShop(db: Db, config: Config): void {
   }
 
   const brands = [
-    ['Nova', 'nova'], ['Lumen', 'lumen'], ['Aurora', 'aurora'], ['Kanso', 'kanso'],
-    ['Terra', 'terra'], ['Pixelia', 'pixelia'], ['Verde', 'verde'], ['Sable', 'sable'],
-    ['Marea', 'marea'], ['Origen', 'origen'],
+    ['Nova', 'nova'],
+    ['Lumen', 'lumen'],
+    ['Aurora', 'aurora'],
+    ['Kanso', 'kanso'],
+    ['Terra', 'terra'],
+    ['Pixelia', 'pixelia'],
+    ['Verde', 'verde'],
+    ['Sable', 'sable'],
+    ['Marea', 'marea'],
+    ['Origen', 'origen'],
   ];
   brands.forEach(([name, slug], idx) => {
     db.insert('shop_brands', {
@@ -546,9 +650,18 @@ function seedShop(db: Db, config: Config): void {
   });
 
   const categories = [
-    ['Informática', 'informatica'], ['Audio', 'audio'], ['Hogar', 'hogar'], ['Libros', 'libros'],
-    ['Deporte', 'deporte'], ['Moda', 'moda'], ['Jardín', 'jardin'], ['Juguetes', 'juguetes'],
-    ['Oficina', 'oficina'], ['Cocina', 'cocina'], ['Móviles', 'moviles'], ['Accesorios', 'accesorios'],
+    ['Informática', 'informatica'],
+    ['Audio', 'audio'],
+    ['Hogar', 'hogar'],
+    ['Libros', 'libros'],
+    ['Deporte', 'deporte'],
+    ['Moda', 'moda'],
+    ['Jardín', 'jardin'],
+    ['Juguetes', 'juguetes'],
+    ['Oficina', 'oficina'],
+    ['Cocina', 'cocina'],
+    ['Móviles', 'moviles'],
+    ['Accesorios', 'accesorios'],
   ];
   categories.forEach(([name, slug], idx) => {
     db.insert('shop_categories', {
@@ -561,11 +674,26 @@ function seedShop(db: Db, config: Config): void {
   });
 
   const productNames = [
-    'Portátil Atlas 14', 'Auriculares Studio', 'Lámpara Nórdica', 'Cafetera Moka',
-    'Zapatillas Ruta', 'Mochila Urbana', 'Teclado Mecánico', 'Monitor 27"',
-    'Altavoz Mini', 'Silla Ergonómica', 'Reloj Deportivo', 'Robot Aspirador',
-    'Cuaderno A5', 'Botella Térmica', 'Cámara Compacta', 'Set de Plumas',
-    'Mancuernas 5 kg', 'Juego de Mesa', 'Sartén Antiadherente', 'Cargador USB-C',
+    'Portátil Atlas 14',
+    'Auriculares Studio',
+    'Lámpara Nórdica',
+    'Cafetera Moka',
+    'Zapatillas Ruta',
+    'Mochila Urbana',
+    'Teclado Mecánico',
+    'Monitor 27"',
+    'Altavoz Mini',
+    'Silla Ergonómica',
+    'Reloj Deportivo',
+    'Robot Aspirador',
+    'Cuaderno A5',
+    'Botella Térmica',
+    'Cámara Compacta',
+    'Set de Plumas',
+    'Mancuernas 5 kg',
+    'Juego de Mesa',
+    'Sartén Antiadherente',
+    'Cargador USB-C',
   ];
   for (let i = 1; i <= productCount; i++) {
     db.insert('shop_products', {
@@ -575,9 +703,12 @@ function seedShop(db: Db, config: Config): void {
       slug: `producto-${i}`,
       brand_id: i % 6 === 0 ? null : ((i - 1) % 10) + 1,
       category_id: ((i - 1) % 12) + 1,
-      description: i % 9 === 0
-        ? 'Descripción extensa del producto con especificaciones técnicas, materiales, garantía y recomendaciones de uso. Compatible con accesorios de la misma familia.'
-        : i % 4 === 0 ? null : `Producto de prueba ${i} con garantía de dos años.`,
+      description:
+        i % 9 === 0
+          ? 'Descripción extensa del producto con especificaciones técnicas, materiales, garantía y recomendaciones de uso. Compatible con accesorios de la misma familia.'
+          : i % 4 === 0
+            ? null
+            : `Producto de prueba ${i} con garantía de dos años.`,
       price_cents: money(499, 149_999, i),
       currency: 'EUR',
       status: i % 13 === 0 ? 'archived' : i % 10 === 0 ? 'draft' : 'active',
@@ -592,7 +723,10 @@ function seedShop(db: Db, config: Config): void {
         sku: `SKU-${1000 + i}-V${k}`,
         name: k === 1 ? 'Estándar' : 'Edición Plus',
         price_cents: money(499, 149_999, i) + k * 500,
-        attributes: JSON.stringify({ color: pick(['negro', 'blanco', 'azul', 'verde'] as const, i + k), talla: k === 1 ? 'M' : 'L' }),
+        attributes: JSON.stringify({
+          color: pick(['negro', 'blanco', 'azul', 'verde'] as const, i + k),
+          talla: k === 1 ? 'M' : 'L',
+        }),
         is_active: i % 17 === 0 && k === 2 ? 0 : 1,
       });
     }
@@ -608,8 +742,10 @@ function seedShop(db: Db, config: Config): void {
   }
 
   const warehouses = [
-    ['Madrid Central', 'MAD-01', 'Madrid'], ['Barcelona Norte', 'BCN-01', 'Barcelona'],
-    ['Lisboa', 'LIS-01', 'Lisboa'], ['Valencia', 'VLC-01', 'Valencia'],
+    ['Madrid Central', 'MAD-01', 'Madrid'],
+    ['Barcelona Norte', 'BCN-01', 'Barcelona'],
+    ['Lisboa', 'LIS-01', 'Lisboa'],
+    ['Valencia', 'VLC-01', 'Valencia'],
   ];
   warehouses.forEach(([name, code, city], idx) => {
     db.insert('shop_warehouses', { id: idx + 1, name, code, city, country: city === 'Lisboa' ? 'PT' : 'ES' });
@@ -637,16 +773,22 @@ function seedShop(db: Db, config: Config): void {
       customer_id: i,
       kind: pick(['card', 'card', 'paypal', 'bank_transfer', 'cash'] as const, i),
       label: i % 2 === 0 ? 'Tarjeta personal' : 'Método principal',
-      last4: i % 4 === 0 ? null : String(1000 + (i * 7) % 9000),
+      last4: i % 4 === 0 ? null : String(1000 + ((i * 7) % 9000)),
       is_default: 1,
       created_at: iso(-300 + i),
     });
   }
 
   const couponDefs = [
-    ['SAVE10', 'percent', 10], ['WELCOME5', 'fixed', 500], ['VERANO20', 'percent', 20],
-    ['VIP50', 'fixed', 5000], ['ENVIO0', 'fixed', 300], ['BOOKS15', 'percent', 15],
-    ['TECH25', 'percent', 25], ['FIXED1000', 'fixed', 1000], ['OLD5', 'percent', 5],
+    ['SAVE10', 'percent', 10],
+    ['WELCOME5', 'fixed', 500],
+    ['VERANO20', 'percent', 20],
+    ['VIP50', 'fixed', 5000],
+    ['ENVIO0', 'fixed', 300],
+    ['BOOKS15', 'percent', 15],
+    ['TECH25', 'percent', 25],
+    ['FIXED1000', 'fixed', 1000],
+    ['OLD5', 'percent', 5],
     ['EXPIRED10', 'percent', 10],
   ] as const;
   couponDefs.forEach(([code, kind, value], idx) => {
@@ -717,7 +859,7 @@ function seedShop(db: Db, config: Config): void {
       id: i,
       customer_id: ((i * 3) % customerCount) + 1,
       status: isOpen ? 'open' : i % 2 === 0 ? 'abandoned' : 'checked_out',
-      coupon_id: i % 5 === 0 ? ((i % 5) + 1) : null,
+      coupon_id: i % 5 === 0 ? (i % 5) + 1 : null,
       created_at: iso(-80 + i),
       updated_at: iso(-3 + i),
     });
@@ -829,7 +971,8 @@ function seedShop(db: Db, config: Config): void {
       }
     }
     if (['shipped', 'delivered'].includes(status)) {
-      const shipmentStatus = status === 'delivered' ? 'delivered' : pick(['in_transit', 'out_for_delivery'] as const, i);
+      const shipmentStatus =
+        status === 'delivered' ? 'delivered' : pick(['in_transit', 'out_for_delivery'] as const, i);
       db.insert('shop_shipments', {
         id: ++shipmentId,
         order_id: i,
@@ -860,10 +1003,16 @@ function seedShop(db: Db, config: Config): void {
       product_id: productId,
       customer_id: customerId,
       rating: 1 + (i % 5),
-      title: i % 4 === 0 ? null : pick(['Muy bueno', 'Cumple lo esperado', 'Mejor de lo que pensaba', 'Puede mejorar'] as const, i),
-      body: i % 3 === 0
-        ? 'El producto llegó bien embalado. La calidad es buena y el envío fue rápido. Repetiré la compra sin duda.'
-        : i % 7 === 0 ? null : `Reseña de prueba número ${i}.`,
+      title:
+        i % 4 === 0
+          ? null
+          : pick(['Muy bueno', 'Cumple lo esperado', 'Mejor de lo que pensaba', 'Puede mejorar'] as const, i),
+      body:
+        i % 3 === 0
+          ? 'El producto llegó bien embalado. La calidad es buena y el envío fue rápido. Repetiré la compra sin duda.'
+          : i % 7 === 0
+            ? null
+            : `Reseña de prueba número ${i}.`,
       created_at: iso(-100 + i),
     });
   }
@@ -876,12 +1025,31 @@ function seedLibrary(db: Db, config: Config): void {
   const userCount = db.count('id_users');
 
   const authorNames = [
-    'Gabriel García Márquez', 'Isabel Allende', 'Haruki Murakami', 'Ursula K. Le Guin',
-    'Jorge Luis Borges', 'Chimamanda Ngozi Adichie', 'Elena Ferrante', 'Liu Cixin',
-    'Svetlana Alexiévich', 'Han Kang', 'Julio Cortázar', 'Clarice Lispector',
-    'Yukio Mishima', 'Octavia Butler', 'Fiódor Dostoievski', 'Virginia Woolf',
-    'Italo Calvino', 'Nnedi Okorafor', 'Roberto Bolaño', 'Sara Mesa',
-    'N. K. Jemisin', 'Mohsin Hamid', 'Olga Tokarczuk', 'Ted Chiang', 'Arundhati Roy',
+    'Gabriel García Márquez',
+    'Isabel Allende',
+    'Haruki Murakami',
+    'Ursula K. Le Guin',
+    'Jorge Luis Borges',
+    'Chimamanda Ngozi Adichie',
+    'Elena Ferrante',
+    'Liu Cixin',
+    'Svetlana Alexiévich',
+    'Han Kang',
+    'Julio Cortázar',
+    'Clarice Lispector',
+    'Yukio Mishima',
+    'Octavia Butler',
+    'Fiódor Dostoievski',
+    'Virginia Woolf',
+    'Italo Calvino',
+    'Nnedi Okorafor',
+    'Roberto Bolaño',
+    'Sara Mesa',
+    'N. K. Jemisin',
+    'Mohsin Hamid',
+    'Olga Tokarczuk',
+    'Ted Chiang',
+    'Arundhati Roy',
   ];
   for (let i = 1; i <= authorCount; i++) {
     db.insert('lib_authors', {
@@ -889,10 +1057,35 @@ function seedLibrary(db: Db, config: Config): void {
       name: `${pick(authorNames, i - 1)}${i > authorNames.length ? ` (${i})` : ''}`,
       bio: i % 3 === 0 ? null : `Autor/a número ${i}, conocido por obras traducidas a varios idiomas.`,
       birth_date: i % 4 === 0 ? null : date(-20_000 + i * 200),
-      nationality: pick(['Colombia', 'Chile', 'Japón', 'EE. UU.', 'Argentina', 'Nigeria', 'Italia', 'China', 'Bielorrusia', 'Corea del Sur'] as const, i),
+      nationality: pick(
+        [
+          'Colombia',
+          'Chile',
+          'Japón',
+          'EE. UU.',
+          'Argentina',
+          'Nigeria',
+          'Italia',
+          'China',
+          'Bielorrusia',
+          'Corea del Sur',
+        ] as const,
+        i,
+      ),
     });
   }
-  const publisherNames = ['Alfaguara', 'Anagrama', 'Tusquets', 'Planeta', 'Salamandra', 'Minotauro', 'Debolsillo', 'Cátedra', 'Acantilado', 'Impedimenta'];
+  const publisherNames = [
+    'Alfaguara',
+    'Anagrama',
+    'Tusquets',
+    'Planeta',
+    'Salamandra',
+    'Minotauro',
+    'Debolsillo',
+    'Cátedra',
+    'Acantilado',
+    'Impedimenta',
+  ];
   publisherNames.forEach((name, idx) => {
     db.insert('lib_publishers', {
       id: idx + 1,
@@ -901,17 +1094,43 @@ function seedLibrary(db: Db, config: Config): void {
       website: `https://publisher${idx + 1}.example.test`,
     });
   });
-  const genres = ['Novela', 'Ensayo', 'Ciencia ficción', 'Fantasía', 'Poesía', 'Historia', 'Misterio', 'Biografía', 'Tecnología', 'Infantil'];
+  const genres = [
+    'Novela',
+    'Ensayo',
+    'Ciencia ficción',
+    'Fantasía',
+    'Poesía',
+    'Historia',
+    'Misterio',
+    'Biografía',
+    'Tecnología',
+    'Infantil',
+  ];
   genres.forEach((name, idx) => {
     db.insert('lib_genres', { id: idx + 1, name, description: `Género ${name} de la biblioteca` });
   });
 
   const titles = [
-    'Cien años de soledad', 'La casa de los espíritus', 'Tokio blues', 'La mano izquierda de la oscuridad',
-    'Ficciones', 'Americanah', 'La amiga estupenda', 'El problema de los tres cuerpos',
-    'Voces de Chernóbil', 'La vegetariana', 'Rayuela', 'La hora de la estrella',
-    'El marino que perdió la gracia del mar', 'Kindred', 'Crimen y castigo', 'La señora Dalloway',
-    'Las ciudades invisibles', 'La muerte de Vivek Oji', '2666', 'Cara de pan',
+    'Cien años de soledad',
+    'La casa de los espíritus',
+    'Tokio blues',
+    'La mano izquierda de la oscuridad',
+    'Ficciones',
+    'Americanah',
+    'La amiga estupenda',
+    'El problema de los tres cuerpos',
+    'Voces de Chernóbil',
+    'La vegetariana',
+    'Rayuela',
+    'La hora de la estrella',
+    'El marino que perdió la gracia del mar',
+    'Kindred',
+    'Crimen y castigo',
+    'La señora Dalloway',
+    'Las ciudades invisibles',
+    'La muerte de Vivek Oji',
+    '2666',
+    'Cara de pan',
   ];
   for (let i = 1; i <= bookCount; i++) {
     db.insert('lib_books', {
@@ -923,9 +1142,10 @@ function seedLibrary(db: Db, config: Config): void {
       published_year: i % 7 === 0 ? null : 1950 + (i % 75),
       language: pick(['es', 'en', 'fr', 'ja'] as const, i),
       pages: i % 6 === 0 ? null : 120 + i * 7,
-      description: i % 5 === 0
-        ? 'Una obra extensa que explora la memoria, la identidad y el paso del tiempo a través de personajes inolvidables. Esta descripción larga sirve para probar búsquedas y campos de texto amplios.'
-        : `Novela de prueba número ${i}.`,
+      description:
+        i % 5 === 0
+          ? 'Una obra extensa que explora la memoria, la identidad y el paso del tiempo a través de personajes inolvidables. Esta descripción larga sirve para probar búsquedas y campos de texto amplios.'
+          : `Novela de prueba número ${i}.`,
       cover_url: i % 3 === 0 ? null : `https://cdn.example.test/books/${i}.jpg`,
       created_at: iso(-400 + i * 3),
     });
@@ -988,7 +1208,11 @@ function seedLibrary(db: Db, config: Config): void {
       fine_cents: fine,
     });
     if (active) {
-      db.run('UPDATE lib_copies SET status = ? WHERE id = ?', 'on_loan', ((i - 1) % Math.round(120 * config.seedScale)) + 1);
+      db.run(
+        'UPDATE lib_copies SET status = ? WHERE id = ?',
+        'on_loan',
+        ((i - 1) % Math.round(120 * config.seedScale)) + 1,
+      );
     }
     if (fine > 0) {
       db.insert('lib_fines', {
@@ -1045,10 +1269,18 @@ function seedEducation(db: Db, config: Config): void {
   }
 
   const courseDefs = [
-    ['Grado en Informática', 'INF', 240], ['Grado en Diseño', 'DIS', 240], ['Máster en Datos', 'DAT', 120],
-    ['Grado en Matemáticas', 'MAT', 240], ['Grado en Historia', 'HIS', 240], ['Máster en Educación', 'EDU', 120],
-    ['Grado en Bellas Artes', 'ART', 240], ['Grado en Física', 'FIS', 240], ['Máster en IA', 'IA', 120],
-    ['Grado en Economía', 'ECO', 240], ['Grado en Filosofía', 'FIL', 240], ['Curso de Acceso', 'ACC', 60],
+    ['Grado en Informática', 'INF', 240],
+    ['Grado en Diseño', 'DIS', 240],
+    ['Máster en Datos', 'DAT', 120],
+    ['Grado en Matemáticas', 'MAT', 240],
+    ['Grado en Historia', 'HIS', 240],
+    ['Máster en Educación', 'EDU', 120],
+    ['Grado en Bellas Artes', 'ART', 240],
+    ['Grado en Física', 'FIS', 240],
+    ['Máster en IA', 'IA', 120],
+    ['Grado en Economía', 'ECO', 240],
+    ['Grado en Filosofía', 'FIL', 240],
+    ['Curso de Acceso', 'ACC', 60],
   ];
   courseDefs.forEach(([name, code, credits], idx) => {
     db.insert('edu_courses', {
@@ -1063,11 +1295,30 @@ function seedEducation(db: Db, config: Config): void {
   });
 
   const subjectDefs = [
-    'Programación I', 'Bases de Datos', 'Álgebra Lineal', 'Fundamentos de Diseño',
-    'Estadística', 'Redes', 'Inteligencia Artificial', 'Historia Contemporánea',
-    'Didáctica', 'Pintura', 'Física I', 'Microeconomía', 'Ética', 'Cálculo',
-    'Sistemas Operativos', 'Interacción Persona-Ordenador', 'Aprendizaje Automático',
-    'Literatura', 'Música', 'Química', 'Metodología', 'Proyectos', 'Seguridad', 'Animación',
+    'Programación I',
+    'Bases de Datos',
+    'Álgebra Lineal',
+    'Fundamentos de Diseño',
+    'Estadística',
+    'Redes',
+    'Inteligencia Artificial',
+    'Historia Contemporánea',
+    'Didáctica',
+    'Pintura',
+    'Física I',
+    'Microeconomía',
+    'Ética',
+    'Cálculo',
+    'Sistemas Operativos',
+    'Interacción Persona-Ordenador',
+    'Aprendizaje Automático',
+    'Literatura',
+    'Música',
+    'Química',
+    'Metodología',
+    'Proyectos',
+    'Seguridad',
+    'Animación',
   ];
   subjectDefs.forEach((name, idx) => {
     db.insert('edu_subjects', {
@@ -1199,8 +1450,12 @@ function seedEducation(db: Db, config: Config): void {
 function seedHr(db: Db, config: Config): void {
   const employeeCount = Math.max(20, Math.round(50 * config.seedScale));
   const deptDefs = [
-    ['Ingeniería', 'ENG', 90_000_000], ['Producto', 'PRD', 60_000_000], ['Ventas', 'SAL', 50_000_000],
-    ['Marketing', 'MKT', 40_000_000], ['Finanzas', 'FIN', 45_000_000], ['Personas', 'HR', 35_000_000],
+    ['Ingeniería', 'ENG', 90_000_000],
+    ['Producto', 'PRD', 60_000_000],
+    ['Ventas', 'SAL', 50_000_000],
+    ['Marketing', 'MKT', 40_000_000],
+    ['Finanzas', 'FIN', 45_000_000],
+    ['Personas', 'HR', 35_000_000],
   ];
   deptDefs.forEach(([name, code, budget], idx) => {
     db.insert('hr_departments', {
@@ -1214,12 +1469,16 @@ function seedHr(db: Db, config: Config): void {
   });
 
   const positionDefs = [
-    'Ingeniero/a de software', 'Arquitecto/a de datos', 'Diseñador/a de producto',
-    'Jefe/a de ventas', 'Especialista de marketing', 'Analista financiero/a',
+    'Ingeniero/a de software',
+    'Arquitecto/a de datos',
+    'Diseñador/a de producto',
+    'Jefe/a de ventas',
+    'Especialista de marketing',
+    'Analista financiero/a',
   ];
   for (let i = 1; i <= 12; i++) {
     const dept = ((i - 1) % 6) + 1;
-    const level = i <= 6 ? (i % 2 === 0 ? 'senior' : 'mid') : (i % 3 === 0 ? 'lead' : 'junior');
+    const level = i <= 6 ? (i % 2 === 0 ? 'senior' : 'mid') : i % 3 === 0 ? 'lead' : 'junior';
     const min = 2_400_000 + dept * 150_000 + (level === 'senior' ? 800_000 : level === 'lead' ? 1_200_000 : 0);
     db.insert('hr_positions', {
       id: i,
@@ -1302,7 +1561,10 @@ function seedHr(db: Db, config: Config): void {
       end_date: date(start + days),
       days,
       status: pick(['pending', 'approved', 'approved', 'rejected', 'cancelled'] as const, i),
-      reason: i % 5 === 0 ? null : pick(['Vacaciones familiares', 'Viaje personal', 'Asuntos propios', 'Descanso'] as const, i),
+      reason:
+        i % 5 === 0
+          ? null
+          : pick(['Vacaciones familiares', 'Viaje personal', 'Asuntos propios', 'Descanso'] as const, i),
       requested_at: iso(start - 20),
       decided_at: i % 4 === 0 ? iso(start - 10) : null,
     });
@@ -1325,11 +1587,26 @@ function seedHr(db: Db, config: Config): void {
 
 function seedFinance(db: Db, config: Config): void {
   const supplierNames = [
-    'Tecnologías Aplicadas S.L.', 'Suministros Norte', 'Cloud & Data', 'Papelería Central',
-    'Energía Verde', 'Transportes Rápidos', 'Consultores Asociados', 'Mobiliario Oficina',
-    'Seguros Delta', 'Formación Continua', 'Marketing Digital', 'Laboratorio Beta',
-    'Servicios Integrales', 'Limpiezas Norte', 'Cafés Selectos', 'Editorial Técnica',
-    'Redes y Comunicaciones', 'Auditoría Externa', 'Mensajería Urgente', 'Material Médico',
+    'Tecnologías Aplicadas S.L.',
+    'Suministros Norte',
+    'Cloud & Data',
+    'Papelería Central',
+    'Energía Verde',
+    'Transportes Rápidos',
+    'Consultores Asociados',
+    'Mobiliario Oficina',
+    'Seguros Delta',
+    'Formación Continua',
+    'Marketing Digital',
+    'Laboratorio Beta',
+    'Servicios Integrales',
+    'Limpiezas Norte',
+    'Cafés Selectos',
+    'Editorial Técnica',
+    'Redes y Comunicaciones',
+    'Auditoría Externa',
+    'Mensajería Urgente',
+    'Material Médico',
   ];
   const supplierCount = Math.max(10, Math.round(20 * config.seedScale));
   for (let i = 1; i <= supplierCount; i++) {
@@ -1344,10 +1621,15 @@ function seedFinance(db: Db, config: Config): void {
   }
 
   const accountDefs = [
-    ['1000', 'Caja', 'asset'], ['1100', 'Banco principal', 'asset'], ['1200', 'Banco secundario', 'asset'],
-    ['2000', 'Proveedores', 'liability'], ['2100', 'Nóminas pendientes', 'liability'],
-    ['3000', 'Capital social', 'equity'], ['4000', 'Ingresos por ventas', 'income'],
-    ['4100', 'Ingresos por servicios', 'income'], ['6000', 'Gastos de personal', 'expense'],
+    ['1000', 'Caja', 'asset'],
+    ['1100', 'Banco principal', 'asset'],
+    ['1200', 'Banco secundario', 'asset'],
+    ['2000', 'Proveedores', 'liability'],
+    ['2100', 'Nóminas pendientes', 'liability'],
+    ['3000', 'Capital social', 'equity'],
+    ['4000', 'Ingresos por ventas', 'income'],
+    ['4100', 'Ingresos por servicios', 'income'],
+    ['6000', 'Gastos de personal', 'expense'],
     ['6100', 'Gastos operativos', 'expense'],
   ] as const;
   accountDefs.forEach(([code, name, kind], idx) => {
@@ -1390,7 +1672,12 @@ function seedFinance(db: Db, config: Config): void {
       const unit = money(10_000, 250_000, i * 3 + k);
       const total = quantity * unit;
       subtotal += total;
-      return { quantity, unit, total, description: `Servicio ${pick(['consultoría', 'licencia', 'mantenimiento', 'formación'] as const, i + k)} ${i}-${k + 1}` };
+      return {
+        quantity,
+        unit,
+        total,
+        description: `Servicio ${pick(['consultoría', 'licencia', 'mantenimiento', 'formación'] as const, i + k)} ${i}-${k + 1}`,
+      };
     });
     const tax = Math.round(subtotal * 0.21);
     const total = subtotal + tax;
@@ -1442,7 +1729,15 @@ function seedFinance(db: Db, config: Config): void {
   for (let dept = 1; dept <= 6; dept++) {
     for (let c = 0; c < 3; c++) {
       const category = budgetCategories[(dept + c) % budgetCategories.length];
-      if (db.get('SELECT 1 AS x FROM fin_budgets WHERE department_id = ? AND year = ? AND category = ?', dept, 2026, category)) continue;
+      if (
+        db.get(
+          'SELECT 1 AS x FROM fin_budgets WHERE department_id = ? AND year = ? AND category = ?',
+          dept,
+          2026,
+          category,
+        )
+      )
+        continue;
       db.insert('fin_budgets', {
         id: ++budgetId,
         department_id: dept,
@@ -1505,14 +1800,12 @@ export function seedAll(db: Db, config: Config): void {
     for (const domain of Object.keys(SEEDERS)) {
       SEEDERS[domain](db, config);
       db.run(
-        "INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        'INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
         `seeded:${domain}`,
         new Date().toISOString(),
       );
     }
-    db.run(
-      "INSERT INTO _meta(key,value) VALUES ('seeded','1') ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-    );
+    db.run("INSERT INTO _meta(key,value) VALUES ('seeded','1') ON CONFLICT(key) DO UPDATE SET value=excluded.value");
   });
 }
 
@@ -1523,7 +1816,7 @@ export function seedDomain(db: Db, domain: string, config: Config): void {
   db.transaction(() => {
     seeder(db, config);
     db.run(
-      "INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+      'INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
       `seeded:${domain}`,
       new Date().toISOString(),
     );
@@ -1538,7 +1831,7 @@ export function resetDomain(db: Db, domain: string, config: Config): void {
     for (const table of [...tables].reverse()) db.run(`DELETE FROM ${table}`);
     SEEDERS[domain](db, config);
     db.run(
-      "INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+      'INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
       `seeded:${domain}`,
       new Date().toISOString(),
     );
@@ -1552,11 +1845,11 @@ export function resetAll(db: Db, config: Config): void {
     for (const domain of domains) {
       for (const table of [...DOMAIN_TABLES[domain]].reverse()) db.run(`DELETE FROM ${table}`);
     }
-    db.run("DELETE FROM _meta");
+    db.run('DELETE FROM _meta');
     for (const domain of Object.keys(SEEDERS)) {
       SEEDERS[domain](db, config);
       db.run(
-        "INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        'INSERT INTO _meta(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
         `seeded:${domain}`,
         new Date().toISOString(),
       );

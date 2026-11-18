@@ -116,9 +116,7 @@ export function decodeResponseBody(buffer, contentType) {
 /** Converts Headers/object input into sorted name/value rows. */
 export function headersToRows(headers) {
   if (!headers) return [];
-  const entries = typeof headers.entries === 'function'
-    ? [...headers.entries()]
-    : Object.entries(headers);
+  const entries = typeof headers.entries === 'function' ? [...headers.entries()] : Object.entries(headers);
   return entries
     .map(([name, value]) => ({ name: String(name), value: String(value) }))
     .sort((a, b) => a.name.localeCompare(b.name));

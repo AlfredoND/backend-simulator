@@ -14,17 +14,21 @@ after(async () => {
   await server.close();
 });
 
-function rawGet(path: string): Promise<{ status: number; body: string; headers: Record<string, string | string[] | undefined> }> {
+function rawGet(
+  path: string,
+): Promise<{ status: number; body: string; headers: Record<string, string | string[] | undefined> }> {
   const url = new URL(server.base);
   return new Promise((resolve, reject) => {
     const req = httpRequest({ hostname: url.hostname, port: url.port, path, method: 'GET' }, (res) => {
       const chunks: Buffer[] = [];
       res.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-      res.on('end', () => resolve({
-        status: res.statusCode ?? 0,
-        body: Buffer.concat(chunks).toString(),
-        headers: res.headers,
-      }));
+      res.on('end', () =>
+        resolve({
+          status: res.statusCode ?? 0,
+          body: Buffer.concat(chunks).toString(),
+          headers: res.headers,
+        }),
+      );
     });
     req.on('error', reject);
     req.end();

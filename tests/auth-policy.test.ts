@@ -61,7 +61,10 @@ test('un usuario sin rol directo recibe permisos de solo lectura desde su grupo'
   const me = await server.json('GET', '/api/v1/identity/auth/me', { token });
   assert.equal(me.status, 200);
   assert.deepEqual(me.body.data.direct_roles, []);
-  assert.deepEqual(me.body.data.roles.map((role: { name: string }) => role.name), ['viewer']);
+  assert.deepEqual(
+    me.body.data.roles.map((role: { name: string }) => role.name),
+    ['viewer'],
+  );
   assert.ok(me.body.data.groups.some((group: { name: string }) => group.name === 'Observadores'));
   assert.ok(me.body.data.permissions.includes('shop:read'));
   assert.ok(!me.body.data.permissions.includes('shop:write'));

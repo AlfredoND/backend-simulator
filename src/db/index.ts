@@ -11,14 +11,7 @@
  * can never leave them writing to the persistent database or a closed handle.
  */
 import { DatabaseSync } from 'node:sqlite';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-} from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -208,10 +201,12 @@ export class Db {
     const schemaFile = fileURLToPath(new URL('./schema.sql', import.meta.url));
     if (!existsSync(schemaFile)) throw new Error(`No se encontró el esquema en ${schemaFile}`);
     this.active.exec(readFileSync(schemaFile, 'utf8'));
-    this.active.prepare(
-      `INSERT INTO _meta(key, value) VALUES ('schema_version', '1')
+    this.active
+      .prepare(
+        `INSERT INTO _meta(key, value) VALUES ('schema_version', '1')
        ON CONFLICT(key) DO NOTHING`,
-    ).run();
+      )
+      .run();
   }
 
   /** Executes internal DDL/multi-statement SQL (never user input). */
@@ -247,7 +242,7 @@ export class Db {
 
   /** Counts rows in an internal table. */
   count(table: string): number {
-    return Number((this.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${table}`)?.n ?? 0));
+    return Number(this.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${table}`)?.n ?? 0);
   }
 
   /**

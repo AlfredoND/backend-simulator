@@ -33,16 +33,21 @@ after(async () => {
 
 function httpsGet(path: string): Promise<{ status: number; body: string; headers: Record<string, unknown> }> {
   return new Promise((resolve, reject) => {
-    const req = httpsRequest({
-      hostname: 'localhost',
-      port: server.app.ports.https!,
-      path,
-      rejectUnauthorized: false,
-    }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-      res.on('end', () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString(), headers: res.headers }));
-    });
+    const req = httpsRequest(
+      {
+        hostname: 'localhost',
+        port: server.app.ports.https!,
+        path,
+        rejectUnauthorized: false,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+        res.on('end', () =>
+          resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString(), headers: res.headers }),
+        );
+      },
+    );
     req.on('error', reject);
     req.end();
   });

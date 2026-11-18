@@ -26,7 +26,10 @@ export const catalog = [
         method: 'GET',
         path: '/api/v1/identity/auth/me',
         title: { es: 'Usuario actual', en: 'Current user' },
-        description: { es: 'Requiere el token demo o uno emitido por login.', en: 'Requires the demo token or one issued by login.' },
+        description: {
+          es: 'Requiere el token demo o uno emitido por login.',
+          en: 'Requires the demo token or one issued by login.',
+        },
       },
     ],
   },
@@ -87,7 +90,10 @@ export const catalog = [
         method: 'GET',
         path: '/api/v1/library/books/search?q=Cien&per_page=5',
         title: { es: 'Buscar libros', en: 'Search books' },
-        description: { es: 'Búsqueda por texto, autor y disponibilidad.', en: 'Search by text, author and availability.' },
+        description: {
+          es: 'Búsqueda por texto, autor y disponibilidad.',
+          en: 'Search by text, author and availability.',
+        },
       },
       {
         method: 'POST',
@@ -95,7 +101,10 @@ export const catalog = [
         body: '{\n  "book_id": 1,\n  "reader_id": 1,\n  "days": 14\n}',
         headers: { 'Content-Type': 'application/json' },
         title: { es: 'Crear préstamo', en: 'Create loan' },
-        description: { es: 'Elige un ejemplar disponible y aplica límites.', en: 'Picks an available copy and applies limits.' },
+        description: {
+          es: 'Elige un ejemplar disponible y aplica límites.',
+          en: 'Picks an available copy and applies limits.',
+        },
       },
       {
         method: 'GET',
@@ -112,7 +121,10 @@ export const catalog = [
         method: 'GET',
         path: '/api/v1/education/students/1/transcript',
         title: { es: 'Expediente académico', en: 'Academic transcript' },
-        description: { es: 'Matrículas, notas, promedio y asistencia.', en: 'Enrollments, grades, average and attendance.' },
+        description: {
+          es: 'Matrículas, notas, promedio y asistencia.',
+          en: 'Enrollments, grades, average and attendance.',
+        },
       },
       {
         method: 'GET',
@@ -162,7 +174,10 @@ export const catalog = [
         method: 'GET',
         path: '/api/v1/finance/reports/balance',
         title: { es: 'Balance financiero', en: 'Financial balance' },
-        description: { es: 'Activos, pasivos y patrimonio agregados.', en: 'Aggregated assets, liabilities and equity.' },
+        description: {
+          es: 'Activos, pasivos y patrimonio agregados.',
+          en: 'Aggregated assets, liabilities and equity.',
+        },
       },
       {
         method: 'GET',
@@ -206,13 +221,19 @@ export const catalog = [
         path: '/test/idempotency',
         headers: { 'Idempotency-Key': 'ui-demo-key' },
         title: { es: 'Idempotencia', en: 'Idempotency' },
-        description: { es: 'La primera petición crea; la repetición devuelve replay.', en: 'First request creates; a replay is returned next.' },
+        description: {
+          es: 'La primera petición crea; la repetición devuelve replay.',
+          en: 'First request creates; a replay is returned next.',
+        },
       },
       {
         method: 'GET',
         path: '/test/download?size=1024',
         title: { es: 'Descarga binaria', en: 'Binary download' },
-        description: { es: 'Muestra cómo se presenta una respuesta binaria.', en: 'Shows how a binary response is presented.' },
+        description: {
+          es: 'Muestra cómo se presenta una respuesta binaria.',
+          en: 'Shows how a binary response is presented.',
+        },
       },
     ],
   },
@@ -225,5 +246,10 @@ export const presets = [
   { label: { es: '418', en: '418' }, method: 'GET', path: '/test/status/418' },
   { label: { es: 'Redirect 307', en: 'Redirect 307' }, method: 'GET', path: '/test/redirect/307?to=/test/echo' },
   { label: { es: 'Error 503', en: 'Error 503' }, method: 'GET', path: '/test/error/503' },
-  { label: { es: 'Idempotencia', en: 'Idempotency' }, method: 'POST', path: '/test/idempotency', headers: { 'Idempotency-Key': 'ui-demo-key' } },
+  {
+    label: { es: 'Idempotencia', en: 'Idempotency' },
+    method: 'POST',
+    path: '/test/idempotency',
+    headers: { 'Idempotency-Key': 'ui-demo-key' },
+  },
 ];

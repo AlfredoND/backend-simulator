@@ -36,14 +36,28 @@ export function ensureCertificates(config: Config, log: Logger): TlsMaterial | n
   try {
     mkdirSync(dirname(config.tlsCertPath), { recursive: true });
     mkdirSync(dirname(config.tlsKeyPath), { recursive: true });
-    execFileSync('openssl', [
-      'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256',
-      '-keyout', config.tlsKeyPath,
-      '-out', config.tlsCertPath,
-      '-days', '3650',
-      '-subj', '/CN=localhost/O=Backend Simulator',
-      '-addext', 'subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:::1',
-    ], { stdio: 'pipe' });
+    execFileSync(
+      'openssl',
+      [
+        'req',
+        '-x509',
+        '-newkey',
+        'rsa:2048',
+        '-nodes',
+        '-sha256',
+        '-keyout',
+        config.tlsKeyPath,
+        '-out',
+        config.tlsCertPath,
+        '-days',
+        '3650',
+        '-subj',
+        '/CN=localhost/O=Backend Simulator',
+        '-addext',
+        'subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:::1',
+      ],
+      { stdio: 'pipe' },
+    );
     log.info('Certificado TLS local generado', { cert: config.tlsCertPath });
     return {
       cert: readFileSync(config.tlsCertPath),

@@ -58,7 +58,10 @@ export async function readRawBody(ctx: Ctx, limit?: number): Promise<Buffer> {
 
 /** Returns the lower-case media type without parameters. */
 export function contentTypeOf(ctx: Ctx): string {
-  return String(ctx.req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+  return String(ctx.req.headers['content-type'] ?? '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
 }
 
 /** Validates Content-Type and parses JSON, producing 400/413/415 consistently. */
@@ -113,7 +116,13 @@ export function sendJson(ctx: Ctx, status: number, payload: unknown, headers: Re
 }
 
 /** Sends UTF-8 text with an explicit content type. */
-export function sendText(ctx: Ctx, status: number, text: string, contentType = 'text/plain; charset=utf-8', headers: ResponseHeaders = {}): void {
+export function sendText(
+  ctx: Ctx,
+  status: number,
+  text: string,
+  contentType = 'text/plain; charset=utf-8',
+  headers: ResponseHeaders = {},
+): void {
   const buf = Buffer.from(text, 'utf8');
   for (const [key, value] of Object.entries(headers)) ctx.res.setHeader(key, value);
   ctx.res.statusCode = status;
@@ -124,7 +133,13 @@ export function sendText(ctx: Ctx, status: number, text: string, contentType = '
 }
 
 /** Sends binary data with a known length. */
-export function sendBuffer(ctx: Ctx, status: number, body: Buffer, contentType: string, headers: ResponseHeaders = {}): void {
+export function sendBuffer(
+  ctx: Ctx,
+  status: number,
+  body: Buffer,
+  contentType: string,
+  headers: ResponseHeaders = {},
+): void {
   for (const [key, value] of Object.entries(headers)) ctx.res.setHeader(key, value);
   ctx.res.statusCode = status;
   ctx.res.setHeader('Content-Type', contentType);
@@ -142,7 +157,7 @@ export function sendError(ctx: Ctx, error: unknown): void {
   } else {
     app.log.error('Error no controlado', {
       request_id: ctx.requestId,
-      error: error instanceof Error ? error.stack ?? error.message : String(error),
+      error: error instanceof Error ? (error.stack ?? error.message) : String(error),
     });
     httpError = new HttpError(500, 'INTERNAL_ERROR', 'Error interno del servidor');
   }
@@ -165,12 +180,7 @@ export function sendError(ctx: Ctx, error: unknown): void {
 }
 
 /** Builds the per-request context and applies common response headers. */
-export function createContext(
-  app: App,
-  req: IncomingMessage,
-  res: ServerResponse,
-  isHead: boolean,
-): RequestContext {
+export function createContext(app: App, req: IncomingMessage, res: ServerResponse, isHead: boolean): RequestContext {
   const requestId = randomUUID();
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
   setRequestIdHeader({ req, res, url, params: {}, query: url.searchParams, requestId, isHead }, requestId);

@@ -15,7 +15,8 @@ const messages = {
     'status.offline': 'Offline',
     'overview.eyebrow': 'Backend local de simulación',
     'overview.title': 'Inspecciona el backend. Prueba el transporte. Sin tocar producción.',
-    'overview.intro': 'Una consola ligera para explorar las APIs, lanzar peticiones y leer respuestas reales del simulador HTTP.',
+    'overview.intro':
+      'Una consola ligera para explorar las APIs, lanzar peticiones y leer respuestas reales del simulador HTTP.',
     'overview.labCta': 'Abrir Request Lab',
     'overview.docsCta': 'Ver API docs',
     'overview.apiBase': 'Base URL de la API',
@@ -41,7 +42,8 @@ const messages = {
     'metric.apis': 'APIs de negocio',
     'lab.eyebrow': 'HTTP Workbench',
     'lab.title': 'Request Lab',
-    'lab.intro': 'Construye una petición, ejecútala y examina la respuesta. Incluye atajos para los escenarios del laboratorio.',
+    'lab.intro':
+      'Construye una petición, ejecútala y examina la respuesta. Incluye atajos para los escenarios del laboratorio.',
     'lab.request': 'Petición',
     'lab.localOnly': 'Solo entorno local',
     'lab.method': 'Método',
@@ -94,7 +96,8 @@ const messages = {
     'docs.copy': 'Copiar',
     'docs.control': 'Control',
     'docs.securityTitle': 'Límites del entorno',
-    'docs.securityText': 'Todo es local: no uses estas credenciales fuera del simulador. El proxy y las redirecciones solo permiten destinos locales.',
+    'docs.securityText':
+      'Todo es local: no uses estas credenciales fuera del simulador. El proxy y las redirecciones solo permiten destinos locales.',
     'footer.note': 'Entorno local de simulación HTTP. Sin producción, sin secretos reales.',
     'toggle.theme': 'Cambiar tema',
     'toggle.language': 'Cambiar idioma',
@@ -117,7 +120,8 @@ const messages = {
     'mode.unfreeze': 'Salir del congelado',
     'mode.frozenAt': 'Imagen creada el {date}.',
     'mode.confirmRestorePersistent': 'Se borrarán los cambios actuales y se regenerarán los datos semilla. ¿Continuar?',
-    'mode.confirmRestoreFrozen': 'Se descartarán los cambios de la copia y se restaurará la imagen congelada. ¿Continuar?',
+    'mode.confirmRestoreFrozen':
+      'Se descartarán los cambios de la copia y se restaurará la imagen congelada. ¿Continuar?',
     'mode.confirmUnfreeze': 'Se descartará la copia congelada y volverás a la base persistente. ¿Continuar?',
     'mode.freezeSuccess': 'Base congelada. Los cambios quedan en la copia descartable.',
     'mode.unfreezeSuccess': 'Modo persistente restaurado.',
@@ -146,7 +150,8 @@ const messages = {
     'status.offline': 'Offline',
     'overview.eyebrow': 'Local simulation backend',
     'overview.title': 'Inspect the backend. Poke the transport. Touch nothing in production.',
-    'overview.intro': 'A lightweight console to explore the APIs, send requests and read real responses from the HTTP simulator.',
+    'overview.intro':
+      'A lightweight console to explore the APIs, send requests and read real responses from the HTTP simulator.',
     'overview.labCta': 'Open Request Lab',
     'overview.docsCta': 'View API docs',
     'overview.apiBase': 'API base URL',
@@ -225,7 +230,8 @@ const messages = {
     'docs.copy': 'Copy',
     'docs.control': 'Control',
     'docs.securityTitle': 'Environment limits',
-    'docs.securityText': 'Everything is local: do not use these credentials outside the simulator. The proxy and redirects only allow local targets.',
+    'docs.securityText':
+      'Everything is local: do not use these credentials outside the simulator. The proxy and redirects only allow local targets.',
     'footer.note': 'Local HTTP simulation environment. No production, no real secrets.',
     'toggle.theme': 'Toggle theme',
     'toggle.language': 'Switch language',
@@ -249,7 +255,8 @@ const messages = {
     'mode.frozenAt': 'Image created on {date}.',
     'mode.confirmRestorePersistent': 'Current changes will be erased and seed data regenerated. Continue?',
     'mode.confirmRestoreFrozen': 'Copy changes will be discarded and the frozen image restored. Continue?',
-    'mode.confirmUnfreeze': 'The frozen copy will be discarded and you will return to the persistent database. Continue?',
+    'mode.confirmUnfreeze':
+      'The frozen copy will be discarded and you will return to the persistent database. Continue?',
     'mode.freezeSuccess': 'Database frozen. Changes stay in the disposable copy.',
     'mode.unfreezeSuccess': 'Persistent mode restored.',
     'mode.restoreSnapshot': 'Frozen image restored.',

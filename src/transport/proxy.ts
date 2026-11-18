@@ -31,7 +31,9 @@ export function createLocalProxy(log: Logger): Server {
     }
     if (!req.url?.startsWith('http://') && !req.url?.startsWith('https://')) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: { code: 'ABSOLUTE_URL_REQUIRED', message: 'El proxy requiere una URL absoluta' } }));
+      res.end(
+        JSON.stringify({ error: { code: 'ABSOLUTE_URL_REQUIRED', message: 'El proxy requiere una URL absoluta' } }),
+      );
       return;
     }
     if (!isLocalHost(target.hostname)) {
@@ -41,17 +43,20 @@ export function createLocalProxy(log: Logger): Server {
     }
     const isHttps = target.protocol === 'https:';
     const requester = isHttps ? httpsRequest : httpRequest;
-    const upstream = requester({
-      hostname: target.hostname,
-      port: target.port || (isHttps ? 443 : 80),
-      path: `${target.pathname}${target.search}`,
-      method: req.method,
-      headers: { ...req.headers, host: target.host, 'x-forwarded-proxy': 'backend-simulator' },
-      ...(isHttps ? { rejectUnauthorized: false } : {}),
-    } as never, (upstreamRes) => {
-      res.writeHead(upstreamRes.statusCode ?? 502, upstreamRes.headers);
-      upstreamRes.pipe(res);
-    });
+    const upstream = requester(
+      {
+        hostname: target.hostname,
+        port: target.port || (isHttps ? 443 : 80),
+        path: `${target.pathname}${target.search}`,
+        method: req.method,
+        headers: { ...req.headers, host: target.host, 'x-forwarded-proxy': 'backend-simulator' },
+        ...(isHttps ? { rejectUnauthorized: false } : {}),
+      } as never,
+      (upstreamRes) => {
+        res.writeHead(upstreamRes.statusCode ?? 502, upstreamRes.headers);
+        upstreamRes.pipe(res);
+      },
+    );
     upstream.on('error', (error) => {
       log.warn('proxy upstream error', { error: error.message, target: target.toString() });
       if (!res.headersSent) {

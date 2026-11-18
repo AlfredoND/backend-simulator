@@ -77,51 +77,76 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
   registerFinanceRoutes(router, '/api/v1');
   registerControlRoutes(router);
 
-  router.add('GET', '/', (ctx) => {
-    sendJson(ctx, 200, {
-      data: {
-        name: 'Backend Simulator',
-        version: '1.0.0',
-        documentation: '/docs',
-        openapi: '/openapi.json',
-        openapi_en: '/openapi.en.json',
-        docs_en: '/docs?lang=en',
-        domains: ['identity', 'projects', 'shop', 'library', 'education', 'hr', 'finance'],
-        lab: '/test',
-        ui: config.uiEnabled ? '/ui/' : null,
-        health: '/health',
-      },
-    });
-  }, { summary: 'Información del servicio' });
+  router.add(
+    'GET',
+    '/',
+    (ctx) => {
+      sendJson(ctx, 200, {
+        data: {
+          name: 'Backend Simulator',
+          version: '1.0.0',
+          documentation: '/docs',
+          openapi: '/openapi.json',
+          openapi_en: '/openapi.en.json',
+          docs_en: '/docs?lang=en',
+          domains: ['identity', 'projects', 'shop', 'library', 'education', 'hr', 'finance'],
+          lab: '/test',
+          ui: config.uiEnabled ? '/ui/' : null,
+          health: '/health',
+        },
+      });
+    },
+    { summary: 'Información del servicio' },
+  );
 
-  router.add('GET', '/health', (ctx) => {
-    sendJson(ctx, 200, {
-      data: {
-        status: 'ok',
-        uptime_seconds: Math.round(process.uptime()),
-        database: { ok: db.get<{ ok: number }>('SELECT 1 AS ok')?.ok === 1 },
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }, { summary: 'Comprobación de salud' });
+  router.add(
+    'GET',
+    '/health',
+    (ctx) => {
+      sendJson(ctx, 200, {
+        data: {
+          status: 'ok',
+          uptime_seconds: Math.round(process.uptime()),
+          database: { ok: db.get<{ ok: number }>('SELECT 1 AS ok')?.ok === 1 },
+          timestamp: new Date().toISOString(),
+        },
+      });
+    },
+    { summary: 'Comprobación de salud' },
+  );
 
-  router.add('GET', '/openapi.json', (ctx) => {
-    const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
-    const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
-    const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
-    sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, lang), { 'Cache-Control': 'no-store' });
-  }, { summary: 'Especificación OpenAPI 3.0', summaryEn: 'OpenAPI 3.0 specification' });
+  router.add(
+    'GET',
+    '/openapi.json',
+    (ctx) => {
+      const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
+      const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
+      const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
+      sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, lang), { 'Cache-Control': 'no-store' });
+    },
+    { summary: 'Especificación OpenAPI 3.0', summaryEn: 'OpenAPI 3.0 specification' },
+  );
 
-  router.add('GET', '/openapi.en.json', (ctx) => {
-    const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
-    const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
-    sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, 'en'), { 'Cache-Control': 'no-store' });
-  }, { summary: 'Especificación OpenAPI 3.0 en inglés', summaryEn: 'OpenAPI 3.0 specification in English' });
+  router.add(
+    'GET',
+    '/openapi.en.json',
+    (ctx) => {
+      const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
+      const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
+      sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, 'en'), { 'Cache-Control': 'no-store' });
+    },
+    { summary: 'Especificación OpenAPI 3.0 en inglés', summaryEn: 'OpenAPI 3.0 specification in English' },
+  );
 
-  router.add('GET', '/docs', (ctx) => {
-    const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
-    sendText(ctx, 200, docsHtml(lang), 'text/html; charset=utf-8');
-  }, { summary: 'Documentación interactiva', summaryEn: 'Interactive documentation' });
+  router.add(
+    'GET',
+    '/docs',
+    (ctx) => {
+      const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
+      sendText(ctx, 200, docsHtml(lang), 'text/html; charset=utf-8');
+    },
+    { summary: 'Documentación interactiva', summaryEn: 'Interactive documentation' },
+  );
 
   const requestListener = (req: IncomingMessage, res: ServerResponse) => {
     const isHead = (req.method ?? 'GET').toUpperCase() === 'HEAD';
@@ -163,7 +188,10 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
           res.statusCode = 204;
           res.setHeader('Allow', allowed.join(', '));
           res.setHeader('Access-Control-Allow-Methods', allowed.join(', '));
-          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Api-Key, X-Control-Token, Idempotency-Key, Range, If-None-Match, If-Modified-Since, X-Simulate-Error');
+          res.setHeader(
+            'Access-Control-Allow-Headers',
+            'Content-Type, Authorization, X-Api-Key, X-Control-Token, Idempotency-Key, Range, If-None-Match, If-Modified-Since, X-Simulate-Error',
+          );
           res.setHeader('Access-Control-Max-Age', '600');
           res.end();
           return;
@@ -212,7 +240,7 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
           });
           socket.end(
             `HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\n` +
-            `Content-Length: ${Buffer.byteLength(payload)}\r\nConnection: close\r\n\r\n${payload}`,
+              `Content-Length: ${Buffer.byteLength(payload)}\r\nConnection: close\r\n\r\n${payload}`,
           );
           return;
         }
@@ -231,17 +259,19 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
     configureHttpServer(httpsServer);
   }
   if (config.http2Enabled && tls) {
-    http2Server = createHttp2SecureServer(
-      { key: tls.key, cert: tls.cert, allowHTTP1: true },
-      requestListener as never,
-    );
+    http2Server = createHttp2SecureServer({ key: tls.key, cert: tls.cert, allowHTTP1: true }, requestListener as never);
     configureHttpServer(http2Server);
   }
   if (config.proxyEnabled) {
     proxyServer = createLocalProxy(log);
   }
 
-  const ports = { http: null as number | null, https: null as number | null, http2: null as number | null, proxy: null as number | null };
+  const ports = {
+    http: null as number | null,
+    https: null as number | null,
+    http2: null as number | null,
+    proxy: null as number | null,
+  };
 
   const listen = (target: Server | HttpsServer | Http2SecureServer, port: number, label: string): Promise<number> =>
     new Promise<number>((resolve, reject) => {
@@ -250,7 +280,9 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
       target.listen(port, config.host, () => {
         target.off('error', onError);
         const address = target.address() as AddressInfo;
-        log.info(`${label} escuchando`, { url: `${label === 'HTTP' ? 'http' : 'https'}://${config.host}:${address.port}` });
+        log.info(`${label} escuchando`, {
+          url: `${label === 'HTTP' ? 'http' : 'https'}://${config.host}:${address.port}`,
+        });
         resolve(address.port);
       });
     });

@@ -25,10 +25,12 @@ function variantWithStock(min = 2): { id: number; available: number } {
 }
 
 function stockOf(variantId: number): number {
-  return Number(server.app.db.get<{ n: number }>(
-    'SELECT COALESCE(SUM(quantity - reserved),0) AS n FROM shop_inventory WHERE variant_id = ?',
-    variantId,
-  )?.n ?? 0);
+  return Number(
+    server.app.db.get<{ n: number }>(
+      'SELECT COALESCE(SUM(quantity - reserved),0) AS n FROM shop_inventory WHERE variant_id = ?',
+      variantId,
+    )?.n ?? 0,
+  );
 }
 
 test('autenticación: 401, login, me, API key y 403 por permisos', async () => {
@@ -63,8 +65,14 @@ test('autenticación: 401, login, me, API key y 403 por permisos', async () => {
   });
   assert.equal(refreshed.status, 200);
   assert.ok(refreshed.body.data.access_token);
-  assert.equal((await server.json('GET', '/api/v1/identity/auth/me', { token: login.body.data.access_token })).status, 401);
-  assert.equal((await server.json('GET', '/api/v1/identity/auth/me', { token: refreshed.body.data.access_token })).status, 200);
+  assert.equal(
+    (await server.json('GET', '/api/v1/identity/auth/me', { token: login.body.data.access_token })).status,
+    401,
+  );
+  assert.equal(
+    (await server.json('GET', '/api/v1/identity/auth/me', { token: refreshed.body.data.access_token })).status,
+    200,
+  );
 
   res = await server.json('GET', '/api/v1/identity/users', { headers: { 'X-API-Key': TEST_API_KEY } });
   assert.equal(res.status, 200);
@@ -119,14 +127,20 @@ test('usuarios: validación 422, conflicto 409, creación y métodos HEAD/OPTION
 });
 
 test('paginación, orden, selección de campos, filtros y búsqueda', async () => {
-  let res = await server.json('GET', '/api/v1/shop/products?per_page=5&sort=-price_cents&fields=id,name,price_cents&status=active');
+  let res = await server.json(
+    'GET',
+    '/api/v1/shop/products?per_page=5&sort=-price_cents&fields=id,name,price_cents&status=active',
+  );
   assert.equal(res.status, 200);
   assert.equal(res.body.data.length, 5);
   assert.ok(res.body.meta.total > 5);
   assert.deepEqual(Object.keys(res.body.data[0]).sort(), ['id', 'name', 'price_cents']);
   assert.ok(Number(res.body.data[0].price_cents) >= Number(res.body.data[1].price_cents));
 
-  res = await server.json('GET', '/api/v1/shop/products?price_cents_gte=1000&price_cents_lte=100000&q=portátil&per_page=10');
+  res = await server.json(
+    'GET',
+    '/api/v1/shop/products?price_cents_gte=1000&price_cents_lte=100000&q=portátil&per_page=10',
+  );
   assert.equal(res.status, 200);
   for (const row of res.body.data) {
     assert.ok(Number(row.price_cents) >= 1000);
@@ -257,7 +271,9 @@ test('biblioteca: búsqueda, préstamo y devolución', async () => {
   assert.equal(res.status, 200);
   assert.ok(res.body.data.length >= 1);
 
-  const copy = server.app.db.get<{ id: number }>("SELECT id FROM lib_copies WHERE status = 'available' ORDER BY id LIMIT 1");
+  const copy = server.app.db.get<{ id: number }>(
+    "SELECT id FROM lib_copies WHERE status = 'available' ORDER BY id LIMIT 1",
+  );
   assert.ok(copy);
   res = await server.json('POST', '/api/v1/library/loans', { body: { copy_id: copy.id, reader_id: 1, days: 14 } });
   assert.equal(res.status, 201);
@@ -336,7 +352,10 @@ test('RRHH: vacaciones con saldo y nóminas agregadas', async () => {
 });
 
 test('finanzas: factura, pago, movimiento y reportes', async () => {
-  const before = Number(server.app.db.get<{ balance_cents: number }>('SELECT balance_cents FROM fin_accounts WHERE id = 2')?.balance_cents ?? 0);
+  const before = Number(
+    server.app.db.get<{ balance_cents: number }>('SELECT balance_cents FROM fin_accounts WHERE id = 2')
+      ?.balance_cents ?? 0,
+  );
   const unique = Date.now();
   let res = await server.json('POST', '/api/v1/finance/invoices', {
     body: {
@@ -357,13 +376,19 @@ test('finanzas: factura, pago, movimiento y reportes', async () => {
   assert.equal(res.status, 201);
   assert.equal(res.body.data.status, 'paid');
   assert.equal(res.body.data.balance_cents, 0);
-  const after = Number(server.app.db.get<{ balance_cents: number }>('SELECT balance_cents FROM fin_accounts WHERE id = 2')?.balance_cents ?? 0);
+  const after = Number(
+    server.app.db.get<{ balance_cents: number }>('SELECT balance_cents FROM fin_accounts WHERE id = 2')
+      ?.balance_cents ?? 0,
+  );
   assert.equal(after, before - 12_100);
 
   res = await server.json('POST', '/api/v1/finance/transactions', {
     body: {
-      account_id: 2, kind: 'credit', amount_cents: 1000,
-      description: 'Ingreso API', reference: `API-TX-${unique}`,
+      account_id: 2,
+      kind: 'credit',
+      amount_cents: 1000,
+      description: 'Ingreso API',
+      reference: `API-TX-${unique}`,
     },
   });
   assert.equal(res.status, 201);

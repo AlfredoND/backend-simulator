@@ -22,7 +22,11 @@ export interface TestServer {
   app: AppInstance;
   base: string;
   request(method: string, path: string, options?: RequestOptions): Promise<Response>;
-  json(method: string, path: string, options?: RequestOptions): Promise<{ status: number; body: any; headers: Headers }>;
+  json(
+    method: string,
+    path: string,
+    options?: RequestOptions,
+  ): Promise<{ status: number; body: any; headers: Headers }>;
   close(): Promise<void>;
 }
 
@@ -59,7 +63,11 @@ export async function startTestServer(overrides: Partial<Config> = {}): Promise<
     const response = await request(method, path, options);
     const text = await response.text();
     let body: any;
-    try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+    try {
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      body = text;
+    }
     return { status: response.status, body, headers: response.headers };
   };
   return {

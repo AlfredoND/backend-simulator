@@ -58,62 +58,62 @@ const ID = 'id';
 
 /** English names for generated resource summaries/descriptions. */
 export const ENGLISH_RESOURCE_NAMES: Record<string, { one: string; many: string }> = {
-  'actividad': { one: 'activity', many: 'activities' },
-  'adjunto': { one: 'attachment', many: 'attachments' },
-  'almacén': { one: 'warehouse', many: 'warehouses' },
-  'asignatura': { one: 'subject', many: 'subjects' },
-  'asistencia': { one: 'attendance record', many: 'attendance records' },
-  'autor': { one: 'author', many: 'authors' },
+  actividad: { one: 'activity', many: 'activities' },
+  adjunto: { one: 'attachment', many: 'attachments' },
+  almacén: { one: 'warehouse', many: 'warehouses' },
+  asignatura: { one: 'subject', many: 'subjects' },
+  asistencia: { one: 'attendance record', many: 'attendance records' },
+  autor: { one: 'author', many: 'authors' },
   'autor de libro': { one: 'book author', many: 'book authors' },
-  'calificación': { one: 'grade', many: 'grades' },
-  'categoría': { one: 'category', many: 'categories' },
-  'cliente': { one: 'customer', many: 'customers' },
-  'comentario': { one: 'comment', many: 'comments' },
-  'contrato': { one: 'contract', many: 'contracts' },
-  'cuenta': { one: 'account', many: 'accounts' },
-  'cupón': { one: 'coupon', many: 'coupons' },
-  'curso': { one: 'course', many: 'courses' },
-  'departamento': { one: 'department', many: 'departments' },
-  'dirección': { one: 'address', many: 'addresses' },
-  'editorial': { one: 'publisher', many: 'publishers' },
-  'ejemplar': { one: 'copy', many: 'copies' },
-  'empleado': { one: 'employee', many: 'employees' },
-  'equipo': { one: 'team', many: 'teams' },
-  'estado': { one: 'status', many: 'statuses' },
-  'estudiante': { one: 'student', many: 'students' },
-  'etiqueta': { one: 'label', many: 'labels' },
+  calificación: { one: 'grade', many: 'grades' },
+  categoría: { one: 'category', many: 'categories' },
+  cliente: { one: 'customer', many: 'customers' },
+  comentario: { one: 'comment', many: 'comments' },
+  contrato: { one: 'contract', many: 'contracts' },
+  cuenta: { one: 'account', many: 'accounts' },
+  cupón: { one: 'coupon', many: 'coupons' },
+  curso: { one: 'course', many: 'courses' },
+  departamento: { one: 'department', many: 'departments' },
+  dirección: { one: 'address', many: 'addresses' },
+  editorial: { one: 'publisher', many: 'publishers' },
+  ejemplar: { one: 'copy', many: 'copies' },
+  empleado: { one: 'employee', many: 'employees' },
+  equipo: { one: 'team', many: 'teams' },
+  estado: { one: 'status', many: 'statuses' },
+  estudiante: { one: 'student', many: 'students' },
+  etiqueta: { one: 'label', many: 'labels' },
   'etiqueta de tarea': { one: 'task label', many: 'task labels' },
-  'evaluación': { one: 'evaluation', many: 'evaluations' },
-  'gasto': { one: 'expense', many: 'expenses' },
-  'género': { one: 'genre', many: 'genres' },
+  evaluación: { one: 'evaluation', many: 'evaluations' },
+  gasto: { one: 'expense', many: 'expenses' },
+  género: { one: 'genre', many: 'genres' },
   'género de libro': { one: 'book genre', many: 'book genres' },
-  'grupo': { one: 'group', many: 'groups' },
-  'imagen': { one: 'image', many: 'images' },
-  'inventario': { one: 'inventory record', many: 'inventory records' },
-  'lector': { one: 'reader', many: 'readers' },
-  'libro': { one: 'book', many: 'books' },
-  'marca': { one: 'brand', many: 'brands' },
-  'material': { one: 'material', many: 'materials' },
-  'matrícula': { one: 'enrollment', many: 'enrollments' },
+  grupo: { one: 'group', many: 'groups' },
+  imagen: { one: 'image', many: 'images' },
+  inventario: { one: 'inventory record', many: 'inventory records' },
+  lector: { one: 'reader', many: 'readers' },
+  libro: { one: 'book', many: 'books' },
+  marca: { one: 'brand', many: 'brands' },
+  material: { one: 'material', many: 'materials' },
+  matrícula: { one: 'enrollment', many: 'enrollments' },
   'método de pago': { one: 'payment method', many: 'payment methods' },
   'miembro de equipo': { one: 'team member', many: 'team members' },
   'miembro de proyecto': { one: 'project member', many: 'project members' },
-  'multa': { one: 'fine', many: 'fines' },
-  'permiso': { one: 'permission', many: 'permissions' },
-  'presupuesto': { one: 'budget', many: 'budgets' },
-  'producto': { one: 'product', many: 'products' },
-  'profesor': { one: 'teacher', many: 'teachers' },
-  'proveedor': { one: 'supplier', many: 'suppliers' },
-  'proyecto': { one: 'project', many: 'projects' },
-  'puesto': { one: 'position', many: 'positions' },
-  'reseña': { one: 'review', many: 'reviews' },
-  'rol': { one: 'role', many: 'roles' },
-  'salario': { one: 'salary', many: 'salaries' },
-  'sección': { one: 'section', many: 'sections' },
-  'tarea': { one: 'task', many: 'tasks' },
-  'transportista': { one: 'carrier', many: 'carriers' },
-  'vacación': { one: 'vacation', many: 'vacations' },
-  'variante': { one: 'variant', many: 'variants' },
+  multa: { one: 'fine', many: 'fines' },
+  permiso: { one: 'permission', many: 'permissions' },
+  presupuesto: { one: 'budget', many: 'budgets' },
+  producto: { one: 'product', many: 'products' },
+  profesor: { one: 'teacher', many: 'teachers' },
+  proveedor: { one: 'supplier', many: 'suppliers' },
+  proyecto: { one: 'project', many: 'projects' },
+  puesto: { one: 'position', many: 'positions' },
+  reseña: { one: 'review', many: 'reviews' },
+  rol: { one: 'role', many: 'roles' },
+  salario: { one: 'salary', many: 'salaries' },
+  sección: { one: 'section', many: 'sections' },
+  tarea: { one: 'task', many: 'tasks' },
+  transportista: { one: 'carrier', many: 'carriers' },
+  vacación: { one: 'vacation', many: 'vacations' },
+  variante: { one: 'variant', many: 'variants' },
 };
 
 function visibleFields(def: ResourceDef): string[] {
@@ -240,7 +240,8 @@ function dbError(error: unknown): never {
     const message = (error as Error).message;
     if (message.includes('UNIQUE')) throw conflict('Ya existe un registro con esos valores');
     if (message.includes('FOREIGN KEY')) throw conflict('Referencia inexistente o recurso todavía en uso');
-    if (message.includes('CHECK')) throw validationError([{ field: '$', message: 'Restricción de integridad incumplida' }]);
+    if (message.includes('CHECK'))
+      throw validationError([{ field: '$', message: 'Restricción de integridad incumplida' }]);
     throw conflict('Operación rechazada por una restricción de la base de datos');
   }
   throw error;
@@ -276,7 +277,10 @@ function parseSelected(ctx: Ctx, def: ResourceDef): string[] {
   const raw = ctx.query.get('fields');
   const visible = visibleFields(def);
   if (!raw) return visible;
-  const selected = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  const selected = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (selected.length === 0) throw validationError([{ field: 'fields', message: 'selección vacía' }]);
   for (const col of selected) {
     if (!visible.includes(col)) throw validationError([{ field: 'fields', message: `campo desconocido: ${col}` }]);
@@ -332,7 +336,16 @@ function buildWhere(ctx: Ctx, def: ResourceDef): WhereBuild {
         column = match[1];
         baseField = def.fields[column];
         const suffix = match[2];
-        op = suffix === '_gte' ? '>=' : suffix === '_lte' ? '<=' : suffix === '_gt' ? '>' : suffix === '_lt' ? '<' : 'LIKE';
+        op =
+          suffix === '_gte'
+            ? '>='
+            : suffix === '_lte'
+              ? '<='
+              : suffix === '_gt'
+                ? '>'
+                : suffix === '_lt'
+                  ? '<'
+                  : 'LIKE';
       }
     }
     if (!baseField || baseField.hidden || baseField.filter === false) {
@@ -363,7 +376,9 @@ function buildWhere(ctx: Ctx, def: ResourceDef): WhereBuild {
   if (q !== null && q !== '') {
     const columns = def.search?.length
       ? def.search
-      : Object.entries(def.fields).filter(([, f]) => f.search).map(([name]) => name);
+      : Object.entries(def.fields)
+          .filter(([, f]) => f.search)
+          .map(([name]) => name);
     const safeColumns = columns.filter((c) => def.fields[c] && !def.fields[c].hidden);
     if (safeColumns.length === 0) throw validationError([{ field: 'q', message: 'búsqueda no disponible' }]);
     if (q.length > 200) throw validationError([{ field: 'q', message: 'máximo 200 caracteres' }]);
@@ -391,8 +406,14 @@ function exampleFor(field: FieldDef): unknown {
 
 function fieldSchema(field: FieldDef): Record<string, unknown> {
   const typeMap: Record<FieldType, string> = {
-    string: 'string', email: 'string', date: 'string', datetime: 'string',
-    integer: 'integer', number: 'number', boolean: 'boolean', json: 'object',
+    string: 'string',
+    email: 'string',
+    date: 'string',
+    datetime: 'string',
+    integer: 'integer',
+    number: 'number',
+    boolean: 'boolean',
+    json: 'object',
   };
   return {
     type: typeMap[field.type],
@@ -439,7 +460,12 @@ function listParameters(def: ResourceDef): Array<Record<string, unknown>> {
   if (def.search?.length) base.push({ name: 'q', in: 'query', schema: { type: 'string', maxLength: 200 } });
   for (const [name, field] of Object.entries(def.fields)) {
     if (field.hidden || field.filter === false) continue;
-    base.push({ name, in: 'query', schema: fieldSchema(field), description: `Filtro exacto por ${name}. Repetible para IN.` });
+    base.push({
+      name,
+      in: 'query',
+      schema: fieldSchema(field),
+      description: `Filtro exacto por ${name}. Repetible para IN.`,
+    });
     if (['integer', 'number', 'date', 'datetime'].includes(field.type)) {
       for (const suffix of ['_gte', '_lte', '_gt', '_lt']) {
         base.push({ name: `${name}${suffix}`, in: 'query', schema: fieldSchema(field) });
@@ -478,7 +504,10 @@ function etagFor(def: ResourceDef, row: Row): string {
 
 function currentEtag(app: RequestContext['app'], def: ResourceDef, id: number): string | null {
   const column = updatedAtColumn(def);
-  const row = app.db.get<Row>(`SELECT id, ${column ? `${column} AS updated_at` : 'id AS updated_at'} FROM ${def.table} WHERE id = ?`, id);
+  const row = app.db.get<Row>(
+    `SELECT id, ${column ? `${column} AS updated_at` : 'id AS updated_at'} FROM ${def.table} WHERE id = ?`,
+    id,
+  );
   if (!row) return null;
   return etagFor(def, row);
 }
@@ -516,88 +545,105 @@ export function registerResource(router: Router, basePath: string, def: Resource
   const tag = def.tag;
   const names = ENGLISH_RESOURCE_NAMES[def.singular] ?? { one: def.singular, many: `${def.singular}s` };
 
-  router.add('GET', collection, (ctx) => {
-    def.authorize?.(ctx, 'read');
-    const app = (ctx as RequestContext).app;
-    const selected = parseSelected(ctx, def);
-    const sort = parseSort(ctx, def);
-    const pagination = parsePagination(ctx, app.config.maxPageSize);
-    const where = buildWhere(ctx, def);
-    const total = Number(app.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${def.table}${where.sql}`, ...where.params)?.n ?? 0);
-    const rows = app.db.all<Row>(
-      `SELECT ${selectClause(selected)} FROM ${def.table}${where.sql} ORDER BY ${sort.column} ${sort.direction.toUpperCase()}, ${ID} ASC LIMIT ? OFFSET ?`,
-      ...where.params,
-      pagination.perPage,
-      pagination.offset,
-    );
-    sendJson(ctx, 200, { data: rows.map((r) => shapeRow(r, def)), meta: paginationMeta(pagination, total) });
-  }, {
-    summary: `Lista ${def.singular}`,
-    summaryEn: `List ${names.many}`,
-    tag,
-    parameters: listParameters(def),
-    responses: {
-      '200': {
-        description: `Lista paginada de ${def.singular}`,
-        content: { 'application/json': { schema: listResponseSchema } },
+  router.add(
+    'GET',
+    collection,
+    (ctx) => {
+      def.authorize?.(ctx, 'read');
+      const app = (ctx as RequestContext).app;
+      const selected = parseSelected(ctx, def);
+      const sort = parseSort(ctx, def);
+      const pagination = parsePagination(ctx, app.config.maxPageSize);
+      const where = buildWhere(ctx, def);
+      const total = Number(
+        app.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${def.table}${where.sql}`, ...where.params)?.n ?? 0,
+      );
+      const rows = app.db.all<Row>(
+        `SELECT ${selectClause(selected)} FROM ${def.table}${where.sql} ORDER BY ${sort.column} ${sort.direction.toUpperCase()}, ${ID} ASC LIMIT ? OFFSET ?`,
+        ...where.params,
+        pagination.perPage,
+        pagination.offset,
+      );
+      sendJson(ctx, 200, { data: rows.map((r) => shapeRow(r, def)), meta: paginationMeta(pagination, total) });
+    },
+    {
+      summary: `Lista ${def.singular}`,
+      summaryEn: `List ${names.many}`,
+      tag,
+      parameters: listParameters(def),
+      responses: {
+        '200': {
+          description: `Lista paginada de ${def.singular}`,
+          content: { 'application/json': { schema: listResponseSchema } },
+        },
+        '422': { $ref: '#/components/responses/ValidationError' },
       },
-      '422': { $ref: '#/components/responses/ValidationError' },
     },
-  });
+  );
 
-  router.add('GET', item, (ctx) => {
-    def.authorize?.(ctx, 'read');
-    const id = parseId(ctx);
-    const row = getById(ctx, def, id);
-    const etag = currentEtag((ctx as RequestContext).app, def, id) ?? etagFor(def, row);
-    if (ctx.req.headers['if-none-match'] === etag || ctx.req.headers['if-none-match'] === '*') {
-      ctx.res.statusCode = 304;
-      ctx.res.setHeader('ETag', etag);
-      ctx.res.end();
-      return;
-    }
-    sendJson(ctx, 200, { data: row }, { ETag: etag });
-  }, {
-    summary: `Obtiene ${def.singular} por id`,
-    summaryEn: `Get ${names.one} by ID`,
-    tag,
-    parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-    responses: {
-      '200': { description: def.singular, content: { 'application/json': { schema: itemResponseSchema } } },
-      '404': { $ref: '#/components/responses/NotFound' },
-    },
-  });
-
-  router.add('POST', collection, async (ctx) => {
-    def.authorize?.(ctx, 'write');
-    const app = (ctx as RequestContext).app;
-    const body = await readJsonBody(ctx);
-    const data = validateBody(body, def, 'create');
-    for (const [key, produce] of Object.entries(def.defaults ?? {})) {
-      if (data[key] === undefined) data[key] = produce();
-    }
-    try {
-      const id = app.db.transaction(() => {
-        const newId = app.db.insert(def.table, data as Record<string, SqlParam>);
-        def.afterCreate?.(ctx, newId);
-        return newId;
-      });
+  router.add(
+    'GET',
+    item,
+    (ctx) => {
+      def.authorize?.(ctx, 'read');
+      const id = parseId(ctx);
       const row = getById(ctx, def, id);
-      sendJson(ctx, 201, { data: row }, { Location: `${collection}/${id}` });
-    } catch (error) {
-      dbError(error);
-    }
-  }, {
-    summary: `Crea ${def.singular}`,
-    summaryEn: `Create ${names.one}`,
-    tag,
-    requestBody: requestBodySchema(def, false),
-    responses: {
-      '201': { description: 'Creado', content: { 'application/json': { schema: itemResponseSchema } } },
-      '409': { $ref: '#/components/responses/ConflictError' },
-      '422': { $ref: '#/components/responses/ValidationError' },
+      const etag = currentEtag((ctx as RequestContext).app, def, id) ?? etagFor(def, row);
+      if (ctx.req.headers['if-none-match'] === etag || ctx.req.headers['if-none-match'] === '*') {
+        ctx.res.statusCode = 304;
+        ctx.res.setHeader('ETag', etag);
+        ctx.res.end();
+        return;
+      }
+      sendJson(ctx, 200, { data: row }, { ETag: etag });
     },
-  });
+    {
+      summary: `Obtiene ${def.singular} por id`,
+      summaryEn: `Get ${names.one} by ID`,
+      tag,
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+      responses: {
+        '200': { description: def.singular, content: { 'application/json': { schema: itemResponseSchema } } },
+        '404': { $ref: '#/components/responses/NotFound' },
+      },
+    },
+  );
+
+  router.add(
+    'POST',
+    collection,
+    async (ctx) => {
+      def.authorize?.(ctx, 'write');
+      const app = (ctx as RequestContext).app;
+      const body = await readJsonBody(ctx);
+      const data = validateBody(body, def, 'create');
+      for (const [key, produce] of Object.entries(def.defaults ?? {})) {
+        if (data[key] === undefined) data[key] = produce();
+      }
+      try {
+        const id = app.db.transaction(() => {
+          const newId = app.db.insert(def.table, data as Record<string, SqlParam>);
+          def.afterCreate?.(ctx, newId);
+          return newId;
+        });
+        const row = getById(ctx, def, id);
+        sendJson(ctx, 201, { data: row }, { Location: `${collection}/${id}` });
+      } catch (error) {
+        dbError(error);
+      }
+    },
+    {
+      summary: `Crea ${def.singular}`,
+      summaryEn: `Create ${names.one}`,
+      tag,
+      requestBody: requestBodySchema(def, false),
+      responses: {
+        '201': { description: 'Creado', content: { 'application/json': { schema: itemResponseSchema } } },
+        '409': { $ref: '#/components/responses/ConflictError' },
+        '422': { $ref: '#/components/responses/ValidationError' },
+      },
+    },
+  );
 
   const updateHandler = (patch: boolean) => async (ctx: Ctx) => {
     def.authorize?.(ctx, 'write');
@@ -632,31 +678,45 @@ export function registerResource(router: Router, basePath: string, def: Resource
     }
   };
   router.add('PUT', item, updateHandler(false), {
-    summary: `Reemplaza ${def.singular}`, summaryEn: `Replace ${names.one}`, tag,
+    summary: `Reemplaza ${def.singular}`,
+    summaryEn: `Replace ${names.one}`,
+    tag,
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
     requestBody: requestBodySchema(def, false),
   });
   router.add('PATCH', item, updateHandler(true), {
-    summary: `Actualiza parcialmente ${def.singular}`, summaryEn: `Partially update ${names.one}`, tag,
+    summary: `Actualiza parcialmente ${def.singular}`,
+    summaryEn: `Partially update ${names.one}`,
+    tag,
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
     requestBody: requestBodySchema(def, true),
   });
 
   if (def.allowDelete !== false) {
-    router.add('DELETE', item, (ctx) => {
-      def.authorize?.(ctx, 'delete');
-      const app = (ctx as RequestContext).app;
-      const id = parseId(ctx);
-      try {
-        const result = app.db.run(`DELETE FROM ${def.table} WHERE ${ID} = ?`, id);
-        if (result.changes === 0) throw notFound(`${def.singular} no encontrado`);
-        ctx.res.statusCode = 204;
-        ctx.res.end();
-      } catch (error) {
-        if (error instanceof HttpError) throw error;
-        dbError(error);
-      }
-    }, { summary: `Elimina ${def.singular}`, summaryEn: `Delete ${names.one}`, tag, responses: { '204': { description: 'Eliminado' }, '409': { $ref: '#/components/responses/ConflictError' } } });
+    router.add(
+      'DELETE',
+      item,
+      (ctx) => {
+        def.authorize?.(ctx, 'delete');
+        const app = (ctx as RequestContext).app;
+        const id = parseId(ctx);
+        try {
+          const result = app.db.run(`DELETE FROM ${def.table} WHERE ${ID} = ?`, id);
+          if (result.changes === 0) throw notFound(`${def.singular} no encontrado`);
+          ctx.res.statusCode = 204;
+          ctx.res.end();
+        } catch (error) {
+          if (error instanceof HttpError) throw error;
+          dbError(error);
+        }
+      },
+      {
+        summary: `Elimina ${def.singular}`,
+        summaryEn: `Delete ${names.one}`,
+        tag,
+        responses: { '204': { description: 'Eliminado' }, '409': { $ref: '#/components/responses/ConflictError' } },
+      },
+    );
   }
 }
 

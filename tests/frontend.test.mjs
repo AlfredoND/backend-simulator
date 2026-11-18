@@ -65,10 +65,13 @@ test('convierte headers entre filas y objeto', () => {
     { name: 'Content-Type', value: 'application/json' },
     { name: 'X-Test', value: 'one' },
   ]);
-  assert.deepEqual(headerRowsToObject([
-    { name: ' Authorization ', value: ' Bearer demo ' },
-    { name: '', value: 'ignored' },
-  ]), { Authorization: 'Bearer demo' });
+  assert.deepEqual(
+    headerRowsToObject([
+      { name: ' Authorization ', value: ' Bearer demo ' },
+      { name: '', value: 'ignored' },
+    ]),
+    { Authorization: 'Bearer demo' },
+  );
 });
 
 test('trunca cuerpos grandes', () => {
@@ -95,10 +98,26 @@ test('las traducciones cubren el HTML y los IDs usados por la UI existen', () =>
 test('la consola expone los controles del modo de datos', () => {
   const html = fs.readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
   const main = fs.readFileSync(new URL('../web/js/main.js', import.meta.url), 'utf8');
-  for (const id of ['mode-badge', 'mode-description', 'control-token', 'mode-freeze', 'mode-restore', 'mode-unfreeze', 'mode-message']) {
+  for (const id of [
+    'mode-badge',
+    'mode-description',
+    'control-token',
+    'mode-freeze',
+    'mode-restore',
+    'mode-unfreeze',
+    'mode-message',
+  ]) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
-  for (const key of ['mode.title', 'mode.hint', 'mode.freeze', 'mode.restore', 'mode.unfreeze', 'mode.persistentHint', 'mode.frozenHint']) {
+  for (const key of [
+    'mode.title',
+    'mode.hint',
+    'mode.freeze',
+    'mode.restore',
+    'mode.unfreeze',
+    'mode.persistentHint',
+    'mode.frozenHint',
+  ]) {
     assert.notEqual(t('es', key), key);
     assert.notEqual(t('en', key), key);
   }

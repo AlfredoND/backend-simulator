@@ -40,12 +40,18 @@ test('publica especificaciones OpenAPI en español e inglés', async () => {
   assert.equal(enOps['GET /api/v1/shop/products'].summary, 'List products');
   assert.equal(esOps['GET /api/v1/shop/products'].summary, 'Lista producto');
   assert.equal(enOps['GET /test/echo'].summary, 'Reflects the request method, URL, query, headers, cookies and body');
-  assert.equal(en.body.tags.find((tag: any) => tag.name === 'Shop · Catalog').description, 'Products, variants, brands and categories.');
+  assert.equal(
+    en.body.tags.find((tag: any) => tag.name === 'Shop · Catalog').description,
+    'Products, variants, brands and categories.',
+  );
   assert.ok(es.body.paths['/_control/mode'].get);
   assert.ok(es.body.paths['/_control/freeze'].post);
   assert.equal(enOps['GET /_control/mode'].summary, 'Data mode status');
   assert.equal(enOps['POST /_control/freeze'].summary, 'Freeze the current database into a disposable copy');
-  assert.equal(en.body.tags.find((tag: any) => tag.name === 'Control').description, 'Statistics, reset, data mode and extra data.');
+  assert.equal(
+    en.body.tags.find((tag: any) => tag.name === 'Control').description,
+    'Statistics, reset, data mode and extra data.',
+  );
 });
 
 test('todas las operaciones personalizadas tienen resumen inglés', () => {

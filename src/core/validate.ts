@@ -82,9 +82,12 @@ export class Validator {
     const max = opts.maxLength ?? 10_000;
     if (value.length > max) this.errors.push({ field: name, message: `máximo ${max} caracteres` });
     if (opts.required && value.length === 0) this.errors.push({ field: name, message: 'no puede estar vacío' });
-    if (opts.min !== undefined && value.length < opts.min) this.errors.push({ field: name, message: `mínimo ${opts.min} caracteres` });
-    if (opts.enum && !opts.enum.includes(value)) this.errors.push({ field: name, message: `valor no permitido (${opts.enum.join(', ')})` });
-    if (opts.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) this.errors.push({ field: name, message: 'email inválido' });
+    if (opts.min !== undefined && value.length < opts.min)
+      this.errors.push({ field: name, message: `mínimo ${opts.min} caracteres` });
+    if (opts.enum && !opts.enum.includes(value))
+      this.errors.push({ field: name, message: `valor no permitido (${opts.enum.join(', ')})` });
+    if (opts.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+      this.errors.push({ field: name, message: 'email inválido' });
     if (opts.pattern && !opts.pattern.test(value)) this.errors.push({ field: name, message: 'formato inválido' });
     this.values[name] = value;
     return value;
