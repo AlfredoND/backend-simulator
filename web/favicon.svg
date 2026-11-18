@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Backend Simulator</title>
   <rect width="64" height="64" rx="16" fill="#c6f26b"/>
   <path d="M17 20h17c7 0 12 4 12 11 0 4-2 7-5 9 4 2 6 5 6 9 0 8-6 12-14 12H17V20Zm12 9v8h5c3 0 5-1 5-4s-2-4-5-4h-5Zm0 16v9h7c4 0 6-2 6-5s-2-4-6-4h-7Z" fill="#10251d"/>
 </svg>

@@ -49,7 +49,12 @@ function rawHeaderPairs(ctx: Ctx): Record<string, string[]> {
   for (let i = 0; i < ctx.req.rawHeaders.length; i += 2) {
     const key = ctx.req.rawHeaders[i];
     const value = ctx.req.rawHeaders[i + 1] ?? '';
-    (result[key] ??= []).push(value);
+    let values = result[key];
+    if (!values) {
+      values = [];
+      result[key] = values;
+    }
+    values.push(value);
   }
   return result;
 }
@@ -71,27 +76,36 @@ async function echo(ctx: Ctx): Promise<void> {
   let json: unknown;
   let jsonError: string | null = null;
   if (type.includes('json') && raw.length > 0) {
-    try { json = JSON.parse(raw.toString('utf8')); } catch (error) { jsonError = error instanceof Error ? error.message : 'invalid JSON'; }
+    try {
+      json = JSON.parse(raw.toString('utf8'));
+    } catch (error) {
+      jsonError = error instanceof Error ? error.message : 'invalid JSON';
+    }
   }
-  sendJson(ctx, 200, {
-    method: ctx.req.method,
-    http_version: ctx.req.httpVersion,
-    scheme: isTls(ctx) ? 'https' : 'http',
-    path: ctx.url.pathname,
-    url: ctx.url.toString(),
-    query: queryObject(ctx),
-    headers: rawHeaderPairs(ctx),
-    cookies: parseCookies(ctx.req.headers.cookie),
-    client: { ip: ctx.req.socket.remoteAddress ?? null, port: ctx.req.socket.remotePort ?? null },
-    body: {
-      size: raw.length,
-      content_type: type || null,
-      text: raw.toString('utf8'),
-      base64: raw.toString('base64'),
-      sha256: createHash('sha256').update(raw).digest('hex'),
-      ...(type.includes('json') ? { json, json_error: jsonError } : {}),
+  sendJson(
+    ctx,
+    200,
+    {
+      method: ctx.req.method,
+      http_version: ctx.req.httpVersion,
+      scheme: isTls(ctx) ? 'https' : 'http',
+      path: ctx.url.pathname,
+      url: ctx.url.toString(),
+      query: queryObject(ctx),
+      headers: rawHeaderPairs(ctx),
+      cookies: parseCookies(ctx.req.headers.cookie),
+      client: { ip: ctx.req.socket.remoteAddress ?? null, port: ctx.req.socket.remotePort ?? null },
+      body: {
+        size: raw.length,
+        content_type: type || null,
+        text: raw.toString('utf8'),
+        base64: raw.toString('base64'),
+        sha256: createHash('sha256').update(raw).digest('hex'),
+        ...(type.includes('json') ? { json, json_error: jsonError } : {}),
+      },
     },
-  }, { 'Cache-Control': 'no-store', 'X-Echo-Method': ctx.req.method ?? '' });
+    { 'Cache-Control': 'no-store', 'X-Echo-Method': ctx.req.method ?? '' },
+  );
 }
 
 function parseBasic(header: string | undefined): { user: string; pass: string } | null {
@@ -105,17 +119,27 @@ function parseBasic(header: string | undefined): { user: string; pass: string } 
 }
 
 function basicChallenge(ctx: Ctx, message: string): void {
-  sendJson(ctx, 401, { error: { code: 'UNAUTHORIZED', message, status: 401 } }, {
-    'WWW-Authenticate': 'Basic realm="backend-lab", charset="UTF-8"',
-    'Cache-Control': 'no-store',
-  });
+  sendJson(
+    ctx,
+    401,
+    { error: { code: 'UNAUTHORIZED', message, status: 401 } },
+    {
+      'WWW-Authenticate': 'Basic realm="backend-lab", charset="UTF-8"',
+      'Cache-Control': 'no-store',
+    },
+  );
 }
 
 function bearerChallenge(ctx: Ctx, message: string, errorCode?: string): void {
-  sendJson(ctx, 401, { error: { code: errorCode ?? 'UNAUTHORIZED', message, status: 401 } }, {
-    'WWW-Authenticate': `Bearer realm="backend-lab"${errorCode ? `, error="${errorCode}"` : ''}`,
-    'Cache-Control': 'no-store',
-  });
+  sendJson(
+    ctx,
+    401,
+    { error: { code: errorCode ?? 'UNAUTHORIZED', message, status: 401 } },
+    {
+      'WWW-Authenticate': `Bearer realm="backend-lab"${errorCode ? `, error="${errorCode}"` : ''}`,
+      'Cache-Control': 'no-store',
+    },
+  );
 }
 
 function cookieAttributes(ctx: Ctx): string {
@@ -128,7 +152,8 @@ function cookieAttributes(ctx: Ctx): string {
   if (['1', 'true'].includes(ctx.query.get('secure') ?? '')) parts.push('Secure');
   const sameSite = ctx.query.get('sameSite');
   if (sameSite) {
-    if (!['Strict', 'Lax', 'None'].includes(sameSite)) throw validationError([{ field: 'sameSite', message: 'Strict, Lax o None' }]);
+    if (!['Strict', 'Lax', 'None'].includes(sameSite))
+      throw validationError([{ field: 'sameSite', message: 'Strict, Lax o None' }]);
     parts.push(`SameSite=${sameSite}`);
   }
   return parts.join('; ');
@@ -157,7 +182,8 @@ async function streamText(ctx: Ctx, binary: boolean): Promise<void> {
   const delay = integerParam(ctx, 'delay', 100, 0, configOf(ctx).maxDelayMs);
   const size = integerParam(ctx, 'size', 32, 1, 65_536);
   const max = configOf(ctx).maxResponseBytes;
-  if (chunks * size > max) throw validationError([{ field: 'size', message: 'la respuesta supera el máximo configurado' }]);
+  if (chunks * size > max)
+    throw validationError([{ field: 'size', message: 'la respuesta supera el máximo configurado' }]);
   ctx.res.statusCode = 200;
   ctx.res.setHeader('Content-Type', binary ? 'application/octet-stream' : 'text/plain; charset=utf-8');
   ctx.res.setHeader('X-Chunks', String(chunks));
@@ -167,7 +193,9 @@ async function streamText(ctx: Ctx, binary: boolean): Promise<void> {
     return;
   }
   let closed = false;
-  ctx.res.on('close', () => { closed = true; });
+  ctx.res.on('close', () => {
+    closed = true;
+  });
   for (let i = 1; i <= chunks && !closed; i++) {
     const payload = binary
       ? Buffer.alloc(size, i % 256)
@@ -203,14 +231,17 @@ async function delayedResponse(ctx: Ctx): Promise<void> {
  */
 export async function handleLab(ctx: Ctx): Promise<void> {
   const config = configOf(ctx);
-  const path = (ctx.url.pathname.replace(/\/+$/, '') || '/test');
+  const path = ctx.url.pathname.replace(/\/+$/, '') || '/test';
   const method = (ctx.req.method ?? 'GET').toUpperCase();
 
   if (method === 'OPTIONS') {
     ctx.res.statusCode = 204;
     ctx.res.setHeader('Allow', 'GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS');
     ctx.res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS');
-    ctx.res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Api-Key, X-Custom, Idempotency-Key, Range, If-None-Match, If-Modified-Since');
+    ctx.res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Api-Key, X-Custom, Idempotency-Key, Range, If-None-Match, If-Modified-Since',
+    );
     ctx.res.setHeader('Access-Control-Max-Age', '600');
     ctx.res.end();
     return;
@@ -236,12 +267,18 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/status' || path.startsWith('/test/status/')) {
       const raw = path.startsWith('/test/status/') ? path.slice('/test/status/'.length) : ctx.query.get('code');
       const code = Number(raw ?? 200);
-      if (!Number.isInteger(code) || code < 200 || code > 599) throw validationError([{ field: 'code', message: 'código entre 200 y 599' }]);
-      sendJson(ctx, code, { simulated_status: code, body_present: ![204, 304].includes(code) }, {
-        'X-Simulated-Status': String(code),
-        ...(code === 429 ? { 'Retry-After': '2' } : {}),
-        ...(code === 401 ? { 'WWW-Authenticate': 'Bearer realm="lab"' } : {}),
-      });
+      if (!Number.isInteger(code) || code < 200 || code > 599)
+        throw validationError([{ field: 'code', message: 'código entre 200 y 599' }]);
+      sendJson(
+        ctx,
+        code,
+        { simulated_status: code, body_present: ![204, 304].includes(code) },
+        {
+          'X-Simulated-Status': String(code),
+          ...(code === 429 ? { 'Retry-After': '2' } : {}),
+          ...(code === 401 ? { 'WWW-Authenticate': 'Bearer realm="lab"' } : {}),
+        },
+      );
       return;
     }
 
@@ -250,10 +287,15 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       return;
     }
     if (path === '/test/headers/required') {
-      const names = (ctx.query.get('names') ?? 'x-required').split(',').map((s) => s.trim()).filter(Boolean);
+      const names = (ctx.query.get('names') ?? 'x-required')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       const missing = names.filter((name) => ctx.req.headers[name.toLowerCase()] === undefined);
       if (missing.length) {
-        sendJson(ctx, 400, { error: { code: 'MISSING_HEADERS', message: 'Faltan headers obligatorios', missing, status: 400 } });
+        sendJson(ctx, 400, {
+          error: { code: 'MISSING_HEADERS', message: 'Faltan headers obligatorios', missing, status: 400 },
+        });
         return;
       }
       sendJson(ctx, 200, { present: names });
@@ -261,35 +303,51 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     }
     if (path === '/test/headers/large') {
       const size = integerParam(ctx, 'size', 4096, 1, 16_384);
-      sendJson(ctx, 200, { header_size: size, value_sha256: createHash('sha256').update('x'.repeat(size)).digest('hex') }, {
-        'X-Large': 'x'.repeat(size),
-      });
+      sendJson(
+        ctx,
+        200,
+        { header_size: size, value_sha256: createHash('sha256').update('x'.repeat(size)).digest('hex') },
+        {
+          'X-Large': 'x'.repeat(size),
+        },
+      );
       return;
     }
     if (path === '/test/headers/repeated') {
       ctx.res.setHeader('Set-Cookie', ['repeat=one; Path=/', 'repeat=two; Path=/']);
-      sendJson(ctx, 200, { repeated: true }, {
-        'X-Duplicate': ['first', 'second'],
-        'X-Repeat-A': 'one',
-        'X-Repeat-B': 'two',
-      });
+      sendJson(
+        ctx,
+        200,
+        { repeated: true },
+        {
+          'X-Duplicate': ['first', 'second'],
+          'X-Repeat-A': 'one',
+          'X-Repeat-B': 'two',
+        },
+      );
       return;
     }
     if (path === '/test/headers/custom') {
       const name = ctx.query.get('name') ?? 'X-Custom-Response';
       const value = ctx.query.get('value') ?? 'custom-value';
-      if (!/^[A-Za-z0-9-]+$/.test(name) || /[\r\n]/.test(value)) throw validationError([{ field: 'name', message: 'nombre o valor de header inválido' }]);
+      if (!/^[A-Za-z0-9-]+$/.test(name) || /[\r\n]/.test(value))
+        throw validationError([{ field: 'name', message: 'nombre o valor de header inválido' }]);
       ctx.res.setHeader(name, value);
       sendJson(ctx, 200, { header: name, value, request_custom: ctx.req.headers[name.toLowerCase()] ?? null });
       return;
     }
     if (path === '/test/headers/cache') {
-      sendJson(ctx, 200, { cached: true }, {
-        'Cache-Control': `public, max-age=${integerParam(ctx, 'max_age', 60, 0, 86_400)}`,
-        'ETag': '"header-cache-v1"',
-        'Vary': 'Accept-Encoding',
-        'Expires': new Date(Date.now() + 60_000).toUTCString(),
-      });
+      sendJson(
+        ctx,
+        200,
+        { cached: true },
+        {
+          'Cache-Control': `public, max-age=${integerParam(ctx, 'max_age', 60, 0, 86_400)}`,
+          ETag: '"header-cache-v1"',
+          Vary: 'Accept-Encoding',
+          Expires: new Date(Date.now() + 60_000).toUTCString(),
+        },
+      );
       return;
     }
 
@@ -308,7 +366,12 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       return;
     }
     if (path === '/test/body/wrong-content-type') {
-      sendText(ctx, 200, JSON.stringify({ message: 'Soy JSON pero el Content-Type es texto plano' }), 'text/plain; charset=utf-8');
+      sendText(
+        ctx,
+        200,
+        JSON.stringify({ message: 'Soy JSON pero el Content-Type es texto plano' }),
+        'text/plain; charset=utf-8',
+      );
       return;
     }
     if (path === '/test/body/large') {
@@ -324,10 +387,32 @@ export async function handleLab(ctx: Ctx): Promise<void> {
         sendJson(ctx, 200, { kind: 'json', unicode: 'áéíóú ñ 日本語 العربية', items: [1, 2, 3] });
         return;
       }
-      if (kind === 'text') { sendText(ctx, 200, 'Respuesta de texto plano con Unicode: ñ, ü, 漢字.'); return; }
-      if (kind === 'html') { sendText(ctx, 200, '<!doctype html><html lang="es"><body><h1>HTML simulado</h1><p>Prueba de respuesta HTML.</p></body></html>', 'text/html; charset=utf-8'); return; }
-      if (kind === 'xml') { sendText(ctx, 200, '<?xml version="1.0" encoding="UTF-8"?><root><item id="1">texto</item></root>', 'application/xml; charset=utf-8'); return; }
-      if (kind === 'csv') { sendText(ctx, 200, 'id,nombre,precio\n1,"Producto, especial",19.99\n2,Otro,5.00\n', 'text/csv; charset=utf-8'); return; }
+      if (kind === 'text') {
+        sendText(ctx, 200, 'Respuesta de texto plano con Unicode: ñ, ü, 漢字.');
+        return;
+      }
+      if (kind === 'html') {
+        sendText(
+          ctx,
+          200,
+          '<!doctype html><html lang="es"><body><h1>HTML simulado</h1><p>Prueba de respuesta HTML.</p></body></html>',
+          'text/html; charset=utf-8',
+        );
+        return;
+      }
+      if (kind === 'xml') {
+        sendText(
+          ctx,
+          200,
+          '<?xml version="1.0" encoding="UTF-8"?><root><item id="1">texto</item></root>',
+          'application/xml; charset=utf-8',
+        );
+        return;
+      }
+      if (kind === 'csv') {
+        sendText(ctx, 200, 'id,nombre,precio\n1,"Producto, especial",19.99\n2,Otro,5.00\n', 'text/csv; charset=utf-8');
+        return;
+      }
       if (kind === 'empty') {
         ctx.res.statusCode = 200;
         ctx.res.setHeader('Content-Length', '0');
@@ -363,9 +448,10 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       }
       const max = config.maxResponseBytes;
       const size = integerParam(ctx, 'size', 0, 0, max);
-      const original = size > 0
-        ? Buffer.alloc(size, 0x7a)
-        : Buffer.from(ctx.query.get('body') ?? 'Contenido comprimible repetido. '.repeat(32), 'utf8');
+      const original =
+        size > 0
+          ? Buffer.alloc(size, 0x7a)
+          : Buffer.from(ctx.query.get('body') ?? 'Contenido comprimible repetido. '.repeat(32), 'utf8');
       if (original.length > max) throw validationError([{ field: 'size', message: 'respuesta demasiado grande' }]);
       let body = original;
       if (encoding === 'gzip') body = gzipSync(original);
@@ -373,7 +459,7 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       else if (encoding === 'br') body = brotliCompressSync(original);
       sendBuffer(ctx, 200, body, 'text/plain; charset=utf-8', {
         ...(encoding === 'identity' ? {} : { 'Content-Encoding': encoding }),
-        'Vary': 'Accept-Encoding',
+        Vary: 'Accept-Encoding',
         'X-Uncompressed-Bytes': String(original.length),
         'X-Compression': encoding,
       });
@@ -394,7 +480,8 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       }
       if (tail.startsWith('chain/')) {
         const n = Number(tail.slice('chain/'.length));
-        if (!Number.isInteger(n) || n < 0 || n > 20) throw validationError([{ field: 'n', message: 'entero entre 0 y 20' }]);
+        if (!Number.isInteger(n) || n < 0 || n > 20)
+          throw validationError([{ field: 'n', message: 'entero entre 0 y 20' }]);
         if (n === 0) {
           sendJson(ctx, 200, { chain_complete: true });
           return;
@@ -406,19 +493,26 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       let code = 302;
       if (tail) {
         code = Number(tail);
-        if (![301, 302, 303, 307, 308].includes(code)) throw validationError([{ field: 'code', message: 'use 301, 302, 303, 307 o 308' }]);
+        if (![301, 302, 303, 307, 308].includes(code))
+          throw validationError([{ field: 'code', message: 'use 301, 302, 303, 307 o 308' }]);
       } else {
         const qCode = Number(ctx.query.get('code') ?? 302);
-        if (![301, 302, 303, 307, 308].includes(qCode)) throw validationError([{ field: 'code', message: 'use 301, 302, 303, 307 o 308' }]);
+        if (![301, 302, 303, 307, 308].includes(qCode))
+          throw validationError([{ field: 'code', message: 'use 301, 302, 303, 307 o 308' }]);
         code = qCode;
       }
       const to = ctx.query.get('to') ?? '/test/echo';
-      if (!to.startsWith('/') || to.startsWith('//')) throw badRequest('El destino debe ser una ruta local que empiece por /');
+      if (!to.startsWith('/') || to.startsWith('//'))
+        throw badRequest('El destino debe ser una ruta local que empiece por /');
       const host = ctx.req.headers.host ?? `localhost:${config.port}`;
       const absolute = ['1', 'true'].includes(ctx.query.get('absolute') ?? '');
       const scheme = isTls(ctx) ? 'https' : 'http';
       const location = absolute ? `${scheme}://${host}${to}` : to;
-      ctx.res.writeHead(code, { Location: location, 'Cache-Control': 'no-store', 'X-Redirect-Source': '/test/redirect' });
+      ctx.res.writeHead(code, {
+        Location: location,
+        'Cache-Control': 'no-store',
+        'X-Redirect-Source': '/test/redirect',
+      });
       ctx.res.end();
       return;
     }
@@ -459,7 +553,8 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/auth/scheme') {
       const header = ctx.req.headers.authorization;
       if (!header) return bearerChallenge(ctx, 'Falta Authorization');
-      if (!/^Bearer\s+/i.test(header)) return bearerChallenge(ctx, 'Esquema no soportado; use Bearer', 'invalid_request');
+      if (!/^Bearer\s+/i.test(header))
+        return bearerChallenge(ctx, 'Esquema no soportado; use Bearer', 'invalid_request');
       sendJson(ctx, 200, { received: header.replace(/\s.+$/, ''), note: 'Esquema Bearer aceptado' });
       return;
     }
@@ -467,14 +562,18 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/cookies/set') {
       const name = ctx.query.get('name') ?? 'session';
       const value = ctx.query.get('value') ?? 'abc123';
-      if (!/^[A-Za-z0-9_-]+$/.test(name)) throw validationError([{ field: 'name', message: 'nombre de cookie inválido' }]);
+      if (!/^[A-Za-z0-9_-]+$/.test(name))
+        throw validationError([{ field: 'name', message: 'nombre de cookie inválido' }]);
       ctx.res.setHeader('Set-Cookie', `${name}=${encodeURIComponent(value)}; ${cookieAttributes(ctx)}`);
       sendJson(ctx, 200, { cookie_set: name, value });
       return;
     }
     if (path === '/test/cookies/set-many') {
       const count = integerParam(ctx, 'count', 3, 1, 10);
-      const cookies = Array.from({ length: count }, (_, i) => `sim_cookie_${i + 1}=value_${i + 1}; Path=/; Max-Age=3600`);
+      const cookies = Array.from(
+        { length: count },
+        (_, i) => `sim_cookie_${i + 1}=value_${i + 1}; Path=/; Max-Age=3600`,
+      );
       ctx.res.setHeader('Set-Cookie', cookies);
       sendJson(ctx, 200, { cookies_set: count, cookies });
       return;
@@ -500,7 +599,12 @@ export async function handleLab(ctx: Ctx): Promise<void> {
         ctx.res.end();
         return;
       }
-      sendJson(ctx, 200, { etag: version, value: 'contenido cacheable' }, { ETag: etag, 'Cache-Control': 'public, max-age=60' });
+      sendJson(
+        ctx,
+        200,
+        { etag: version, value: 'contenido cacheable' },
+        { ETag: etag, 'Cache-Control': 'public, max-age=60' },
+      );
       return;
     }
     if (path === '/test/cache/last-modified') {
@@ -515,16 +619,26 @@ export async function handleLab(ctx: Ctx): Promise<void> {
         ctx.res.end();
         return;
       }
-      sendJson(ctx, 200, { last_modified: lastModified }, { 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=3600' });
+      sendJson(
+        ctx,
+        200,
+        { last_modified: lastModified },
+        { 'Last-Modified': lastModified, 'Cache-Control': 'public, max-age=3600' },
+      );
       return;
     }
     if (path === '/test/cache/control') {
       const maxAge = integerParam(ctx, 'max_age', 60, 0, 86_400);
       const noStore = ['1', 'true'].includes(ctx.query.get('no_store') ?? '');
-      sendJson(ctx, 200, { cached: !noStore }, {
-        'Cache-Control': noStore ? 'no-store' : `public, max-age=${maxAge}`,
-        ...(noStore ? { Pragma: 'no-cache' } : {}),
-      });
+      sendJson(
+        ctx,
+        200,
+        { cached: !noStore },
+        {
+          'Cache-Control': noStore ? 'no-store' : `public, max-age=${maxAge}`,
+          ...(noStore ? { Pragma: 'no-cache' } : {}),
+        },
+      );
       return;
     }
 
@@ -536,10 +650,15 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       ctx.res.statusCode = 200;
       ctx.res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
       ctx.res.setHeader('Cache-Control', 'no-cache');
-      if (ctx.isHead) { ctx.res.end(); return; }
+      if (ctx.isHead) {
+        ctx.res.end();
+        return;
+      }
       ctx.res.flushHeaders();
       let closed = false;
-      ctx.res.on('close', () => { closed = true; });
+      ctx.res.on('close', () => {
+        closed = true;
+      });
       for (let i = 1; i <= count && !closed; i++) {
         ctx.res.write(`event: tick\ndata: ${JSON.stringify({ event: i, total: count, at: now() })}\n\n`);
         if (delay > 0) await sleep(delay);
@@ -552,7 +671,10 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       ctx.res.statusCode = 200;
       ctx.res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       ctx.res.setHeader('Trailer', 'X-Trailer-Checksum');
-      if (ctx.isHead) { ctx.res.end(); return; }
+      if (ctx.isHead) {
+        ctx.res.end();
+        return;
+      }
       ctx.res.write('primera parte\n');
       ctx.res.write('segunda parte\n');
       const digest = createHash('sha256').update('primera parteseegunda parte\n').digest('hex');
@@ -593,10 +715,15 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       const rangeHeader = ctx.req.headers.range;
       const range = parseRange(rangeHeader, total);
       if (rangeHeader && !range) {
-        sendJson(ctx, 416, { error: { code: 'RANGE_NOT_SATISFIABLE', message: 'Rango no satisfacible', total } }, {
-          'Content-Range': `bytes */${total}`,
-          'Accept-Ranges': 'bytes',
-        });
+        sendJson(
+          ctx,
+          416,
+          { error: { code: 'RANGE_NOT_SATISFIABLE', message: 'Rango no satisfacible', total } },
+          {
+            'Content-Range': `bytes */${total}`,
+            'Accept-Ranges': 'bytes',
+          },
+        );
         return;
       }
       if (range) {
@@ -604,13 +731,13 @@ export async function handleLab(ctx: Ctx): Promise<void> {
         sendBuffer(ctx, 206, slice, 'application/octet-stream', {
           'Accept-Ranges': 'bytes',
           'Content-Range': `bytes ${range.start}-${range.end}/${total}`,
-          'ETag': etag,
+          ETag: etag,
         });
       } else {
         sendBuffer(ctx, 200, body, 'application/octet-stream', {
           'Accept-Ranges': 'bytes',
           'Content-Disposition': 'attachment; filename="simulation.bin"',
-          'ETag': etag,
+          ETag: etag,
         });
       }
       return;
@@ -619,7 +746,8 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/delay' || path.startsWith('/test/delay/')) {
       if (path !== '/test/delay') {
         const ms = Number(path.slice('/test/delay/'.length));
-        if (!Number.isInteger(ms) || ms < 0 || ms > config.maxDelayMs) throw validationError([{ field: 'ms', message: 'retraso fuera de rango' }]);
+        if (!Number.isInteger(ms) || ms < 0 || ms > config.maxDelayMs)
+          throw validationError([{ field: 'ms', message: 'retraso fuera de rango' }]);
         await sleep(ms);
         sendJson(ctx, 200, { delayed_ms: ms });
         return;
@@ -631,7 +759,10 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       const respondWith = ctx.query.get('respond') === '200' ? 200 : 504;
       const outcome = await new Promise<'timeout' | 'closed'>((resolve) => {
         const timer = setTimeout(() => resolve('timeout'), ms);
-        ctx.res.once('close', () => { clearTimeout(timer); resolve('closed'); });
+        ctx.res.once('close', () => {
+          clearTimeout(timer);
+          resolve('closed');
+        });
       });
       if (outcome === 'timeout' && !ctx.res.writableEnded && !ctx.res.destroyed) {
         sendJson(ctx, respondWith, { simulated: 'timeout', waited_ms: ms });
@@ -641,7 +772,10 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/never') {
       await new Promise<void>((resolve) => {
         const timer = setTimeout(resolve, 120_000);
-        ctx.res.once('close', () => { clearTimeout(timer); resolve(); });
+        ctx.res.once('close', () => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
       if (!ctx.res.writableEnded && !ctx.res.destroyed) {
         ctx.res.statusCode = 504;
@@ -656,20 +790,26 @@ export async function handleLab(ctx: Ctx): Promise<void> {
     if (path === '/test/error' || path.startsWith('/test/error/')) {
       let code = path === '/test/error' ? 500 : Number(path.slice('/test/error/'.length));
       if (path.endsWith('/rate-limited')) code = 429;
-      if (!Number.isInteger(code) || code < 400 || code > 599) throw validationError([{ field: 'code', message: 'código entre 400 y 599' }]);
-      sendJson(ctx, code, {
-        error: {
-          code: code === 429 ? 'TOO_MANY_REQUESTS' : code === 503 ? 'SERVICE_UNAVAILABLE' : 'SIMULATED_ERROR',
-          message: `Error HTTP ${code} simulado`,
-          status: code,
-          request_id: ctx.requestId,
+      if (!Number.isInteger(code) || code < 400 || code > 599)
+        throw validationError([{ field: 'code', message: 'código entre 400 y 599' }]);
+      sendJson(
+        ctx,
+        code,
+        {
+          error: {
+            code: code === 429 ? 'TOO_MANY_REQUESTS' : code === 503 ? 'SERVICE_UNAVAILABLE' : 'SIMULATED_ERROR',
+            message: `Error HTTP ${code} simulado`,
+            status: code,
+            request_id: ctx.requestId,
+          },
         },
-      }, {
-        'Cache-Control': 'no-store',
-        ...(code === 429 ? { 'Retry-After': '2' } : {}),
-        ...(code === 503 ? { 'Retry-After': '5' } : {}),
-        ...(code === 401 ? { 'WWW-Authenticate': 'Bearer realm="lab"' } : {}),
-      });
+        {
+          'Cache-Control': 'no-store',
+          ...(code === 429 ? { 'Retry-After': '2' } : {}),
+          ...(code === 503 ? { 'Retry-After': '5' } : {}),
+          ...(code === 401 ? { 'WWW-Authenticate': 'Bearer realm="lab"' } : {}),
+        },
+      );
       return;
     }
     if (path === '/test/rate-limit') {
@@ -691,10 +831,21 @@ export async function handleLab(ctx: Ctx): Promise<void> {
         'Cache-Control': 'no-store',
       };
       if (bucket.count > limit) {
-        sendJson(ctx, 429, { error: { code: 'TOO_MANY_REQUESTS', message: 'Rate limit excedido', retry_after_seconds: Math.ceil((bucket.resetAt - nowMs) / 1000) } }, {
-          ...headers,
-          'Retry-After': String(Math.ceil((bucket.resetAt - nowMs) / 1000)),
-        });
+        sendJson(
+          ctx,
+          429,
+          {
+            error: {
+              code: 'TOO_MANY_REQUESTS',
+              message: 'Rate limit excedido',
+              retry_after_seconds: Math.ceil((bucket.resetAt - nowMs) / 1000),
+            },
+          },
+          {
+            ...headers,
+            'Retry-After': String(Math.ceil((bucket.resetAt - nowMs) / 1000)),
+          },
+        );
         return;
       }
       sendJson(ctx, 200, { allowed: true, count: bucket.count, limit, remaining, window_ms: windowMs }, headers);
@@ -721,7 +872,11 @@ export async function handleLab(ctx: Ctx): Promise<void> {
       }
       const existing = idempotencyState.get(key);
       if (existing) {
-        sendJson(ctx, 200, existing.body, { 'Idempotent-Replay': 'true', 'Idempotency-Key': key, 'Cache-Control': 'no-store' });
+        sendJson(ctx, 200, existing.body, {
+          'Idempotent-Replay': 'true',
+          'Idempotency-Key': key,
+          'Cache-Control': 'no-store',
+        });
         return;
       }
       const body = { id: ctx.requestId, key, created_at: now(), operation: 'simulated-write' };
@@ -751,7 +906,9 @@ export async function handleLab(ctx: Ctx): Promise<void> {
   } catch (error) {
     if (!ctx.res.headersSent) {
       if (error && typeof error === 'object' && 'status' in error) throw error;
-      sendJson(ctx, 500, { error: { code: 'LAB_ERROR', message: error instanceof Error ? error.message : String(error) } });
+      sendJson(ctx, 500, {
+        error: { code: 'LAB_ERROR', message: error instanceof Error ? error.message : String(error) },
+      });
     } else if (!ctx.res.writableEnded) {
       ctx.res.end();
     }

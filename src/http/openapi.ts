@@ -98,12 +98,20 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   'Finance · Payments': 'Pagos.',
   'Finance · Budgets': 'Presupuestos.',
   'Finance · Reports': 'Balances y agregados.',
-  'Control': 'Estadísticas, reseteo, modo de datos y datos adicionales.',
+  Control: 'Estadísticas, reseteo, modo de datos y datos adicionales.',
   'HTTP Lab': 'Laboratorio de transporte HTTP independiente.',
-  'General': 'Información del servicio.',
+  General: 'Información del servicio.',
 };
 
-function labOperations(): Array<{ method: string; path: string; summary: string; tags: string[]; parameters?: Array<Record<string, unknown>>; security?: Array<Record<string, string[]>>; responses?: Record<string, unknown> }> {
+function labOperations(): Array<{
+  method: string;
+  path: string;
+  summary: string;
+  tags: string[];
+  parameters?: Array<Record<string, unknown>>;
+  security?: Array<Record<string, string[]>>;
+  responses?: Record<string, unknown>;
+}> {
   const commonErrors = {
     '400': { $ref: '#/components/responses/BadRequest' },
     '500': { $ref: '#/components/responses/InternalError' },
@@ -116,37 +124,121 @@ function labOperations(): Array<{ method: string; path: string; summary: string;
       tags: ['HTTP Lab'],
       responses: { '200': { description: 'Eco de la solicitud' }, ...commonErrors },
     })),
-    { method: 'get', path: '/test/methods/{method}', summary: 'Comprueba el método recibido', tags: ['HTTP Lab'], parameters: [{ name: 'method', in: 'path', required: true, schema: { type: 'string' } }] },
-    { method: 'get', path: '/test/status/{code}', summary: 'Devuelve el código HTTP solicitado', tags: ['HTTP Lab'], parameters: [{ name: 'code', in: 'path', required: true, schema: { type: 'integer', minimum: 200, maximum: 599 } }] },
-    { method: 'get', path: '/test/headers/required', summary: 'Exige headers y devuelve 400 con los ausentes', tags: ['HTTP Lab'], parameters: [{ name: 'names', in: 'query', schema: { type: 'string' } }] },
-    { method: 'get', path: '/test/compress', summary: 'Comprime la respuesta con gzip, deflate o Brotli', tags: ['HTTP Lab'], parameters: [
-      { name: 'algo', in: 'query', schema: { type: 'string', enum: ['auto', 'gzip', 'deflate', 'br', 'identity'] } },
-      { name: 'size', in: 'query', schema: { type: 'integer', minimum: 0 } },
-    ] },
-    { method: 'get', path: '/test/redirect/{code}', summary: 'Redirección local con el código indicado', tags: ['HTTP Lab'], parameters: [
-      { name: 'code', in: 'path', required: true, schema: { type: 'integer', enum: [301, 302, 303, 307, 308] } },
-      { name: 'to', in: 'query', schema: { type: 'string' } },
-      { name: 'absolute', in: 'query', schema: { type: 'boolean' } },
-    ] },
-    { method: 'get', path: '/test/auth/basic', summary: 'Basic Auth', tags: ['HTTP Lab'], security: [{ basicAuth: [] }] },
-    { method: 'get', path: '/test/auth/bearer', summary: 'Bearer token', tags: ['HTTP Lab'], security: [{ bearerAuth: [] }] },
-    { method: 'get', path: '/test/auth/api-key', summary: 'API key en X-API-Key', tags: ['HTTP Lab'], security: [{ apiKeyAuth: [] }] },
+    {
+      method: 'get',
+      path: '/test/methods/{method}',
+      summary: 'Comprueba el método recibido',
+      tags: ['HTTP Lab'],
+      parameters: [{ name: 'method', in: 'path', required: true, schema: { type: 'string' } }],
+    },
+    {
+      method: 'get',
+      path: '/test/status/{code}',
+      summary: 'Devuelve el código HTTP solicitado',
+      tags: ['HTTP Lab'],
+      parameters: [
+        { name: 'code', in: 'path', required: true, schema: { type: 'integer', minimum: 200, maximum: 599 } },
+      ],
+    },
+    {
+      method: 'get',
+      path: '/test/headers/required',
+      summary: 'Exige headers y devuelve 400 con los ausentes',
+      tags: ['HTTP Lab'],
+      parameters: [{ name: 'names', in: 'query', schema: { type: 'string' } }],
+    },
+    {
+      method: 'get',
+      path: '/test/compress',
+      summary: 'Comprime la respuesta con gzip, deflate o Brotli',
+      tags: ['HTTP Lab'],
+      parameters: [
+        { name: 'algo', in: 'query', schema: { type: 'string', enum: ['auto', 'gzip', 'deflate', 'br', 'identity'] } },
+        { name: 'size', in: 'query', schema: { type: 'integer', minimum: 0 } },
+      ],
+    },
+    {
+      method: 'get',
+      path: '/test/redirect/{code}',
+      summary: 'Redirección local con el código indicado',
+      tags: ['HTTP Lab'],
+      parameters: [
+        { name: 'code', in: 'path', required: true, schema: { type: 'integer', enum: [301, 302, 303, 307, 308] } },
+        { name: 'to', in: 'query', schema: { type: 'string' } },
+        { name: 'absolute', in: 'query', schema: { type: 'boolean' } },
+      ],
+    },
+    {
+      method: 'get',
+      path: '/test/auth/basic',
+      summary: 'Basic Auth',
+      tags: ['HTTP Lab'],
+      security: [{ basicAuth: [] }],
+    },
+    {
+      method: 'get',
+      path: '/test/auth/bearer',
+      summary: 'Bearer token',
+      tags: ['HTTP Lab'],
+      security: [{ bearerAuth: [] }],
+    },
+    {
+      method: 'get',
+      path: '/test/auth/api-key',
+      summary: 'API key en X-API-Key',
+      tags: ['HTTP Lab'],
+      security: [{ apiKeyAuth: [] }],
+    },
     { method: 'get', path: '/test/cookies/set', summary: 'Crea una cookie con atributos', tags: ['HTTP Lab'] },
     { method: 'get', path: '/test/cookies/echo', summary: 'Devuelve las cookies recibidas', tags: ['HTTP Lab'] },
-    { method: 'get', path: '/test/cache/etag', summary: 'ETag y 304 con If-None-Match', tags: ['HTTP Lab'], parameters: [{ name: 'If-None-Match', in: 'header', schema: { type: 'string' } }] },
-    { method: 'get', path: '/test/cache/last-modified', summary: 'Last-Modified y 304 con If-Modified-Since', tags: ['HTTP Lab'] },
-    { method: 'get', path: '/test/stream/text', summary: 'Stream de texto por chunks', tags: ['HTTP Lab'], parameters: [
-      { name: 'chunks', in: 'query', schema: { type: 'integer' } },
-      { name: 'delay', in: 'query', schema: { type: 'integer' } },
-      { name: 'size', in: 'query', schema: { type: 'integer' } },
-    ] },
-    { method: 'get', path: '/test/download', summary: 'Descarga binaria con soporte Range', tags: ['HTTP Lab'], parameters: [
-      { name: 'size', in: 'query', schema: { type: 'integer' } },
-      { name: 'Range', in: 'header', schema: { type: 'string' } },
-    ], responses: { '200': { description: 'Descarga completa' }, '206': { description: 'Contenido parcial' }, '416': { description: 'Rango no satisfacible' } } },
+    {
+      method: 'get',
+      path: '/test/cache/etag',
+      summary: 'ETag y 304 con If-None-Match',
+      tags: ['HTTP Lab'],
+      parameters: [{ name: 'If-None-Match', in: 'header', schema: { type: 'string' } }],
+    },
+    {
+      method: 'get',
+      path: '/test/cache/last-modified',
+      summary: 'Last-Modified y 304 con If-Modified-Since',
+      tags: ['HTTP Lab'],
+    },
+    {
+      method: 'get',
+      path: '/test/stream/text',
+      summary: 'Stream de texto por chunks',
+      tags: ['HTTP Lab'],
+      parameters: [
+        { name: 'chunks', in: 'query', schema: { type: 'integer' } },
+        { name: 'delay', in: 'query', schema: { type: 'integer' } },
+        { name: 'size', in: 'query', schema: { type: 'integer' } },
+      ],
+    },
+    {
+      method: 'get',
+      path: '/test/download',
+      summary: 'Descarga binaria con soporte Range',
+      tags: ['HTTP Lab'],
+      parameters: [
+        { name: 'size', in: 'query', schema: { type: 'integer' } },
+        { name: 'Range', in: 'header', schema: { type: 'string' } },
+      ],
+      responses: {
+        '200': { description: 'Descarga completa' },
+        '206': { description: 'Contenido parcial' },
+        '416': { description: 'Rango no satisfacible' },
+      },
+    },
     { method: 'get', path: '/test/error/{code}', summary: 'Genera un error HTTP estructurado', tags: ['HTTP Lab'] },
     { method: 'get', path: '/test/rate-limit', summary: 'Rate limit en memoria con Retry-After', tags: ['HTTP Lab'] },
-    { method: 'post', path: '/test/idempotency', summary: 'Idempotencia mediante Idempotency-Key', tags: ['HTTP Lab'], parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }] },
+    {
+      method: 'post',
+      path: '/test/idempotency',
+      summary: 'Idempotencia mediante Idempotency-Key',
+      tags: ['HTTP Lab'],
+      parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string' } }],
+    },
   ];
 }
 
@@ -170,30 +262,48 @@ export function buildOpenApi(
     const pathParams: Array<Record<string, unknown>> = [];
     for (const match of openApiPath.matchAll(/\{([^}]+)\}/g)) {
       if (!doc.parameters?.some((p) => p.name === match[1] && p.in === 'path')) {
-        pathParams.push({ name: match[1], in: 'path', required: true, schema: { type: match[1].toLowerCase().includes('id') ? 'integer' : 'string' } });
+        pathParams.push({
+          name: match[1],
+          in: 'path',
+          required: true,
+          schema: { type: match[1].toLowerCase().includes('id') ? 'integer' : 'string' },
+        });
       }
     }
     const parameters = localizeParameters([...pathParams, ...(doc.parameters ?? [])], lang);
     const needsBody = ['post', 'put', 'patch'].includes(method);
     const operation: OpenApiObject = {
-      summary: lang === 'en'
-        ? translateSummary(doc.summary, doc.summaryEn, lang) || `${route.method} ${route.path}`
-        : (doc.summary ?? `${route.method} ${route.path}`),
+      summary:
+        lang === 'en'
+          ? translateSummary(doc.summary, doc.summaryEn, lang) || `${route.method} ${route.path}`
+          : (doc.summary ?? `${route.method} ${route.path}`),
       tags: [tag],
       operationId: `${method}_${route.path}`.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
       ...(parameters.length ? { parameters } : {}),
       ...(doc.security ? { security: doc.security } : {}),
-      requestBody: doc.requestBody ?? (needsBody ? {
-        required: false,
-        content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } },
-      } : undefined),
-      responses: localizeResponses({
-        ...(doc.responses ?? { '200': { description: 'Operación exitosa' } }),
-        '500': { $ref: '#/components/responses/InternalError' },
-      }, lang),
+      requestBody:
+        doc.requestBody ??
+        (needsBody
+          ? {
+              required: false,
+              content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } },
+            }
+          : undefined),
+      responses: localizeResponses(
+        {
+          ...(doc.responses ?? { '200': { description: 'Operación exitosa' } }),
+          '500': { $ref: '#/components/responses/InternalError' },
+        },
+        lang,
+      ),
     };
     if (operation.requestBody === undefined) delete operation.requestBody;
-    (paths[openApiPath] ??= {})[method] = operation;
+    let pathEntry = paths[openApiPath];
+    if (!pathEntry) {
+      pathEntry = {};
+      paths[openApiPath] = pathEntry;
+    }
+    pathEntry[method] = operation;
   }
 
   for (const op of labOperations()) {
@@ -205,18 +315,35 @@ export function buildOpenApi(
       operationId: `${op.method}_${op.path}`.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
       ...(parameters.length ? { parameters: localizeParameters(parameters, lang) } : {}),
       ...(op.security ? { security: op.security } : {}),
-      responses: localizeResponses({
-        ...(op.responses ?? { '200': { description: 'Respuesta simulada' } }),
-        '500': { $ref: '#/components/responses/InternalError' },
-      }, lang),
+      responses: localizeResponses(
+        {
+          ...(op.responses ?? { '200': { description: 'Respuesta simulada' } }),
+          '500': { $ref: '#/components/responses/InternalError' },
+        },
+        lang,
+      ),
     };
-    (paths[op.path] ??= {})[op.method] = operation;
+    let pathEntry = paths[op.path];
+    if (!pathEntry) {
+      pathEntry = {};
+      paths[op.path] = pathEntry;
+    }
+    pathEntry[op.method] = operation;
   }
 
   const servers = [
     { url: serverUrl, description: 'HTTP/1.1' },
-    ...(config.httpsEnabled ? [{ url: `https://localhost:${config.httpsPort}`, description: translateDescription('HTTPS (certificado local)', lang) }] : []),
-    ...(config.http2Enabled ? [{ url: `https://localhost:${config.http2Port}`, description: translateDescription('HTTP/2 sobre TLS', lang) }] : []),
+    ...(config.httpsEnabled
+      ? [
+          {
+            url: `https://localhost:${config.httpsPort}`,
+            description: translateDescription('HTTPS (certificado local)', lang),
+          },
+        ]
+      : []),
+    ...(config.http2Enabled
+      ? [{ url: `https://localhost:${config.http2Port}`, description: translateDescription('HTTP/2 sobre TLS', lang) }]
+      : []),
   ];
 
   return {
@@ -229,9 +356,7 @@ export function buildOpenApi(
     servers,
     tags: [...tags].sort().map((name) => ({
       name,
-      description: lang === 'en'
-        ? (TAG_DESCRIPTIONS_EN[name] ?? name)
-        : (TAG_DESCRIPTIONS[name] ?? name),
+      description: lang === 'en' ? (TAG_DESCRIPTIONS_EN[name] ?? name) : (TAG_DESCRIPTIONS[name] ?? name),
     })),
     paths,
     components: {
@@ -280,13 +405,34 @@ export function buildOpenApi(
         },
       },
       responses: {
-        BadRequest: { description: translateDescription('Solicitud inválida', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        Unauthorized: { description: translateDescription('No autenticado', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        Forbidden: { description: translateDescription('Sin permisos', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        NotFound: { description: translateDescription('No encontrado', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        ConflictError: { description: translateDescription('Conflicto', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        ValidationError: { description: translateDescription('Validación fallida', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        InternalError: { description: translateDescription('Error interno', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        BadRequest: {
+          description: translateDescription('Solicitud inválida', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        Unauthorized: {
+          description: translateDescription('No autenticado', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        Forbidden: {
+          description: translateDescription('Sin permisos', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        NotFound: {
+          description: translateDescription('No encontrado', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        ConflictError: {
+          description: translateDescription('Conflicto', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        ValidationError: {
+          description: translateDescription('Validación fallida', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
+        InternalError: {
+          description: translateDescription('Error interno', lang),
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+        },
       },
     },
   };
