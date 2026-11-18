@@ -54,6 +54,25 @@ export async function performRequest({
   };
 }
 
+/** Executes a protected data-control action and parses its JSON envelope. */
+export async function controlRequest(baseUrl, path, { method = 'POST', token = '', signal } = {}) {
+  const result = await performRequest({
+    baseUrl,
+    path,
+    method,
+    headers: { 'X-Control-Token': token },
+    attachAuth: false,
+    signal,
+  });
+  let body = null;
+  try {
+    body = result.text ? JSON.parse(result.text) : null;
+  } catch {
+    body = { raw: result.text };
+  }
+  return { ...result, body };
+}
+
 /** Fetches and parses a public JSON endpoint used by the dashboard. */
 export async function getJson(baseUrl, path, signal) {
   const result = await performRequest({ baseUrl, path, signal, attachAuth: false });

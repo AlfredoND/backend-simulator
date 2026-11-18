@@ -8,7 +8,7 @@
  */
 import { applyTranslations, t } from './i18n.js';
 import { catalog, presets } from './catalog.js';
-import { getJson, performRequest } from './api.js';
+import { controlRequest, getJson, performRequest } from './api.js';
 import {
   buildRequestUrl,
   compactDomainName,
@@ -43,9 +43,12 @@ const state = {
     : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
   apiBase: normalizeBaseUrl(local.getItem('bs.apiBase') || defaultApiBase),
   token: session.getItem('bs.token') ?? 'local-admin-token',
+  controlToken: session.getItem('bs.controlToken') ?? 'local-control-token',
   attachAuth: session.getItem('bs.attachAuth') !== 'false',
   connection: 'checking',
   stats: null,
+  mode: null,
+  modeBusy: false,
   controller: null,
   responseText: '',
 };
@@ -67,6 +70,13 @@ const elements = {
   metricRecords: $('#metric-records'),
   metricDomains: $('#metric-domains'),
   domainGrid: $('#domain-grid'),
+  modeBadge: $('#mode-badge'),
+  modeDescription: $('#mode-description'),
+  controlToken: $('#control-token'),
+  modeFreeze: $('#mode-freeze'),
+  modeRestore: $('#mode-restore'),
+  modeUnfreeze: $('#mode-unfreeze'),
+  modeMessage: $('#mode-message'),
   requestForm: $('#request-form'),
   method: $('#method-select'),
   path: $('#path-input'),
@@ -200,6 +210,7 @@ function updateStaticLanguage() {
   renderPresets();
   renderCatalog();
   if (state.stats) renderDomains(state.stats);
+  renderMode();
   setConnection(state.connection);
 }
 
@@ -260,12 +271,86 @@ function renderDomains(stats) {
   }
 }
 
+/** Renders the active data mode and the actions valid for that mode. */
+function renderMode() {
+  const mode = state.mode;
+  const frozen = mode?.mode === 'frozen';
+  elements.modeBadge.textContent = t(state.lang, frozen ? 'mode.frozen' : 'mode.persistent');
+  elements.modeBadge.dataset.mode = frozen ? 'frozen' : 'persistent';
+  elements.modeDescription.textContent = t(state.lang, frozen ? 'mode.frozenHint' : 'mode.persistentHint');
+  elements.modeRestore.textContent = t(state.lang, frozen ? 'mode.restoreFrozen' : 'mode.restore');
+  elements.modeFreeze.hidden = frozen;
+  elements.modeUnfreeze.hidden = !frozen;
+  const disabled = !mode || state.modeBusy;
+  elements.modeFreeze.disabled = disabled;
+  elements.modeRestore.disabled = disabled;
+  elements.modeUnfreeze.disabled = disabled;
+  elements.controlToken.disabled = state.modeBusy;
+  elements.modeMessage.textContent = frozen && mode?.frozen_at
+    ? t(state.lang, 'mode.frozenAt', {
+      date: new Date(mode.frozen_at).toLocaleString(state.lang === 'es' ? 'es-ES' : 'en-GB'),
+    })
+    : '';
+}
+
+/** Toggles the data-mode controls while an action is in flight. */
+function setModeBusy(busy) {
+  state.modeBusy = busy;
+  renderMode();
+}
+
+/** Runs freeze, restore or unfreeze and refreshes the overview afterwards. */
+async function runModeAction(action) {
+  if (!state.mode || state.modeBusy) return;
+  const token = elements.controlToken.value.trim();
+  if (!token) {
+    showToast(t(state.lang, 'mode.tokenMissing'), true);
+    elements.controlToken.focus();
+    return;
+  }
+  session.setItem('bs.controlToken', token);
+  const frozen = state.mode.mode === 'frozen';
+  if (action === 'restore') {
+    const key = frozen ? 'mode.confirmRestoreFrozen' : 'mode.confirmRestorePersistent';
+    if (!window.confirm(t(state.lang, key))) return;
+  }
+  if (action === 'unfreeze' && !window.confirm(t(state.lang, 'mode.confirmUnfreeze'))) return;
+  const path = action === 'freeze'
+    ? '/_control/freeze'
+    : action === 'unfreeze'
+      ? '/_control/unfreeze'
+      : '/_control/restore';
+  setModeBusy(true);
+  try {
+    const result = await controlRequest(state.apiBase, path, { token, method: 'POST' });
+    if (!result.ok) {
+      const detail = result.body?.error?.message ?? `HTTP ${result.status}`;
+      showToast(`${t(state.lang, 'mode.error')} ${detail}`, true);
+      return;
+    }
+    if (result.body?.data) state.mode = result.body.data;
+    const successKey = action === 'freeze'
+      ? 'mode.freezeSuccess'
+      : action === 'unfreeze'
+        ? 'mode.unfreezeSuccess'
+        : frozen ? 'mode.restoreSnapshot' : 'mode.restoreSeed';
+    showToast(t(state.lang, successKey));
+    await refreshOverview();
+  } catch {
+    showToast(t(state.lang, 'mode.error'), true);
+  } finally {
+    setModeBusy(false);
+  }
+}
+
 function renderOverviewError() {
   elements.metricHealth.textContent = '—';
   elements.metricHealthDetail.textContent = t(state.lang, 'overview.offline');
   elements.metricUptime.textContent = '—';
   elements.metricRecords.textContent = '—';
   elements.metricDomains.textContent = '—';
+  state.mode = null;
+  renderMode();
   elements.domainGrid.replaceChildren();
   const message = document.createElement('p');
   message.className = 'muted';
@@ -285,12 +370,14 @@ async function refreshOverview() {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
-    const [health, stats] = await Promise.all([
+    const [health, stats, mode] = await Promise.all([
       getJson(state.apiBase, '/health', controller.signal),
       getJson(state.apiBase, '/_control/stats', controller.signal),
+      getJson(state.apiBase, '/_control/mode', controller.signal),
     ]);
     const healthData = health.data ?? {};
     state.stats = stats.data ?? {};
+    state.mode = mode.data ?? null;
     elements.metricHealth.textContent = String(healthData.status ?? 'ok').toUpperCase();
     elements.metricHealthDetail.textContent = healthData.database?.ok
       ? t(state.lang, 'metric.databaseOk')
@@ -299,6 +386,7 @@ async function refreshOverview() {
     elements.metricRecords.textContent = formatNumber(state.stats.total_records);
     elements.metricDomains.textContent = formatNumber(Object.keys(state.stats.domains ?? {}).length);
     renderDomains(state.stats);
+    renderMode();
     setConnection('online');
   } catch {
     setConnection('offline');
@@ -550,6 +638,12 @@ function bindEvents() {
     }
   });
   elements.refreshOverview.addEventListener('click', () => refreshOverview());
+  elements.modeFreeze.addEventListener('click', () => runModeAction('freeze'));
+  elements.modeRestore.addEventListener('click', () => runModeAction('restore'));
+  elements.modeUnfreeze.addEventListener('click', () => runModeAction('unfreeze'));
+  elements.controlToken.addEventListener('input', () => {
+    session.setItem('bs.controlToken', elements.controlToken.value);
+  });
   elements.requestForm.addEventListener('submit', handleSend);
   elements.method.addEventListener('change', updateBodyAvailability);
   elements.addHeader.addEventListener('click', () => {
@@ -598,6 +692,7 @@ function bindEvents() {
 function initialize() {
   elements.apiBase.value = state.apiBase;
   elements.token.value = state.token;
+  elements.controlToken.value = state.controlToken;
   elements.attachAuth.checked = state.attachAuth;
   addHeaderRow('Accept', 'application/json');
   updateStaticLanguage();

@@ -91,3 +91,16 @@ test('las traducciones cubren el HTML y los IDs usados por la UI existen', () =>
   const referenced = [...main.matchAll(/\$\('#([^']+)'\)/g)].map((match) => match[1]);
   for (const id of referenced) assert.ok(ids.has(id), `missing DOM id: ${id}`);
 });
+
+test('la consola expone los controles del modo de datos', () => {
+  const html = fs.readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const main = fs.readFileSync(new URL('../web/js/main.js', import.meta.url), 'utf8');
+  for (const id of ['mode-badge', 'mode-description', 'control-token', 'mode-freeze', 'mode-restore', 'mode-unfreeze', 'mode-message']) {
+    assert.match(html, new RegExp(`id="${id}"`));
+  }
+  for (const key of ['mode.title', 'mode.hint', 'mode.freeze', 'mode.restore', 'mode.unfreeze', 'mode.persistentHint', 'mode.frozenHint']) {
+    assert.notEqual(t('es', key), key);
+    assert.notEqual(t('en', key), key);
+  }
+  assert.match(main, /controlRequest/);
+});

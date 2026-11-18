@@ -94,6 +94,28 @@
         <div class="domain-grid" id="domain-grid">
           <p class="muted" data-i18n="overview.loading">Cargando datos del backend…</p>
         </div>
+
+        <div class="data-mode-panel" id="data-mode-panel">
+          <div class="hero-panel-head">
+            <div>
+              <h2 data-i18n="mode.title">Modo de datos</h2>
+              <p data-i18n="mode.hint">Elige cómo trabajar con la base y vuelve al estado original cuando quieras.</p>
+            </div>
+            <span class="mode-badge" id="mode-badge" data-mode="persistent">Persistente</span>
+          </div>
+          <p class="mode-description" id="mode-description" data-i18n="mode.persistentHint">Los cambios se guardan en la base principal y sobreviven a los reinicios.</p>
+          <div class="mode-token">
+            <label for="control-token" data-i18n="mode.controlToken">Token de control</label>
+            <input id="control-token" type="password" value="local-control-token" autocomplete="off" spellcheck="false">
+          </div>
+          <p class="field-hint" data-i18n="mode.controlTokenHint">Se envía como X-Control-Token solo en las acciones de este panel.</p>
+          <div class="mode-actions">
+            <button class="button button-small" id="mode-freeze" type="button" data-i18n="mode.freeze">Congelar base</button>
+            <button class="button button-small button-secondary" id="mode-restore" type="button" data-i18n="mode.restore">Restaurar datos</button>
+            <button class="button button-small button-danger" id="mode-unfreeze" type="button" hidden data-i18n="mode.unfreeze">Salir del congelado</button>
+          </div>
+          <p class="mode-message" id="mode-message" role="status" aria-live="polite"></p>
+        </div>
       </div>
     </section>
 
