@@ -1,7 +1,7 @@
 import { createServer, request as httpRequest, type Server } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { connect as netConnect } from 'node:net';
-import type { Logger } from './logger.js';
+import type { Logger } from '../core/logger.js';
 
 function isLocalHost(hostname: string): boolean {
   return ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname.toLowerCase());
@@ -38,7 +38,7 @@ export function createLocalProxy(log: Logger): Server {
       port: target.port || (isHttps ? 443 : 80),
       path: `${target.pathname}${target.search}`,
       method: req.method,
-      headers: { ...req.headers, host: target.host, 'x-forwarded-proxy': 'mafetch-simulator' },
+      headers: { ...req.headers, host: target.host, 'x-forwarded-proxy': 'backend-simulator' },
       ...(isHttps ? { rejectUnauthorized: false } : {}),
     } as never, (upstreamRes) => {
       res.writeHead(upstreamRes.statusCode ?? 502, upstreamRes.headers);

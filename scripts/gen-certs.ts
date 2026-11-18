@@ -1,6 +1,6 @@
-import { loadConfig } from '../src/config.js';
-import { createLogger } from '../src/logger.js';
-import { ensureCertificates } from '../src/tls.js';
+import { loadConfig } from '../src/core/config.js';
+import { createLogger } from '../src/core/logger.js';
+import { ensureCertificates } from '../src/transport/tls.js';
 
 const config = loadConfig({ httpsEnabled: true, http2Enabled: true });
 const log = createLogger('info');

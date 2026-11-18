@@ -1,6 +1,6 @@
 import { createHash, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
-import type { Config } from './config.js';
-import { Db } from './db.js';
+import type { Config } from '../core/config.js';
+import { Db } from './index.js';
 import { DOMAIN_TABLES } from './domain-tables.js';
 
 const DAY = 86_400_000;
@@ -34,7 +34,7 @@ const pick = <T>(arr: readonly T[], n: number): T => arr[Math.abs(n) % arr.lengt
 const money = (min: number, max: number, n: number): number =>
   Math.round(min + (Math.abs(Math.sin(n * 12.9898)) % 1) * (max - min));
 
-export function hashPassword(password: string, salt = 'mafetch-local-seed'): string {
+export function hashPassword(password: string, salt = 'backend-simulator-seed'): string {
   const iterations = 20_000;
   const hash = pbkdf2Sync(password, salt, iterations, 32, 'sha256').toString('hex');
   return `pbkdf2$${iterations}$${salt}$${hash}`;
@@ -64,9 +64,9 @@ function seedIdentity(db: Db, config: Config): void {
 
   for (let i = 1; i <= total; i++) {
     const isAdmin = i === 1;
-    const email = isAdmin ? config.adminEmail : i === 2 ? 'viewer@mafetch.local' : `user${i}@example.com`;
+    const email = isAdmin ? config.adminEmail : i === 2 ? 'viewer@simulator.local' : `user${i}@example.com`;
     const name = isAdmin
-      ? 'Admin Mafetch'
+      ? 'Admin Simulator'
       : i === 2
         ? 'Vera Observadora'
         : `${pick(FIRST, i * 7)} ${pick(LAST, i * 3)}`;
@@ -83,7 +83,7 @@ function seedIdentity(db: Db, config: Config): void {
       updated_at: iso(-20 + i),
     });
     const first = isAdmin ? 'Admin' : i === 2 ? 'Vera' : pick(FIRST, i * 7);
-    const last = isAdmin ? 'Mafetch' : i === 2 ? 'Observadora' : pick(LAST, i * 3);
+    const last = isAdmin ? 'Local' : i === 2 ? 'Observadora' : pick(LAST, i * 3);
     db.insert('id_profiles', {
       id: i,
       user_id: i,
@@ -219,7 +219,7 @@ function seedIdentity(db: Db, config: Config): void {
       user_id: i + 2,
       token_hash: hashToken(`seed-session-${i}`),
       refresh_hash: hashToken(`seed-refresh-${i}`),
-      user_agent: i % 2 === 0 ? 'Mafetch-Sim/1.0' : 'curl/8.5.0',
+      user_agent: i % 2 === 0 ? 'Backend-Sim/1.0' : 'curl/8.5.0',
       ip: `127.0.0.${i}`,
       created_at: iso(-30 + i),
       expires_at: iso(expired ? -1 : 60 + i),
@@ -1350,7 +1350,7 @@ function seedFinance(db: Db, config: Config): void {
       id: i,
       invoice_number: `INV-2026-${String(1000 + i)}`,
       supplier_id: i % 7 === 0 ? null : ((i - 1) % supplierCount) + 1,
-      customer_name: i % 2 === 0 ? 'Mafetch Labs S.L.' : `Cliente Corporativo ${i}`,
+      customer_name: i % 2 === 0 ? 'Simulator Labs S.L.' : `Cliente Corporativo ${i}`,
       status: pick(invoiceStatuses as never[], i),
       issue_date: issue,
       due_date: date(-180 + i * 2 + 30),

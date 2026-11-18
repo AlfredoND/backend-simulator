@@ -1,9 +1,9 @@
 import type { IncomingMessage } from 'node:http';
-import type { Db } from './db.js';
-import { hashToken } from './seed.js';
-import { forbidden, unauthorized } from './errors.js';
+import type { Db } from '../db/index.js';
+import { hashToken } from '../db/seed.js';
+import { forbidden, unauthorized } from '../core/errors.js';
 import type { Ctx } from './router.js';
-import type { RequestContext } from './http.js';
+import type { RequestContext } from './index.js';
 
 export interface AuthUser {
   id: number;
@@ -45,7 +45,7 @@ export function resolveUser(ctx: Ctx): AuthUser | null {
     const match = /^Bearer\s+(.+)$/i.exec(auth.trim());
     if (!match) {
       throw unauthorized('Esquema de autenticación no soportado; use Bearer', {
-        'WWW-Authenticate': 'Bearer realm="mafetch-simulator"',
+        'WWW-Authenticate': 'Bearer realm="backend-simulator"',
       });
     }
     const hash = hashToken(match[1].trim());

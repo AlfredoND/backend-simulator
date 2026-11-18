@@ -2,13 +2,13 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { createServer as createHttpsServer, type Server as HttpsServer } from 'node:https';
 import { createSecureServer as createHttp2SecureServer, type Http2SecureServer } from 'node:http2';
 import type { AddressInfo } from 'node:net';
-import { loadConfig, type Config } from './config.js';
-import { Db } from './db.js';
-import { createLogger, type Logger } from './logger.js';
-import { Router } from './router.js';
-import { createContext, sendError, sendJson, sendText } from './http.js';
-import { ensureSeeded } from './seed.js';
-import { HttpError } from './errors.js';
+import { loadConfig, type Config } from './core/config.js';
+import { Db } from './db/index.js';
+import { createLogger, type Logger } from './core/logger.js';
+import { Router } from './http/router.js';
+import { createContext, sendError, sendJson, sendText } from './http/index.js';
+import { ensureSeeded } from './db/seed.js';
+import { HttpError } from './core/errors.js';
 import { registerIdentityRoutes } from './domains/identity.js';
 import { registerProjectRoutes } from './domains/projects.js';
 import { registerShopRoutes } from './domains/shop.js';
@@ -16,11 +16,11 @@ import { registerLibraryRoutes } from './domains/library.js';
 import { registerEducationRoutes } from './domains/education.js';
 import { registerHrRoutes } from './domains/hr.js';
 import { registerFinanceRoutes } from './domains/finance.js';
-import { registerControlRoutes } from './control.js';
-import { handleLab } from './lab.js';
-import { buildOpenApi, docsHtml } from './openapi.js';
-import { ensureCertificates } from './tls.js';
-import { createLocalProxy } from './proxy.js';
+import { registerControlRoutes } from './control/index.js';
+import { handleLab } from './lab/index.js';
+import { buildOpenApi, docsHtml } from './http/openapi.js';
+import { ensureCertificates } from './transport/tls.js';
+import { createLocalProxy } from './transport/proxy.js';
 
 export interface AppInstance {
   config: Config;
@@ -57,7 +57,7 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
   router.add('GET', '/', (ctx) => {
     sendJson(ctx, 200, {
       data: {
-        name: 'Mafetch Backend Simulator',
+        name: 'Backend Simulator',
         version: '1.0.0',
         documentation: '/docs',
         openapi: '/openapi.json',
@@ -93,7 +93,7 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
     const isHead = (req.method ?? 'GET').toUpperCase() === 'HEAD';
     const ctx = createContext({ config, db, log }, req, res, isHead);
     const started = performance.now();
-    res.setHeader('Server', 'Mafetch-Simulator/1.0');
+    res.setHeader('Server', 'Backend-Simulator/1.0');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Expose-Headers', 'X-Request-Id, ETag, Location, Retry-After');
     res.on('finish', () => {

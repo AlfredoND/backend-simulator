@@ -1,5 +1,5 @@
 import type { Ctx } from './router.js';
-import { validationError } from './errors.js';
+import { validationError } from '../core/errors.js';
 
 export interface Pagination {
   page: number;

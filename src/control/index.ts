@@ -1,12 +1,12 @@
 import { timingSafeEqual } from 'node:crypto';
-import type { Router } from './router.js';
-import type { Ctx } from './router.js';
-import type { RequestContext } from './http.js';
-import { readJsonBody, sendJson } from './http.js';
-import { HttpError, badRequest, notFound } from './errors.js';
-import { DOMAINS, DOMAIN_TABLES } from './domain-tables.js';
-import { resetAll, resetDomain, hashPassword } from './seed.js';
-import { Validator } from './validate.js';
+import type { Router } from '../http/router.js';
+import type { Ctx } from '../http/router.js';
+import type { RequestContext } from '../http/index.js';
+import { readJsonBody, sendJson } from '../http/index.js';
+import { HttpError, badRequest, notFound } from '../core/errors.js';
+import { DOMAINS, DOMAIN_TABLES } from '../db/domain-tables.js';
+import { resetAll, resetDomain, hashPassword } from '../db/seed.js';
+import { Validator } from '../core/validate.js';
 
 const now = () => new Date().toISOString();
 
@@ -32,7 +32,7 @@ function requireControl(ctx: Ctx): void {
   const b = Buffer.from(provided);
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
     throw new HttpError(401, 'UNAUTHORIZED', 'Token de control ausente o inválido', {
-      headers: { 'WWW-Authenticate': 'Bearer realm="mafetch-control"' },
+      headers: { 'WWW-Authenticate': 'Bearer realm="backend-control"' },
     });
   }
 }

@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import type { Config } from './config.js';
-import type { Db } from './db.js';
-import type { Logger } from './logger.js';
-import { HttpError, badRequest, payloadTooLarge, unauthorized, unsupportedMedia } from './errors.js';
+import type { Config } from '../core/config.js';
+import type { Db } from '../db/index.js';
+import type { Logger } from '../core/logger.js';
+import { HttpError, badRequest, payloadTooLarge, unauthorized, unsupportedMedia } from '../core/errors.js';
 import type { Ctx } from './router.js';
 
 export interface App {
@@ -130,7 +130,7 @@ export function sendError(ctx: Ctx, error: unknown): void {
     for (const [key, value] of Object.entries(httpError.headers)) ctx.res.setHeader(key, value);
   }
   if (httpError.status === 401 && !ctx.res.hasHeader('WWW-Authenticate')) {
-    ctx.res.setHeader('WWW-Authenticate', 'Bearer realm="mafetch-simulator"');
+    ctx.res.setHeader('WWW-Authenticate', 'Bearer realm="backend-simulator"');
   }
   if (httpError.status === 429) ctx.res.setHeader('Cache-Control', 'no-store');
   const payload = {

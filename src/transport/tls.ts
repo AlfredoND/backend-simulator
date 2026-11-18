@@ -1,8 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type { Config } from './config.js';
-import type { Logger } from './logger.js';
+import type { Config } from '../core/config.js';
+import type { Logger } from '../core/logger.js';
 
 export interface TlsMaterial {
   cert: Buffer;
@@ -32,7 +32,7 @@ export function ensureCertificates(config: Config, log: Logger): TlsMaterial | n
       '-keyout', config.tlsKeyPath,
       '-out', config.tlsCertPath,
       '-days', '3650',
-      '-subj', '/CN=localhost/O=Mafetch Backend Simulator',
+      '-subj', '/CN=localhost/O=Backend Simulator',
       '-addext', 'subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1,IP:::1',
     ], { stdio: 'pipe' });
     log.info('Certificado TLS local generado', { cert: config.tlsCertPath });

@@ -1,9 +1,9 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib';
-import type { Ctx } from './router.js';
-import type { RequestContext } from './http.js';
-import { parseCookies, readRawBody, sendBuffer, sendJson, sendText } from './http.js';
-import { badRequest, notFound, validationError } from './errors.js';
+import type { Ctx } from '../http/router.js';
+import type { RequestContext } from '../http/index.js';
+import { parseCookies, readRawBody, sendBuffer, sendJson, sendText } from '../http/index.js';
+import { badRequest, notFound, validationError } from '../core/errors.js';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const isTls = (ctx: Ctx): boolean => Boolean((ctx.req.socket as { encrypted?: boolean }).encrypted);
@@ -98,14 +98,14 @@ function parseBasic(header: string | undefined): { user: string; pass: string } 
 
 function basicChallenge(ctx: Ctx, message: string): void {
   sendJson(ctx, 401, { error: { code: 'UNAUTHORIZED', message, status: 401 } }, {
-    'WWW-Authenticate': 'Basic realm="mafetch-lab", charset="UTF-8"',
+    'WWW-Authenticate': 'Basic realm="backend-lab", charset="UTF-8"',
     'Cache-Control': 'no-store',
   });
 }
 
 function bearerChallenge(ctx: Ctx, message: string, errorCode?: string): void {
   sendJson(ctx, 401, { error: { code: errorCode ?? 'UNAUTHORIZED', message, status: 401 } }, {
-    'WWW-Authenticate': `Bearer realm="mafetch-lab"${errorCode ? `, error="${errorCode}"` : ''}`,
+    'WWW-Authenticate': `Bearer realm="backend-lab"${errorCode ? `, error="${errorCode}"` : ''}`,
     'Cache-Control': 'no-store',
   });
 }

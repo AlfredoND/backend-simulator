@@ -1,5 +1,5 @@
 import type { Router } from './router.js';
-import type { Config } from './config.js';
+import type { Config } from '../core/config.js';
 
 type OpenApiObject = Record<string, unknown>;
 
@@ -174,9 +174,9 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
   return {
     openapi: '3.0.3',
     info: {
-      title: 'Mafetch Backend Simulator',
+      title: 'Backend Simulator',
       version: '1.0.0',
-      description: 'APIs de negocio y laboratorio HTTP para probar clientes HTTP contra escenarios realistas. Todo el servidor es local y utiliza SQLite.',
+      description: 'Local HTTP backend simulator with business APIs and a transport laboratory. Simulador local de backend HTTP con APIs de negocio y laboratorio de transporte. Todo el servidor es local y utiliza SQLite.',
     },
     servers,
     tags: [...tags].sort().map((name) => ({ name, description: TAG_DESCRIPTIONS[name] ?? name })),
@@ -245,12 +245,12 @@ export function docsHtml(): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mafetch Backend Simulator · API</title>
+  <title>Backend Simulator · API</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
   <style>body{margin:0;background:#fafafa}.fallback{padding:2rem;font-family:system-ui,sans-serif}</style>
 </head>
 <body>
-  <div id="swagger-ui"><div class="fallback"><h1>Mafetch Backend Simulator</h1><p>Especificación disponible en <a href="/openapi.json">/openapi.json</a>.</p></div></div>
+  <div id="swagger-ui"><div class="fallback"><h1>Backend Simulator</h1><p>OpenAPI specification: <a href="/openapi.json">/openapi.json</a> · Especificación OpenAPI: <a href="/openapi.json">/openapi.json</a>.</p></div></div>
   <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
     if (window.SwaggerUIBundle) {

@@ -1,15 +1,15 @@
 import { randomBytes } from 'node:crypto';
-import type { Router } from '../router.js';
-import type { Ctx } from '../router.js';
-import type { RequestContext } from '../http.js';
-import { readJsonBody, sendJson } from '../http.js';
-import { badRequest, conflict, forbidden, notFound, unauthorized, validationError } from '../errors.js';
-import { registerResource } from '../resource.js';
-import type { ResourceDef } from '../resource.js';
-import { Validator } from '../validate.js';
-import { hashPassword, hashToken, verifyPassword } from '../seed.js';
-import { effectivePermissionCodes, requirePermission, requireUser, resolveUser, userRoles } from '../auth.js';
-import { escapeLike, paginationMeta, parsePagination } from '../query.js';
+import type { Router } from '../http/router.js';
+import type { Ctx } from '../http/router.js';
+import type { RequestContext } from '../http/index.js';
+import { readJsonBody, sendJson } from '../http/index.js';
+import { badRequest, conflict, forbidden, notFound, unauthorized, validationError } from '../core/errors.js';
+import { registerResource } from '../http/resource.js';
+import type { ResourceDef } from '../http/resource.js';
+import { Validator } from '../core/validate.js';
+import { hashPassword, hashToken, verifyPassword } from '../db/seed.js';
+import { effectivePermissionCodes, requirePermission, requireUser, resolveUser, userRoles } from '../http/auth.js';
+import { escapeLike, paginationMeta, parsePagination } from '../http/query.js';
 
 type Row = Record<string, unknown>;
 const now = () => new Date().toISOString();
