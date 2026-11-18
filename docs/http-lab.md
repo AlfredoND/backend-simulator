@@ -1,5 +1,7 @@
 # Laboratorio HTTP `/test`
 
+Idiomas: **Español** | [English](http-lab.en.md)
+
 El laboratorio es independiente de SQLite y de los dominios de negocio. Sirve para probar el transporte y el comportamiento de un cliente HTTP. Todos los endpoints admiten `HEAD` con las mismas cabeceras que `GET` y `OPTIONS` responde `Allow`.
 
 Las credenciales y límites salen de la configuración (`BASIC_USER`, `BASIC_PASSWORD`, `ADMIN_TOKEN`, `TEST_API_KEY`, `MAX_BODY_BYTES`, `MAX_RESPONSE_BYTES`, `MAX_DELAY_MS`).
