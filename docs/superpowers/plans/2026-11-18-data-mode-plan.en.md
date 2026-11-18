@@ -514,7 +514,179 @@ git commit -m "chore(deps): pin development dependency versions"
 
 ---
 
-### Task 5: Bilingual documentation
+### Task 5: Code quality policies
+
+**Files:**
+- Create: `eslint.config.js`
+- Create: `.prettierrc.json`
+- Create: `.prettierignore`
+- Create: `.editorconfig`
+- Modify: `package.json`
+- Modify: `package-lock.json`
+- Modify: `.github/workflows/ci.yml`
+- Modify: files under `src/`, `tests/`, `web/js/`, and `scripts/` as required by lint or formatting.
+
+**Interfaces:**
+- Produces:
+  - `npm run lint`
+  - `npm run format`
+  - `npm run format:check`
+  - `npm run check` → typecheck + lint + format:check + test
+- Consumes: existing TypeScript configuration and current code.
+
+- [ ] **Step 1: Install exact quality tooling**
+
+```bash
+npm install --save-dev --save-exact \
+  eslint@10.15.0 @eslint/js@10.0.1 typescript-eslint@8.73.0 \
+  prettier@3.10.1 eslint-config-prettier@10.1.8 globals@17.14.0
+```
+
+Verify all six dependencies have no `^` in `package.json`.
+
+- [ ] **Step 2: Create ESLint, Prettier, and EditorConfig policies**
+
+`eslint.config.js`:
+
+```js
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettier from 'eslint-config-prettier';
+import globals from 'globals';
+
+export default tseslint.config(
+  { ignores: ['dist/**', 'node_modules/**', 'data/**', 'certs/**', '.superpowers/**'] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.ts', 'tests/**/*.ts', 'scripts/**/*.ts'],
+    languageOptions: { globals: globals.node },
+    rules: {
+      eqeqeq: ['error', 'always'],
+      'no-var': 'error',
+      'prefer-const': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['web/js/**/*.js'],
+    languageOptions: { globals: globals.browser },
+    rules: { eqeqeq: ['error', 'always'], 'no-var': 'error', 'prefer-const': 'error' },
+  },
+  {
+    files: ['tests/**/*.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+  },
+  {
+    files: ['**/*.mjs', 'eslint.config.js'],
+    languageOptions: { globals: globals.node },
+  },
+  prettier,
+);
+```
+
+`.prettierrc.json`:
+
+```json
+{
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "printWidth": 120
+}
+```
+
+`.prettierignore`:
+
+```text
+node_modules/
+dist/
+data/
+certs/
+.superpowers/
+package-lock.json
+LICENSE
+NOTICE
+docs/
+README.md
+README.en.md
+PLAN.md
+PLAN.en.md
+web/index.html
+```
+
+`.editorconfig`:
+
+```ini
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+```
+
+- [ ] **Step 3: Add quality scripts**
+
+Add to `package.json`:
+
+```json
+"lint": "eslint .",
+"format": "prettier --write .",
+"format:check": "prettier --check .",
+"check": "npm run typecheck && npm run lint && npm run format:check && npm test"
+```
+
+- [ ] **Step 4: Run lint and fix real findings**
+
+Run: `npm run lint`
+Expected: PASS or a list of concrete findings. Fix the code; do not disable rules except `no-explicit-any` in tests.
+
+- [ ] **Step 5: Add CI quality gates**
+
+In `.github/workflows/ci.yml`, after `Typecheck`, add:
+
+```yaml
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+```
+
+- [ ] **Step 6: Format the code**
+
+Run:
+```bash
+npm run format
+npm run format:check
+```
+Expected: PASS. Review the diff to ensure documentation, HTML, lockfile, and legal material were not reformatted.
+
+- [ ] **Step 7: Run the complete quality gate**
+
+Run:
+```bash
+npm run check
+npm run build
+```
+Expected: typecheck OK, lint OK, format OK, **72/72 tests**, build OK.
+
+- [ ] **Step 8: Commit tooling and formatting**
+
+```bash
+git add eslint.config.js .prettierrc.json .prettierignore .editorconfig package.json package-lock.json .github/workflows/ci.yml
+git commit -m "chore(quality): add lint and format policies"
+
+git add src tests web/js scripts
+git commit -m "style: format source and tests with Prettier"
+```
+
+---
+
+### Task 6: Bilingual documentation
 
 **Files:**
 - Create: `docs/data-modes.md`
@@ -531,8 +703,8 @@ git commit -m "chore(deps): pin development dependency versions"
 - Modify: `PLAN.en.md`
 
 **Interfaces:**
-- Consumes: endpoints and UI from Tasks 2–4.
-- Produces: user-facing contract and license references.
+- Consumes: endpoints and UI from Tasks 2–5.
+- Produces: user-facing contract, quality commands, and license references.
 
 - [ ] **Step 1: Write `docs/data-modes.md` and its English pair**
 
@@ -552,7 +724,8 @@ Include:
 - User guide ES/EN: add the new endpoints to the control section and a freeze → modify → restore → leave flow.
 - Capabilities ES/EN: new data mode row and updated test count.
 - Frontend ES/EN: mode panel, control token, and states.
-- PLAN ES/EN: delivery status and tests.
+- README ES/EN: `npm run lint`, `npm run format:check`, and `npm run check` commands.
+- PLAN ES/EN: delivery status, quality, and tests.
 
 The expected count is **72 tests** (65 current + 2 data + 3 API + 1 UI + 1 license). If `npm test` reports another number, update the documents to the real number before committing.
 
@@ -570,20 +743,19 @@ git commit -m "docs: document data modes and Apache-2.0 license"
 
 ---
 
-### Task 6: Final verification
+### Task 7: Final verification
 
 **Files:** none; verification only.
 
 - [ ] **Step 1: Run static and automated checks**
 
 ```bash
-npm run typecheck
-npm test
+npm run check
 npm run build
 node --check web/js/main.js
 ```
 
-Expected: typecheck OK, **72/72 tests**, build OK.
+Expected: typecheck, lint, and format OK; **72/72 tests**; build OK.
 
 - [ ] **Step 2: Verify the browser panel**
 

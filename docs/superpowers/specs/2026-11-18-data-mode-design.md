@@ -198,6 +198,19 @@ El token de control se guarda en `sessionStorage`, no en `localStorage`. El valo
 6. Documentar en README la diferencia entre `npm start` (desarrollo con `tsx`) y `npm run start:dist` (compilado).
 7. Quitar los rangos `^` de `devDependencies` y fijar las versiones exactas instaladas (`@types/node`, `tsx`, `typescript`), regenerando `package-lock.json`. El lockfile ya garantiza reproducibilidad, pero el pinning explícito evita que una nueva instalación resuelva versiones distintas si se borra el lockfile.
 
+### 7.1 Políticas de calidad de código
+
+El proyecto no tiene linting ni formato automatizado. Se añaden:
+
+- **ESLint 10** con flat config y `typescript-eslint` recomendado.
+- **Prettier 3** para formato consistente.
+- **EditorConfig** para espacios, UTF-8 y fin de línea.
+- Reglas: `eqeqeq`, `prefer-const`, `no-var`, variables no usadas y `no-explicit-any` desactivado solo en tests.
+- Scripts: `lint`, `format`, `format:check` y `check` (typecheck + lint + formato + tests).
+- CI ejecuta lint y verificación de formato además de typecheck, tests y build.
+- Dependencias de calidad fijadas a versiones exactas, sin `^`.
+- Prettier ignora documentación, HTML, lockfile, artefactos y material legal para no reescribir textos bilingües ni archivos generados.
+
 ## 8. Licencia
 
 Se adopta **Apache License 2.0**:
