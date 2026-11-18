@@ -41,18 +41,18 @@ test('congela, restaura y descongela sin tocar la base persistente', () => {
   try {
     db.run("INSERT INTO pr_labels(name,color) VALUES ('freeze-baseline','#112233')");
     const persistent = db.count('pr_labels');
+    const captured = db;
     assert.throws(() => db.unfreeze());
     const frozen = db.freeze();
     assert.equal(frozen.mode, 'frozen');
     assert.equal(db.mode, 'frozen');
-    assert.ok(frozen.baseline_records! >= persistent);
+    assert.ok(frozen.baseline_records !== null && frozen.baseline_records >= persistent);
     db.run("INSERT INTO pr_labels(name,color) VALUES ('freeze-working','#445566')");
     assert.equal(db.count('pr_labels'), persistent + 1);
     const restored = db.restoreFrozen();
     assert.equal(restored.mode, 'frozen');
     assert.equal(db.count('pr_labels'), persistent);
     db.run("INSERT INTO pr_labels(name,color) VALUES ('freeze-working-2','#778899')");
-    const captured = db;
     captured.run("INSERT INTO pr_labels(name,color) VALUES ('captured-before-freeze','#101010')");
     db.unfreeze();
     assert.equal(db.mode, 'persistent');
@@ -108,11 +108,18 @@ test('control: expone el modo, protege acciones y valida transiciones', async ()
   const server = await startTestServer();
   const token = { 'X-Control-Token': CONTROL_TOKEN };
   try {
+    for (const path of ['freeze', 'unfreeze', 'restore', 'reset/shop', 'reset', 'seed']) {
+      assert.equal((await server.json('POST', `/_control/${path}`)).status, 401, `${path} sin token`);
+      assert.equal(
+        (await server.json('POST', `/_control/${path}`, { headers: { 'X-Control-Token': 'token-incorrecto' } })).status,
+        401,
+        `${path} con token incorrecto`,
+      );
+    }
     let res = await server.json('GET', '/_control/mode');
     assert.equal(res.status, 200);
     assert.equal(res.body.data.mode, 'persistent');
     assert.equal(res.body.data.frozen_at, null);
-    assert.equal((await server.json('POST', '/_control/freeze')).status, 401);
     res = await server.json('POST', '/_control/freeze', { headers: token });
     assert.equal(res.status, 200);
     assert.equal(res.body.data.mode, 'frozen');
