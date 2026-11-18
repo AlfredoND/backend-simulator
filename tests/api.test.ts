@@ -46,7 +46,7 @@ test('autenticación: 401, login, me, API key y 403 por permisos', async () => {
   assert.equal(res.status, 403);
 
   const login = await server.json('POST', '/api/v1/identity/auth/login', {
-    body: { email: 'admin@mafetch.local', password: 'Admin123!' },
+    body: { email: 'admin@simulator.local', password: 'Admin123!' },
   });
   assert.equal(login.status, 200);
   assert.equal(login.body.data.token_type, 'Bearer');
@@ -54,7 +54,7 @@ test('autenticación: 401, login, me, API key y 403 por permisos', async () => {
 
   res = await server.json('GET', '/api/v1/identity/auth/me', { token: login.body.data.access_token });
   assert.equal(res.status, 200);
-  assert.equal(res.body.data.user.email, 'admin@mafetch.local');
+  assert.equal(res.body.data.user.email, 'admin@simulator.local');
   assert.ok(Array.isArray(res.body.data.permissions));
 
   const refreshed = await server.json('POST', '/api/v1/identity/auth/refresh', {
@@ -69,12 +69,12 @@ test('autenticación: 401, login, me, API key y 403 por permisos', async () => {
   assert.equal(res.status, 200);
 
   const bad = await server.json('POST', '/api/v1/identity/auth/login', {
-    body: { email: 'admin@mafetch.local', password: 'incorrecta' },
+    body: { email: 'admin@simulator.local', password: 'incorrecta' },
   });
   assert.equal(bad.status, 401);
 
   const wrongType = await server.json('POST', '/api/v1/identity/auth/login', {
-    rawBody: 'email=admin@mafetch.local',
+    rawBody: 'email=admin@simulator.local',
     headers: { 'Content-Type': 'text/plain' },
   });
   assert.equal(wrongType.status, 415);

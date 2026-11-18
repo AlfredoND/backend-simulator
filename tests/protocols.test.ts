@@ -12,7 +12,7 @@ let server: TestServer;
 let certDir: string;
 
 before(async () => {
-  certDir = mkdtempSync(join(tmpdir(), 'mafetch-certs-'));
+  certDir = mkdtempSync(join(tmpdir(), 'backend-certs-'));
   server = await startTestServer({
     httpsEnabled: true,
     http2Enabled: true,

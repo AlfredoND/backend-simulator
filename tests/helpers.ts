@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp, type AppInstance } from '../src/app.js';
-import type { Config } from '../src/config.js';
+import type { Config } from '../src/core/config.js';
 
 export const ADMIN_TOKEN = 'local-admin-token';
 export const VIEWER_TOKEN = 'local-viewer-token';
@@ -26,7 +26,7 @@ export interface TestServer {
 }
 
 export async function startTestServer(overrides: Partial<Config> = {}): Promise<TestServer> {
-  const dir = mkdtempSync(join(tmpdir(), 'mafetch-sim-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'backend-sim-test-'));
   const app = createApp({
     dbPath: join(dir, 'test.sqlite'),
     port: 0,
