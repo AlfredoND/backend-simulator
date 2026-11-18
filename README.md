@@ -1,12 +1,23 @@
-# Mafetch Backend Simulator
+# Backend Simulator
 
-Entorno local de simulación de APIs HTTP y de transporte para probar clientes como Mafetch sin mocks acoplados. Incluye seis dominios de negocio sobre SQLite, un laboratorio HTTP independiente, HTTPS, HTTP/2, proxy local, datos deterministas y documentación OpenAPI.
+**Backend Simulator es únicamente un servidor local de simulación de APIs HTTP.** No es un cliente HTTP, no implementa ningún SDK y no forma parte de ningún producto externo. Su función es ofrecer APIs de negocio realistas y un laboratorio de transporte para probar cualquier cliente HTTP.
 
-No implementa Mafetch, no es un runner de pruebas y no pretende ser seguro para producción.
+Idiomas: **Español** | [English](README.en.md)
+
+## Qué incluye
+
+- Siete APIs HTTP de negocio sobre SQLite: identidad, proyectos, e-commerce, biblioteca, educación, RRHH y finanzas.
+- CRUD, paginación, filtros, búsqueda, ordenación, selección de campos y relaciones.
+- Autenticación con Bearer, API keys, sesiones, roles y permisos.
+- Operaciones transaccionales: checkout, cancelación, devolución, matriculación, vacaciones, facturación y pagos.
+- Laboratorio HTTP independiente en `/test` para probar transporte: compresión, streaming, redirects, cookies, caché, rangos, errores, timeouts, rate limiting y concurrencia.
+- HTTP/1.1, HTTPS local, HTTP/2 sobre TLS y proxy HTTP local opcional.
+- Datos semilla deterministas, persistentes y protegidos por endpoints de control.
+- OpenAPI dinámico y documentación bilingüe.
 
 ## Inicio rápido
 
-Requisitos: Node.js 24 o superior y OpenSSL (para generar el certificado local).
+Requisitos: Node.js 24 o superior y OpenSSL (para el certificado local).
 
 ```bash
 npm install
@@ -18,7 +29,7 @@ Servicios por defecto:
 | Servicio | URL |
 |---|---|
 | HTTP/1.1 | `http://127.0.0.1:4000` |
-| Docs | `http://127.0.0.1:4000/docs` |
+| Documentación interactiva | `http://127.0.0.1:4000/docs` |
 | OpenAPI | `http://127.0.0.1:4000/openapi.json` |
 | Laboratorio HTTP | `http://127.0.0.1:4000/test` |
 | HTTPS | `https://localhost:4443` |
@@ -35,15 +46,25 @@ npm run dev        # recarga automática
 npm run build      # compila a dist/
 npm run start:dist
 npm run typecheck
-npm test           # pruebas de integración con SQLite temporal
+npm test           # integración con SQLite temporal
 ```
 
-## Credenciales semilla
+## Documentación
+
+| Documento | Español | English |
+|---|---|---|
+| Guía paso a paso | [docs/user-guide.md](docs/user-guide.md) | [docs/user-guide.en.md](docs/user-guide.en.md) |
+| Laboratorio HTTP | [docs/http-lab.md](docs/http-lab.md) | [docs/http-lab.en.md](docs/http-lab.en.md) |
+| Matriz de capacidades | [docs/capabilities.md](docs/capabilities.md) | [docs/capabilities.en.md](docs/capabilities.en.md) |
+| Plan de entrega | [PLAN.md](PLAN.md) | [PLAN.en.md](PLAN.en.md) |
+| Especificación de API | `GET /openapi.json` | `GET /openapi.json` |
+
+## Credenciales de simulación
 
 | Uso | Valor |
 |---|---|
-| Administrador | `admin@mafetch.local` / `Admin123!` |
-| Viewer | `viewer@mafetch.local` / `Viewer123!` |
+| Administrador | `admin@simulator.local` / `Admin123!` |
+| Viewer | `viewer@simulator.local` / `Viewer123!` |
 | Resto de usuarios | `Password123!` |
 | Token Bearer admin | `local-admin-token` |
 | Token Bearer viewer | `local-viewer-token` |
@@ -52,7 +73,7 @@ npm test           # pruebas de integración con SQLite temporal
 | Basic Auth del laboratorio | `testuser` / `testpass` |
 | Bearer del laboratorio | `local-admin-token` |
 
-Todos los valores son configurables por variables de entorno. No son secretos reales.
+Todos los valores son configurables mediante variables de entorno. Son credenciales de simulación, no secretos reales.
 
 ## APIs de negocio
 
@@ -70,13 +91,13 @@ Prefijo común: `/api/v1`.
 
 ### Convenciones
 
-Respuestas exitosas:
+Respuesta de recurso:
 
 ```json
 { "data": { "id": 1 } }
 ```
 
-Listas:
+Lista paginada:
 
 ```json
 {
@@ -93,7 +114,7 @@ Listas:
 }
 ```
 
-Errores:
+Error estructurado:
 
 ```json
 {
@@ -106,34 +127,31 @@ Errores:
 }
 ```
 
-La mayoría de recursos generados aceptan:
+Los recursos habituales aceptan:
 
-- `page`, `per_page` (máximo 100), `limit`, `offset`.
-- `sort=campo` o `sort=-campo`, y `order=asc|desc`.
-- `fields=id,name,precio` para seleccionar columnas.
-- `q=texto` donde hay búsqueda documentada.
-- Filtros exactos `?status=active`; al repetir un parámetro se genera `IN`.
+- `page`, `per_page` (máximo 100), `limit` y `offset`.
+- `sort=campo`, `sort=-campo` y `order=asc|desc`.
+- `fields=id,name,price_cents` para seleccionar columnas.
+- `q=texto` en recursos con búsqueda.
+- Filtros exactos `?status=active`; los parámetros repetidos generan `IN`.
 - Rangos `_gte`, `_lte`, `_gt`, `_lt` y `_like` cuando el tipo lo permite.
-- `ETag` en lecturas de recurso, `If-None-Match` → `304`, y `If-Match` en escrituras → `412` si la versión no coincide.
+- `ETag` en lecturas; `If-None-Match` devuelve `304`; `If-Match` devuelve `412` si la versión no coincide.
 
-Métodos: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` y `OPTIONS`. `OPTIONS` devuelve `Allow`; `HEAD` mantiene cabeceras y elimina el cuerpo. Los métodos no permitidos devuelven `405`.
+Métodos: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` y `OPTIONS`. `OPTIONS` incluye `Allow`; `HEAD` conserva cabeceras y elimina el cuerpo; los métodos no permitidos devuelven `405`.
 
 ### Autenticación
 
 - `Authorization: Bearer <token>` para sesiones y tokens.
 - `X-API-Key: <key>` para API keys.
-- Los recursos de identidad y las mutaciones sensibles exigen permisos. Las rutas de lectura de identidad requieren `identity:read`; las escrituras `identity:write`.
-- El resto de dominios está abierto por defecto para facilitar escenarios de negocio; los escenarios de `401`/`403` están disponibles en identidad y en `/test/auth/*`.
-- Permisos efectivos: `GET /api/v1/identity/users/:id/permissions`.
-
-Ejemplos:
+- Los recursos de identidad requieren `identity:read` para lectura e `identity:write` para escritura.
+- El resto de dominios está abierto por defecto; los escenarios `401`/`403` están disponibles en identidad y en `/test/auth/*`.
 
 ```bash
 curl -s http://localhost:4000/health
 
 TOKEN=$(curl -s -X POST http://localhost:4000/api/v1/identity/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@mafetch.local","password":"Admin123!"}' |
+  -d '{"email":"admin@simulator.local","password":"Admin123!"}' |
   node -pe 'JSON.parse(fs.readFileSync(0)).data.access_token')
 
 curl -s -H "Authorization: Bearer $TOKEN" \
@@ -143,38 +161,22 @@ curl -s -H 'X-API-Key: local-test-api-key' \
   'http://localhost:4000/api/v1/identity/users?per_page=3'
 ```
 
-### Operaciones de negocio destacadas
-
-- **Proyectos**: crear tareas dentro de un proyecto, subtareas, cambio de estado, historial y estadísticas agregadas.
-- **E-commerce**: checkout atómico con cálculo de impuestos, descuento, envío, pago, envío logístico y descuento de stock; cancelación y reembolso restauran/actualizan datos en transacción.
-- **Biblioteca**: préstamo con disponibilidad y límite de 5 préstamos activos, devolución con multa por retraso, renovación y reservas con índice único parcial.
-- **Educación**: matrícula por sección con aforo, asistencia en lote con upsert y expediente con promedio ponderado/GPA.
-- **RRHH**: solicitud de vacaciones con solape y saldo anual, aprobación/rechazo, nómina agregada.
-- **Finanzas**: factura con líneas y cálculo de IVA, pago parcial/total, movimientos que actualizan saldo, balance y presupuestos.
-
-Consulta `/docs` para contratos interactivos. La especificación `/openapi.json` se genera desde el router y los esquemas de recursos.
-
 ## Laboratorio HTTP
 
-Prefijo `/test`, independiente de SQLite. Incluye:
+Prefijo `/test`, independiente de SQLite. Permite probar:
 
-- Eco completo de método, URL, query repetida, headers crudos, cookies y cuerpo (texto, base64, SHA-256, JSON parseado).
-- Métodos estándar y extensiones; métodos personalizados arbitrarios en `/test/echo` (capturados por el parser) y en HTTP/2.
-- Códigos de estado, cuerpos vacíos/binarios/JSON/HTML/XML/CSV, JSON inválido y Content-Type incorrecto.
-- Compresión gzip, deflate y Brotli, negociada o forzada.
-- Redirecciones 301/302/303/307/308, relativas/absolutas, cadenas, bucles y destinos ausentes.
-- Basic, Bearer, API key, credenciales ausentes/incorrectas, expiradas y esquema incorrecto.
-- Cookies con Path, Max-Age, Expires, HttpOnly, Secure y SameSite; múltiples cookies.
-- ETag/If-None-Match, Last-Modified/If-Modified-Since, Cache-Control y 304.
-- Streaming de texto/binario/SSE, trailers, cortes, respuestas incompletas y descargas grandes.
-- Rangos `Range`/`Content-Range`, rangos inválidos `416` y descargas condicionales.
-- Retrasos, timeout, cierre de conexión, errores controlados, 429 con `Retry-After` y rate limit en memoria.
-- Concurrencia, contador, idempotencia con `Idempotency-Key`.
-- Respuestas HTTP malformadas y cabeceras inválidas a nivel de socket.
+- Eco de método, URL, query repetida, headers crudos, cookies y cuerpo.
+- Métodos estándar, de extensión y personalizados.
+- Códigos HTTP, cuerpos vacíos, JSON inválido, binarios, HTML, XML y CSV.
+- Compresión gzip, deflate y Brotli.
+- Redirecciones 301/302/303/307/308, cadenas, bucles y destinos ausentes.
+- Basic, Bearer, API key y tokens expirados.
+- Cookies, ETag/Last-Modified/304, streaming, SSE, trailers y descargas con rangos.
+- Delays, timeouts, cortes, respuestas incompletas, errores, 429 y rate limiting.
+- Concurrencia, contador e idempotencia.
+- Respuestas HTTP malformadas a nivel de socket.
 
-Referencia completa con ejemplos: [docs/http-lab.md](docs/http-lab.md).
-
-Ejemplos:
+Guía completa: [docs/http-lab.md](docs/http-lab.md) · [English](docs/http-lab.en.md).
 
 ```bash
 curl -i http://localhost:4000/test/status/418
@@ -185,28 +187,26 @@ curl -i 'http://localhost:4000/test/cache/etag?version=2'
 curl -s -X POST 'http://localhost:4000/test/idempotency' -H 'Idempotency-Key: demo'
 ```
 
-## Protocolos y transporte
+## Protocolos de transporte
 
 | Capacidad | Estado |
 |---|---|
 | HTTP/1.1 | Sí |
 | HTTPS con certificado autofirmado local | Sí (`HTTPS_PORT`) |
 | HTTP/2 sobre TLS | Sí (`HTTP2_PORT`, ALPN `h2`) |
-| HTTP/2 sobre HTTP/1.1 en el mismo puerto TLS | Sí (`allowHTTP1`) |
-| Proxy HTTP local (peticiones absolutas y CONNECT) | Sí, opcional y limitado a destinos locales |
+| HTTP/2 con fallback HTTP/1.1 | Sí (`allowHTTP1`) |
+| Proxy HTTP local (URL absoluta y CONNECT) | Sí, opcional y solo destinos locales |
 | SSE | Sí, `/test/stream/sse` |
 | WebSocket | No implementado |
 
-El proxy es útil para probar clientes con configuración de proxy, pero rechaza destinos externos para no actuar como proxy abierto.
-
 ## Persistencia y datos
 
-- SQLite en `DB_PATH` (por defecto `./data/mafetch-sim.sqlite`), WAL activado, foreign keys activas.
+- SQLite en `DB_PATH` (por defecto `./data/backend-simulator.sqlite`), WAL activo y foreign keys activas.
 - Los datos semilla solo se cargan si la base está vacía. **No se borran al arrancar.**
-- IDs explícitos y datos deterministas; Unicode, NULLs, fechas variadas, dinero en céntimos y estados variados.
+- IDs explícitos y datos deterministas; Unicode, NULLs, fechas variadas, importes en céntimos y estados variados.
 - `SEED_SCALE` (0.1–10) multiplica los volúmenes principales.
 - Estadísticas: `GET /_control/stats` y `GET /_control/domains`.
-- Reseteo protegido:
+- Reset protegido con `X-Control-Token`:
 
 ```bash
 curl -X POST http://localhost:4000/_control/reset/shop \
@@ -217,37 +217,37 @@ curl -X POST http://localhost:4000/_control/reset \
 ```
 
 - Datos adicionales: `POST /_control/seed` con `{"entity":"users|tasks|products|books|students|employees|transactions","count":N}` y `X-Control-Token`.
-- Resetear un dominio con dependencias externas (por ejemplo identidad o RRHH) puede dejar referencias opcionales a `NULL`; los dominios autocontenidos (shop, library, education, projects) se restauran limpiamente.
+- Resetear identidad o RRHH puede dejar referencias opcionales a `NULL` en otros dominios. Shop, library, education y projects se restauran de forma autocontenida.
 
 ## Configuración
 
-Todas las variables se leen del entorno. También se carga `.env` si existe (sin sobrescribir variables ya definidas). Copia `.env.example`.
+Copia `.env.example`. Las variables del entorno tienen prioridad; `.env` se carga si existe.
 
 | Variable | Defecto | Descripción |
 |---|---|---|
 | `HOST` | `127.0.0.1` | Interfaz de escucha |
-| `PORT` | `4000` | Puerto HTTP (`0` en pruebas = aleatorio) |
+| `PORT` | `4000` | Puerto HTTP (`0` = aleatorio) |
 | `HTTPS_ENABLED` | `true` | Activa HTTPS |
 | `HTTPS_PORT` | `4443` | Puerto HTTPS |
 | `HTTP2_ENABLED` | `true` | Activa HTTP/2 TLS |
 | `HTTP2_PORT` | `4444` | Puerto HTTP/2 |
 | `PROXY_ENABLED` | `false` | Activa proxy local |
-| `PROXY_PORT` | `8080` | Puerto proxy |
-| `DB_PATH` | `./data/mafetch-sim.sqlite` | Ruta SQLite |
+| `PROXY_PORT` | `8080` | Puerto del proxy |
+| `DB_PATH` | `./data/backend-simulator.sqlite` | Ruta SQLite |
 | `SEED_SCALE` | `1` | Escala de datos (0.1–10) |
 | `MAX_BODY_BYTES` | `10485760` | Límite de request body |
 | `MAX_RESPONSE_BYTES` | `20971520` | Límite de respuestas generadas |
 | `MAX_PAGE_SIZE` | `100` | Tamaño máximo de página |
 | `MAX_DELAY_MS` | `60000` | Retraso máximo del laboratorio |
-| `REQUEST_TIMEOUT_MS` | `30000` | Timeout de recepción de request |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | semilla | Credenciales del admin |
+| `REQUEST_TIMEOUT_MS` | `30000` | Timeout de recepción |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | semilla | Credenciales del administrador |
 | `SEED_PASSWORD` | `Password123!` | Contraseña de usuarios semilla |
-| `ADMIN_TOKEN` / `VIEWER_TOKEN` | semilla | Tokens Bearer de negocio y laboratorio |
-| `TEST_API_KEY` | `local-test-api-key` | API key semilla y laboratorio |
-| `CONTROL_TOKEN` | `local-control-token` | Protección de reset/seed |
+| `ADMIN_TOKEN` / `VIEWER_TOKEN` | semilla | Tokens Bearer |
+| `TEST_API_KEY` | `local-test-api-key` | API key semilla y del laboratorio |
+| `CONTROL_TOKEN` | `local-control-token` | Protección de reset y seed |
 | `BASIC_USER` / `BASIC_PASSWORD` | `testuser` / `testpass` | Basic Auth del laboratorio |
 | `TLS_CERT_PATH` / `TLS_KEY_PATH` | `./certs/...` | Certificado y clave |
-| `TLS_AUTO_GENERATE` | `true` | Genera certificado con OpenSSL si falta |
+| `TLS_AUTO_GENERATE` | `true` | Genera certificado si falta |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error`, `silent` |
 
 ## Estructura
@@ -255,19 +255,15 @@ Todas las variables se leen del entorno. También se carga `.env` si existe (sin
 ```text
 src/
   app.ts, index.ts       composición y arranque HTTP/HTTPS/HTTP2/proxy
-  schema.sql             esquema relacional
-  seed.ts                datos deterministas y reseteo
-  db.ts, config.ts       persistencia y configuración
-  router.ts, http.ts     router sin framework, cuerpos y respuestas
-  resource.ts, query.ts  CRUD reutilizable, validación, paginación y filtros
-  auth.ts, validate.ts   autenticación/permisos y validación de cuerpos
-  domains/               identidad, proyectos, shop, biblioteca, educación, RRHH, finanzas
-  lab.ts                 laboratorio HTTP
-  control.ts             estadísticas, reset y datos extra
-  openapi.ts             especificación y UI
-  tls.ts, proxy.ts       certificados y proxy
-tests/                   integración: db, api, lab, protocolos
-docs/                    documentación del laboratorio y matriz de capacidades
+  core/                  configuración, errores, logger y validación
+  db/                    schema.sql, persistencia, seed y mapa de dominios
+  http/                  router, contexto HTTP, auth, filtros, CRUD y OpenAPI
+  domains/               APIs de negocio
+  lab/                   laboratorio HTTP
+  control/               estadísticas, reset y datos extra
+  transport/             certificados TLS y proxy local
+tests/                   integración
+docs/                    guía, laboratorio, capacidades y versiones en inglés
 ```
 
 ## Pruebas
@@ -277,15 +273,13 @@ npm test
 npm run typecheck
 ```
 
-Las pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones/rollback, auth 401/403, validación, ETag/412, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2 y proxy.
-
-Matriz de cobertura honesta: [docs/capabilities.md](docs/capabilities.md).
+Las pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autenticación, validación, ETag/412, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2 y proxy.
 
 ## Límites y seguridad
 
 Este servidor es exclusivamente local:
 
-- Las credenciales y certificados son de simulación; no usar en producción.
+- Credenciales y certificados de simulación; no usar en producción.
 - El proxy solo acepta destinos locales.
 - Las redirecciones del laboratorio solo admiten rutas locales.
 - Los cuerpos y respuestas generadas están limitados por configuración.
