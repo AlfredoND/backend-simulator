@@ -375,7 +375,7 @@ npm run typecheck
 npm run build
 ```
 
-Tests create temporary SQLite databases and random ports; they do not modify your development database.
+The 48 tests create temporary SQLite databases and random ports; they do not modify your development database.
 
 ## 13. Common issues
 
@@ -392,7 +392,31 @@ Tests create temporary SQLite databases and random ports; they do not modify you
 | External proxy target rejected | Intentional: only local targets are allowed |
 | Custom method without body | Use an extension method or HTTP/2 |
 
-## 14. Shutdown
+## 14. Web interface
+
+With the server running, open:
+
+```text
+http://localhost:4000/ui/
+```
+
+The interface is a static micro frontend with no framework or build step:
+
+- **Overview**: health, uptime, records and per-domain counts.
+- **Request Lab**: send requests with method, path, headers, body and token; inspect status, time, size, headers and body.
+- **API catalog**: search endpoints and load them into the laboratory.
+- **Documentation**: OpenAPI/Swagger links and simulation credentials.
+- **Preferences**: Spanish/English, light/dark theme and configurable API base.
+
+The **Use demo token** button loads `local-admin-token`. To serve the UI separately, use any static server over `web/` and set the API base URL. To disable it:
+
+```bash
+UI_ENABLED=false npm start
+```
+
+Details and customization: [frontend.en.md](frontend.en.md) · [Español](frontend.md).
+
+## 15. Shutdown
 
 ```bash
 Ctrl+C
@@ -403,6 +427,7 @@ The server closes HTTP, HTTPS, HTTP/2, proxy and SQLite cleanly.
 ## Related documentation
 
 - [README (English)](../README.en.md) · [Español](../README.md)
+- [Micro frontend](frontend.en.md) · [Español](frontend.md)
 - [HTTP laboratory](http-lab.en.md) · [Español](http-lab.md)
 - [Capability matrix](capabilities.en.md) · [Español](capabilities.md)
 - [OpenAPI](http://localhost:4000/openapi.json)

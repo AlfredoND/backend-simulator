@@ -64,6 +64,7 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 | Local certificates | Yes | Auto-generated with OpenSSL; SAN localhost/127.0.0.1 | `tests/protocols.test.ts` |
 | HTTP/2 | Yes | Dedicated TLS server, ALPN h2 | `tests/protocols.test.ts` |
 | HTTP proxy | Yes (local) | `PROXY_ENABLED`; absolute requests and CONNECT; local targets | `tests/protocols.test.ts` |
+| Static micro frontend | Yes | `/ui/`; overview, Request Lab, catalog, i18n and theme | `tests/ui.test.ts`, `tests/frontend.test.mjs` |
 | HTTP/3 / QUIC | No | Out of scope | — |
 | Custom DNS | No | Out of scope | — |
 | Malformed HTTP responses | Yes (HTTP/1.1) | `/test/raw/*` | `tests/lab.test.ts` |
@@ -93,7 +94,7 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 ## Verification
 
 ```text
-npm test       37 tests, 37 pass
+npm test       48 tests, 48 pass
 npm run typecheck   no errors
 npm run build       compiles and copies schema.sql
 ```

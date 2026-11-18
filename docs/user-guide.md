@@ -375,7 +375,7 @@ npm run typecheck
 npm run build
 ```
 
-Las pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo.
+Las 48 pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo.
 
 ## 13. Problemas comunes
 
@@ -392,7 +392,31 @@ Las pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu 
 | Proxy externo rechazado | Es intencional: solo se permiten destinos locales |
 | Método personalizado sin cuerpo | Usa un método de extensión o HTTP/2 |
 
-## 14. Parada
+## 14. Interfaz web
+
+Con el servidor en marcha, abre:
+
+```text
+http://localhost:4000/ui/
+```
+
+La interfaz es un micro frontend estático, sin framework ni build:
+
+- **Resumen**: salud, uptime, registros y conteos por dominio.
+- **Request Lab**: envía peticiones con método, ruta, headers, body y token; muestra estado, tiempo, tamaño, headers y cuerpo.
+- **Catálogo API**: busca endpoints y cárgalos en el laboratorio.
+- **Documentación**: enlaces a OpenAPI/Swagger y credenciales de simulación.
+- **Preferencias**: español/inglés, tema claro/oscuro y API base configurable.
+
+El botón **Usar token demo** carga `local-admin-token`. Para servir la UI por separado, usa cualquier servidor estático sobre `web/` y configura la Base URL de la API. Si no quieres servirla:
+
+```bash
+UI_ENABLED=false npm start
+```
+
+Detalles y personalización: [frontend.md](frontend.md) · [English](frontend.en.md).
+
+## 15. Parada
 
 ```bash
 Ctrl+C
@@ -403,6 +427,7 @@ El servidor cierra HTTP, HTTPS, HTTP/2, proxy y SQLite de forma ordenada.
 ## Documentación relacionada
 
 - [README](../README.md) · [English README](../README.en.md)
+- [Micro frontend](frontend.md) · [English](frontend.en.md)
 - [Laboratorio HTTP](http-lab.md) · [English](http-lab.en.md)
 - [Matriz de capacidades](capabilities.md) · [English](capabilities.en.md)
 - [OpenAPI](http://localhost:4000/openapi.json)

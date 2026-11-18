@@ -36,11 +36,17 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - OpenAPI dinámico en `/openapi.json` y UI en `/docs`.
 - README, guía de uso, documentación del laboratorio, matriz de capacidades y `.env.example`, con versiones en español e inglés.
 
-## Fase 5 — Verificación [COMPLETA]
-- `npm test`: 37/37 pruebas.
+## Fase 5 — Micro frontend [COMPLETA]
+- UI estática en `web/`, sin framework ni build, servida en `/ui/`.
+- Resumen de salud/datos, Request Lab, catálogo de endpoints, documentación, tema e idioma.
+- Servidor estático con MIME, CSP y protección de traversal.
+- Documentación bilingüe en `docs/frontend.md` y `docs/frontend.en.md`.
+
+## Fase 6 — Verificación [COMPLETA]
+- `npm test`: 48/48 pruebas.
 - `npm run typecheck`: sin errores.
 - `npm run build`: OK, copia `schema.sql`.
-- Cobertura: persistencia, APIs, lab y protocolos TLS/HTTP2/proxy.
+- Cobertura: persistencia, APIs, laboratorio, protocolos TLS/HTTP2/proxy y micro frontend.
 
 ## Limitaciones conocidas
 - WebSocket no implementado (SSE sí).
@@ -50,3 +56,4 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Métodos arbitrarios con cuerpo completo requieren HTTP/2 o métodos de extensión.
 - Reset de dominios con dependencias externas (identidad/RRHH) puede dejar referencias opcionales a NULL.
 - Rate limit global de APIs no incluido; el laboratorio ofrece rate limit configurable.
+- La UI es estática y deliberadamente simple: no incluye router SPA ni framework.

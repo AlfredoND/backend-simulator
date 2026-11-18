@@ -64,6 +64,7 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 | Certificados locales | Sí | Autogenerados con OpenSSL; SAN localhost/127.0.0.1 | `tests/protocols.test.ts` |
 | HTTP/2 | Sí | Servidor TLS independiente, ALPN h2 | `tests/protocols.test.ts` |
 | Proxy HTTP | Sí (local) | `PROXY_ENABLED`; peticiones absolutas y CONNECT; destinos locales | `tests/protocols.test.ts` |
+| Micro frontend estático | Sí | `/ui/`; overview, Request Lab, catálogo, i18n y tema | `tests/ui.test.ts`, `tests/frontend.test.mjs` |
 | HTTP/3 / QUIC | No | Fuera del alcance | — |
 | DNS personalizado | No | Fuera del alcance | — |
 | Respuestas HTTP malformadas | Sí (HTTP/1.1) | `/test/raw/*` | `tests/lab.test.ts` |
@@ -93,7 +94,7 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 ## Verificación
 
 ```text
-npm test       37 pruebas, 37 pasan
+npm test       48 pruebas, 48 pasan
 npm run typecheck   sin errores
 npm run build       compila y copia schema.sql
 ```

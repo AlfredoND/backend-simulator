@@ -11,6 +11,7 @@ Idiomas: **Español** | [English](README.en.md)
 - Autenticación con Bearer, API keys, sesiones, roles y permisos.
 - Operaciones transaccionales: checkout, cancelación, devolución, matriculación, vacaciones, facturación y pagos.
 - Laboratorio HTTP independiente en `/test` para probar transporte: compresión, streaming, redirects, cookies, caché, rangos, errores, timeouts, rate limiting y concurrencia.
+- Micro frontend estático en `/ui/` con resumen, Request Lab, catálogo de endpoints, tema e idioma. Sin framework y sin build.
 - HTTP/1.1, HTTPS local, HTTP/2 sobre TLS y proxy HTTP local opcional.
 - Datos semilla deterministas, persistentes y protegidos por endpoints de control.
 - OpenAPI dinámico y documentación bilingüe.
@@ -29,6 +30,7 @@ Servicios por defecto:
 | Servicio | URL |
 |---|---|
 | HTTP/1.1 | `http://127.0.0.1:4000` |
+| Interfaz web | `http://127.0.0.1:4000/ui/` |
 | Documentación interactiva | `http://127.0.0.1:4000/docs` |
 | OpenAPI | `http://127.0.0.1:4000/openapi.json` |
 | Laboratorio HTTP | `http://127.0.0.1:4000/test` |
@@ -49,11 +51,24 @@ npm run typecheck
 npm test           # integración con SQLite temporal
 ```
 
+## Interfaz web
+
+El micro frontend está en `web/` y se sirve en `/ui/`:
+
+- Resumen de salud, uptime, registros y dominios.
+- Request Lab con método, ruta, headers, body, token, aborto y respuesta completa.
+- Catálogo de endpoints cargables en el laboratorio.
+- Cambio de idioma español/inglés y tema claro/oscuro.
+- Base URL configurable, incluso si la UI se sirve por separado.
+
+Es JavaScript nativo con ES modules: sin framework, sin dependencias de UI y sin build. Gestión y personalización: [docs/frontend.md](docs/frontend.md) · [English](docs/frontend.en.md).
+
 ## Documentación
 
 | Documento | Español | English |
 |---|---|---|
 | Guía paso a paso | [docs/user-guide.md](docs/user-guide.md) | [docs/user-guide.en.md](docs/user-guide.en.md) |
+| Micro frontend | [docs/frontend.md](docs/frontend.md) | [docs/frontend.en.md](docs/frontend.en.md) |
 | Laboratorio HTTP | [docs/http-lab.md](docs/http-lab.md) | [docs/http-lab.en.md](docs/http-lab.en.md) |
 | Matriz de capacidades | [docs/capabilities.md](docs/capabilities.md) | [docs/capabilities.en.md](docs/capabilities.en.md) |
 | Plan de entrega | [PLAN.md](PLAN.md) | [PLAN.en.md](PLAN.en.md) |
@@ -233,6 +248,8 @@ Copia `.env.example`. Las variables del entorno tienen prioridad; `.env` se carg
 | `HTTP2_PORT` | `4444` | Puerto HTTP/2 |
 | `PROXY_ENABLED` | `false` | Activa proxy local |
 | `PROXY_PORT` | `8080` | Puerto del proxy |
+| `UI_ENABLED` | `true` | Sirve el micro frontend en `/ui/` |
+| `UI_DIR` | `./web` | Directorio de archivos de la UI |
 | `DB_PATH` | `./data/backend-simulator.sqlite` | Ruta SQLite |
 | `SEED_SCALE` | `1` | Escala de datos (0.1–10) |
 | `MAX_BODY_BYTES` | `10485760` | Límite de request body |
@@ -262,8 +279,9 @@ src/
   lab/                   laboratorio HTTP
   control/               estadísticas, reset y datos extra
   transport/             certificados TLS y proxy local
-tests/                   integración
-docs/                    guía, laboratorio, capacidades y versiones en inglés
+web/                     micro frontend estático (HTML/CSS/JS, sin build)
+tests/                   integración y pruebas del frontend
+docs/                    guía, frontend, laboratorio, capacidades y versiones en inglés
 ```
 
 ## Pruebas
@@ -273,7 +291,7 @@ npm test
 npm run typecheck
 ```
 
-Las pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autenticación, validación, ETag/412, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2 y proxy.
+Las 48 pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autenticación, validación, ETag/412, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2, proxy, servidor estático y helpers del micro frontend.
 
 ## Límites y seguridad
 
@@ -283,6 +301,7 @@ Este servidor es exclusivamente local:
 - El proxy solo acepta destinos locales.
 - Las redirecciones del laboratorio solo admiten rutas locales.
 - Los cuerpos y respuestas generadas están limitados por configuración.
+- La UI guarda el token en `sessionStorage` y no carga recursos de terceros.
 - Las operaciones destructivas exigen `X-Control-Token`.
 - Las consultas usan parámetros ligados y listas blancas de columnas/tablas.
 - No se ejecuta código recibido ni se accede a archivos por rutas de usuario.
