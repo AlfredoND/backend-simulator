@@ -1,6 +1,6 @@
 # Modo de datos congelado — Plan de implementación
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Añadir un modo de datos congelado con copia descartable, restauración de la imagen o de los datos semilla, controles web y licencia Apache-2.0.
 
@@ -9,6 +9,8 @@
 **Tech Stack:** Node.js 24, TypeScript estricto, `node:sqlite`, `node:http`, frontend vanilla ES modules, SQLite WAL.
 
 **Spec:** [Diseño del modo de datos](../specs/2026-11-18-data-mode-design.md)
+
+> **Estado de ejecución:** completado y verificado el 2026-11-18.
 
 ## Global Constraints
 
@@ -41,7 +43,7 @@
 - `docs/superpowers/plans/2026-11-18-data-mode-plan.md`
 - `docs/superpowers/plans/2026-11-18-data-mode-plan.en.md`
 
-- [ ] **Step 1: Commit the approved documentation**
+- [x] **Step 1: Commit the approved documentation**
 
 ```bash
 git add docs/superpowers/specs/2026-11-18-data-mode-design.md docs/superpowers/specs/2026-11-18-data-mode-design.en.md docs/superpowers/plans/2026-11-18-data-mode-plan.md docs/superpowers/plans/2026-11-18-data-mode-plan.en.md
@@ -68,7 +70,7 @@ git commit -m "docs: add data mode design and implementation plan"
   - `Db.restoreFrozen(): DataModeState`
   - `Db.close()` sigue cerrando todo.
 
-- [ ] **Step 1: Write the failing core tests**
+- [x] **Step 1: Write the failing core tests**
 
 Crea `tests/data-mode.test.ts` con un helper que use `mkdtempSync`, `Db`, `loadConfig`, `ensureSeeded` y `rmSync`. Los tests deben ser:
 
@@ -116,12 +118,12 @@ test('un cierre en congelado deja intacta la base persistente', () => {
 
 La referencia `captured` se toma antes de `unfreeze`: el insert `captured-before-freeze` debe terminar en la copia congelada, no en la persistente; `captured-after-unfreeze` debe funcionar después de descongelar sin usar una conexión cerrada.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: FAIL porque `freeze`, `unfreeze`, `restoreFrozen`, `state` o `mode` no existen.
 
-- [ ] **Step 3: Implement the facade and lifecycle in `src/db/index.ts`**
+- [x] **Step 3: Implement the facade and lifecycle in `src/db/index.ts`**
 
 Convierte `raw` en una fachada sobre `this.active`:
 
@@ -148,12 +150,12 @@ Convierte `raw` en una fachada sobre `this.active`:
 - `removeDatabaseFiles(path)` elimina `path`, `path-wal` y `path-shm`.
 - JSDoc de la fachada y de las decisiones de aislamiento.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/index.ts tests/data-mode.test.ts
@@ -181,7 +183,7 @@ git commit -m "feat(db): add frozen data mode lifecycle"
   - `GET /_control/stats` incluye `data_mode: DataModeState`.
   - Los resets incluyen `mode` en la respuesta.
 
-- [ ] **Step 1: Write the failing API tests**
+- [x] **Step 1: Write the failing API tests**
 
 Añade a `tests/data-mode.test.ts`:
 
@@ -249,12 +251,12 @@ test('control: reset y restore aíslan la copia congelada', async () => {
 
 Añade un helper `createProduct(server, prefix): Promise<number>` que haga `POST /api/v1/shop/products` con `sku`, `name`, `slug` únicos y `category_id: 1`, y devuelva `body.data.id`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: FAIL con 404 en `/_control/mode` y `/_control/freeze`.
 
-- [ ] **Step 3: Implement the control routes**
+- [x] **Step 3: Implement the control routes**
 
 En `src/control/index.ts`:
 
@@ -272,7 +274,7 @@ En `src/control/index.ts`:
   - `Restaura la imagen congelada o los datos semilla` / `Restore the frozen image or seed data`
 - Actualiza `TAG_DESCRIPTIONS.Control` a `Estadísticas, reseteo, modo de datos y datos adicionales.` y `TAG_DESCRIPTIONS_EN.Control` a `Statistics, reset, data mode and extra data.`.
 
-- [ ] **Step 4: Add OpenAPI assertions**
+- [x] **Step 4: Add OpenAPI assertions**
 
 En `tests/openapi.test.ts`, dentro del primer test o en uno nuevo, verifica:
 
@@ -284,12 +286,12 @@ assert.equal(enOps['POST /_control/freeze'].summary, 'Freeze the current databas
 assert.equal(en.body.tags.find((tag: any) => tag.name === 'Control').description, 'Statistics, reset, data mode and extra data.');
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `node --import tsx --test tests/data-mode.test.ts tests/openapi.test.ts`
 Expected: PASS (5 tests de datos + pruebas OpenAPI existentes).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/control/index.ts src/http/openapi.ts src/http/openapi-i18n.ts tests/data-mode.test.ts tests/openapi.test.ts
@@ -313,7 +315,7 @@ git commit -m "feat(control): expose data mode endpoints"
 - Produces: `controlRequest(baseUrl, path, { method, token, signal })` en `web/js/api.js`.
 - DOM IDs: `mode-badge`, `mode-description`, `control-token`, `mode-freeze`, `mode-restore`, `mode-unfreeze`, `mode-message`.
 
-- [ ] **Step 1: Write the failing UI contract test**
+- [x] **Step 1: Write the failing UI contract test**
 
 Añade a `tests/frontend.test.mjs`:
 
@@ -332,12 +334,12 @@ test('la consola expone los controles del modo de datos', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/frontend.test.mjs`
 Expected: FAIL porque faltan los IDs y las traducciones.
 
-- [ ] **Step 3: Add the panel and translations**
+- [x] **Step 3: Add the panel and translations**
 
 En `web/index.html`, dentro de `.hero-panel` y después de `#domain-grid`, añade el panel con:
 
@@ -350,7 +352,7 @@ En `web/index.html`, dentro de `.hero-panel` y después de `#domain-grid`, añad
 
 Añade claves ES/EN en `web/js/i18n.js` para título, hint, badge, descripciones, token, botones, confirmaciones, éxito y error. Las claves `data-i18n` del HTML deben existir para que pase el test existente.
 
-- [ ] **Step 4: Implement the client and controller**
+- [x] **Step 4: Implement the client and controller**
 
 En `web/js/api.js` añade:
 
@@ -381,12 +383,12 @@ En `web/js/main.js`:
 
 Estilos en `web/styles.css`: badge persistente/congelado, panel, fila de token, acciones y responsive.
 
-- [ ] **Step 5: Run tests and syntax check**
+- [x] **Step 5: Run tests and syntax check**
 
 Run: `node --import tsx --test tests/frontend.test.mjs tests/ui.test.ts`
 Expected: PASS. Ejecuta también `node --check web/js/main.js`; debe salir sin errores.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/index.html web/styles.css web/js/api.js web/js/i18n.js web/js/main.js tests/frontend.test.mjs
@@ -409,7 +411,7 @@ git commit -m "feat(web): add data mode console controls"
 - Produces: `"license": "Apache-2.0"`, `LICENSE` canónico, `NOTICE` con atribución, build portable y versiones de desarrollo exactas.
 - Consumes: `src/db/schema.sql`, `dist/src/db/schema.sql`.
 
-- [ ] **Step 1: Write the failing license test**
+- [x] **Step 1: Write the failing license test**
 
 ```js
 test('el paquete declara Apache-2.0 y la licencia está presente', () => {
@@ -423,12 +425,12 @@ test('el paquete declara Apache-2.0 y la licencia está presente', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/license.test.mjs`
 Expected: FAIL porque no existe `LICENSE` ni el campo `license`.
 
-- [ ] **Step 3: Add the license and portable build**
+- [x] **Step 3: Add the license and portable build**
 
 - Descarga el texto oficial de Apache-2.0 a `LICENSE`:
 
@@ -446,7 +448,7 @@ curl -fsSL https://www.apache.org/licenses/LICENSE-2.0.txt -o LICENSE
   - Cambia `build` a `"tsc -p tsconfig.json && node scripts/copy-schema.mjs"`.
   - No añadas `author`, `repository`, `homepage`, `main`, `exports` ni `files` sin datos reales.
 
-- [ ] **Step 4: Run tests and build**
+- [x] **Step 4: Run tests and build**
 
 Run:
 ```bash
@@ -455,14 +457,14 @@ npm run build
 ```
 Expected: PASS y `dist/src/db/schema.sql` existe.
 
-- [ ] **Step 5: Commit license and portable build**
+- [x] **Step 5: Commit license and portable build**
 
 ```bash
 git add LICENSE NOTICE scripts/copy-schema.mjs tests/license.test.mjs package.json
 git commit -m "chore: adopt Apache-2.0 and portable build"
 ```
 
-- [ ] **Step 6: Add failing exact-version assertions**
+- [x] **Step 6: Add failing exact-version assertions**
 
 Añade al test de licencia:
 
@@ -475,7 +477,7 @@ for (const [name, version] of Object.entries(pkg.devDependencies)) {
 Run: `node --import tsx --test tests/license.test.mjs`
 Expected: FAIL porque `@types/node`, `tsx` y `typescript` usan `^`.
 
-- [ ] **Step 7: Pin the installed development versions**
+- [x] **Step 7: Pin the installed development versions**
 
 Ejecuta con las versiones instaladas actualmente:
 
@@ -495,7 +497,7 @@ Esto debe dejar en `package.json`:
 
 Verifica que `package-lock.json` quedó actualizado y que `npm ci --dry-run` está sincronizado.
 
-- [ ] **Step 8: Run tests, lockfile check and build**
+- [x] **Step 8: Run tests, lockfile check and build**
 
 Run:
 ```bash
@@ -505,7 +507,7 @@ npm run build
 ```
 Expected: PASS, lockfile sincronizado y build correcto.
 
-- [ ] **Step 9: Commit pinned dependencies**
+- [x] **Step 9: Commit pinned dependencies**
 
 ```bash
 git add package.json package-lock.json tests/license.test.mjs
@@ -534,7 +536,7 @@ git commit -m "chore(deps): pin development dependency versions"
   - `npm run check` → typecheck + lint + format:check + test
 - Consumes: configuración TypeScript existente y código actual.
 
-- [ ] **Step 1: Install exact quality tooling**
+- [x] **Step 1: Install exact quality tooling**
 
 ```bash
 npm install --save-dev --save-exact \
@@ -544,7 +546,7 @@ npm install --save-dev --save-exact \
 
 Verifica que las seis dependencias queden sin `^` en `package.json`.
 
-- [ ] **Step 2: Create ESLint, Prettier and EditorConfig policies**
+- [x] **Step 2: Create ESLint, Prettier and EditorConfig policies**
 
 `eslint.config.js`:
 
@@ -629,7 +631,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 ```
 
-- [ ] **Step 3: Add quality scripts**
+- [x] **Step 3: Add quality scripts**
 
 En `package.json` añade:
 
@@ -640,12 +642,12 @@ En `package.json` añade:
 "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
 ```
 
-- [ ] **Step 4: Run lint and fix real findings**
+- [x] **Step 4: Run lint and fix real findings**
 
 Run: `npm run lint`
 Expected: PASS o lista de hallazgos concretos. Corrige el código; no desactives reglas salvo `no-explicit-any` en tests.
 
-- [ ] **Step 5: Add CI quality gates**
+- [x] **Step 5: Add CI quality gates**
 
 En `.github/workflows/ci.yml`, después de `Typecheck`, añade:
 
@@ -656,7 +658,7 @@ En `.github/workflows/ci.yml`, después de `Typecheck`, añade:
         run: npm run format:check
 ```
 
-- [ ] **Step 6: Format the code**
+- [x] **Step 6: Format the code**
 
 Run:
 ```bash
@@ -665,16 +667,16 @@ npm run format:check
 ```
 Expected: PASS. Revisa el diff para asegurar que no se reformatearon documentos, HTML, lockfile ni material legal.
 
-- [ ] **Step 7: Run the complete quality gate**
+- [x] **Step 7: Run the complete quality gate**
 
 Run:
 ```bash
 npm run check
 npm run build
 ```
-Expected: typecheck OK, lint OK, format OK, **72/72 tests**, build OK.
+Expected: typecheck OK, lint OK, format OK, **73/73 tests**, build OK.
 
-- [ ] **Step 8: Commit tooling and formatting**
+- [x] **Step 8: Commit tooling and formatting**
 
 ```bash
 git add eslint.config.js .prettierrc.json .prettierignore .editorconfig package.json package-lock.json .github/workflows/ci.yml
@@ -706,7 +708,7 @@ git commit -m "style: format source and tests with Prettier"
 - Consumes: endpoints and UI from Tasks 2–5.
 - Produces: user-facing contract, quality commands and license references.
 
-- [ ] **Step 1: Write `docs/data-modes.md` and its English pair**
+- [x] **Step 1: Write `docs/data-modes.md` and its English pair**
 
 Incluye:
 
@@ -718,7 +720,7 @@ Incluye:
 - Limitaciones: snapshot síncrono, temporales en el sistema, un solo snapshot.
 - Enlaces al otro idioma y a la guía de usuario.
 
-- [ ] **Step 2: Update README and guides**
+- [x] **Step 2: Update README and guides**
 
 - README ES/EN: sección de persistencia con los dos modos, restauración, reinicio y licencia Apache-2.0.
 - User guide ES/EN: añade los endpoints nuevos a la sección de control y un ejemplo de flujo congelar → modificar → restaurar → salir.
@@ -727,14 +729,14 @@ Incluye:
 - README ES/EN: comandos `npm run lint`, `npm run format:check` y `npm run check`.
 - PLAN ES/EN: estado de entrega, calidad y pruebas.
 
-El conteo esperado es **72 pruebas** (65 actuales + 2 de datos + 3 de API + 1 de UI + 1 de licencia). Si `npm test` reporta otro número, actualiza los documentos al número real antes de commitear.
+El conteo esperado es **73 pruebas** (65 actuales + 2 de datos + 3 de API + 1 de UI + 1 de licencia + 1 de regresión de freeze). Si `npm test` reporta otro número, actualiza los documentos al número real antes de commitear.
 
-- [ ] **Step 3: Run documentation tests**
+- [x] **Step 3: Run documentation tests**
 
 Run: `node --import tsx --test tests/docs.test.mjs`
 Expected: PASS; todos los pares ES/EN y enlaces locales existen.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md README.en.md PLAN.md PLAN.en.md docs/data-modes.md docs/data-modes.en.md docs/user-guide.md docs/user-guide.en.md docs/capabilities.md docs/capabilities.en.md docs/frontend.md docs/frontend.en.md
@@ -747,7 +749,7 @@ git commit -m "docs: document data modes and Apache-2.0 license"
 
 **Files:** ninguno; solo verificación.
 
-- [ ] **Step 1: Run static and automated checks**
+- [x] **Step 1: Run static and automated checks**
 
 ```bash
 npm run check
@@ -755,9 +757,9 @@ npm run build
 node --check web/js/main.js
 ```
 
-Expected: typecheck, lint y formato OK; **72/72 tests**; build OK.
+Expected: typecheck, lint y formato OK; **73/73 tests**; build OK.
 
-- [ ] **Step 2: Verify the browser panel**
+- [x] **Step 2: Verify the browser panel**
 
 Arranca el servidor con una base temporal y abre `/ui/` en Chrome headless. Comprueba:
 
@@ -767,11 +769,11 @@ Arranca el servidor con una base temporal y abre `/ui/` en Chrome headless. Comp
 - Crear un producto y `Restaurar datos` lo elimina.
 - `Salir del congelado` vuelve a `Persistente`.
 
-- [ ] **Step 3: Verify the persistent database is untouched**
+- [x] **Step 3: Verify the persistent database is untouched**
 
 Con el servidor en congelado, crea un producto, descongela y consulta el producto: debe devolver `404`. Repite el flujo con `restore` y confirma el comportamiento documentado.
 
-- [ ] **Step 4: Check Git state**
+- [x] **Step 4: Check Git state**
 
 ```bash
 git status --short

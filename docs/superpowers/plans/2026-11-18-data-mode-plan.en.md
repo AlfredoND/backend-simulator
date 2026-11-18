@@ -1,6 +1,6 @@
 # Frozen Data Mode — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a frozen data mode with a disposable copy, restore of the image or seed data, web controls, and the Apache-2.0 license.
 
@@ -9,6 +9,8 @@
 **Tech Stack:** Node.js 24, strict TypeScript, `node:sqlite`, `node:http`, vanilla ES-module frontend, SQLite WAL.
 
 **Spec:** [Data mode design](../specs/2026-11-18-data-mode-design.en.md)
+
+> **Execution status:** completed and verified on 2026-11-18.
 
 ## Global Constraints
 
@@ -41,7 +43,7 @@
 - `docs/superpowers/plans/2026-11-18-data-mode-plan.md`
 - `docs/superpowers/plans/2026-11-18-data-mode-plan.en.md`
 
-- [ ] **Step 1: Commit the approved documentation**
+- [x] **Step 1: Commit the approved documentation**
 
 ```bash
 git add docs/superpowers/specs/2026-11-18-data-mode-design.md docs/superpowers/specs/2026-11-18-data-mode-design.en.md docs/superpowers/plans/2026-11-18-data-mode-plan.md docs/superpowers/plans/2026-11-18-data-mode-plan.en.md
@@ -68,7 +70,7 @@ git commit -m "docs: add data mode design and implementation plan"
   - `Db.restoreFrozen(): DataModeState`
   - `Db.close()` still closes everything.
 
-- [ ] **Step 1: Write the failing core tests**
+- [x] **Step 1: Write the failing core tests**
 
 Create `tests/data-mode.test.ts` with a helper using `mkdtempSync`, `Db`, `loadConfig`, `ensureSeeded`, and `rmSync`. The tests must be:
 
@@ -116,12 +118,12 @@ test('closing while frozen leaves the persistent database intact', () => {
 
 The `captured` reference is taken before `unfreeze`: the `captured-before-freeze` insert must end up in the frozen copy, not the persistent database; `captured-after-unfreeze` must work after unfreezing without using a closed connection.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: FAIL because `freeze`, `unfreeze`, `restoreFrozen`, `state`, or `mode` do not exist.
 
-- [ ] **Step 3: Implement the facade and lifecycle in `src/db/index.ts`**
+- [x] **Step 3: Implement the facade and lifecycle in `src/db/index.ts`**
 
 Turn `raw` into a facade over `this.active`:
 
@@ -148,12 +150,12 @@ Turn `raw` into a facade over `this.active`:
 - `removeDatabaseFiles(path)` removes `path`, `path-wal`, and `path-shm`.
 - Add JSDoc for the facade and isolation decisions.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/index.ts tests/data-mode.test.ts
@@ -181,7 +183,7 @@ git commit -m "feat(db): add frozen data mode lifecycle"
   - `GET /_control/stats` includes `data_mode: DataModeState`.
   - Reset responses include `mode`.
 
-- [ ] **Step 1: Write the failing API tests**
+- [x] **Step 1: Write the failing API tests**
 
 Add to `tests/data-mode.test.ts`:
 
@@ -249,12 +251,12 @@ test('control: reset and restore isolate the frozen copy', async () => {
 
 Add a `createProduct(server, prefix): Promise<number>` helper that sends `POST /api/v1/shop/products` with unique `sku`, `name`, `slug`, and `category_id: 1`, and returns `body.data.id`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/data-mode.test.ts`
 Expected: FAIL with 404 for `/_control/mode` and `/_control/freeze`.
 
-- [ ] **Step 3: Implement the control routes**
+- [x] **Step 3: Implement the control routes**
 
 In `src/control/index.ts`:
 
@@ -272,7 +274,7 @@ In `src/control/index.ts`:
   - `Restaura la imagen congelada o los datos semilla` / `Restore the frozen image or seed data`
 - Update `TAG_DESCRIPTIONS.Control` to `Estadísticas, reseteo, modo de datos y datos adicionales.` and `TAG_DESCRIPTIONS_EN.Control` to `Statistics, reset, data mode and extra data.`.
 
-- [ ] **Step 4: Add OpenAPI assertions**
+- [x] **Step 4: Add OpenAPI assertions**
 
 In `tests/openapi.test.ts`, inside the first test or a new one, verify:
 
@@ -284,12 +286,12 @@ assert.equal(enOps['POST /_control/freeze'].summary, 'Freeze the current databas
 assert.equal(en.body.tags.find((tag: any) => tag.name === 'Control').description, 'Statistics, reset, data mode and extra data.');
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `node --import tsx --test tests/data-mode.test.ts tests/openapi.test.ts`
 Expected: PASS (5 data tests + existing OpenAPI tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/control/index.ts src/http/openapi.ts src/http/openapi-i18n.ts tests/data-mode.test.ts tests/openapi.test.ts
@@ -313,7 +315,7 @@ git commit -m "feat(control): expose data mode endpoints"
 - Produces: `controlRequest(baseUrl, path, { method, token, signal })` in `web/js/api.js`.
 - DOM IDs: `mode-badge`, `mode-description`, `control-token`, `mode-freeze`, `mode-restore`, `mode-unfreeze`, `mode-message`.
 
-- [ ] **Step 1: Write the failing UI contract test**
+- [x] **Step 1: Write the failing UI contract test**
 
 Add to `tests/frontend.test.mjs`:
 
@@ -332,12 +334,12 @@ test('the console exposes the data mode controls', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/frontend.test.mjs`
 Expected: FAIL because the IDs and translations are missing.
 
-- [ ] **Step 3: Add the panel and translations**
+- [x] **Step 3: Add the panel and translations**
 
 In `web/index.html`, inside `.hero-panel` after `#domain-grid`, add the panel with:
 
@@ -350,7 +352,7 @@ In `web/index.html`, inside `.hero-panel` after `#domain-grid`, add the panel wi
 
 Add ES/EN keys in `web/js/i18n.js` for title, hint, badge, descriptions, token, buttons, confirmations, success, and error. Every `data-i18n` key in the HTML must exist for the existing test.
 
-- [ ] **Step 4: Implement the client and controller**
+- [x] **Step 4: Implement the client and controller**
 
 In `web/js/api.js` add:
 
@@ -381,12 +383,12 @@ In `web/js/main.js`:
 
 Styles in `web/styles.css`: persistent/frozen badge, panel, token row, actions, and responsive rules.
 
-- [ ] **Step 5: Run tests and syntax check**
+- [x] **Step 5: Run tests and syntax check**
 
 Run: `node --import tsx --test tests/frontend.test.mjs tests/ui.test.ts`
 Expected: PASS. Also run `node --check web/js/main.js`; it must exit cleanly.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/index.html web/styles.css web/js/api.js web/js/i18n.js web/js/main.js tests/frontend.test.mjs
@@ -409,7 +411,7 @@ git commit -m "feat(web): add data mode console controls"
 - Produces: `"license": "Apache-2.0"`, canonical `LICENSE`, `NOTICE` attribution, portable build, and exact development versions.
 - Consumes: `src/db/schema.sql`, `dist/src/db/schema.sql`.
 
-- [ ] **Step 1: Write the failing license test**
+- [x] **Step 1: Write the failing license test**
 
 ```js
 test('the package declares Apache-2.0 and the license is present', () => {
@@ -423,12 +425,12 @@ test('the package declares Apache-2.0 and the license is present', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --import tsx --test tests/license.test.mjs`
 Expected: FAIL because `LICENSE` and the `license` field do not exist.
 
-- [ ] **Step 3: Add the license and portable build**
+- [x] **Step 3: Add the license and portable build**
 
 - Download the canonical Apache-2.0 text to `LICENSE`:
 
@@ -446,7 +448,7 @@ curl -fsSL https://www.apache.org/licenses/LICENSE-2.0.txt -o LICENSE
   - Change `build` to `"tsc -p tsconfig.json && node scripts/copy-schema.mjs"`.
   - Do not add `author`, `repository`, `homepage`, `main`, `exports`, or `files` without real data.
 
-- [ ] **Step 4: Run tests and build**
+- [x] **Step 4: Run tests and build**
 
 Run:
 ```bash
@@ -455,14 +457,14 @@ npm run build
 ```
 Expected: PASS and `dist/src/db/schema.sql` exists.
 
-- [ ] **Step 5: Commit license and portable build**
+- [x] **Step 5: Commit license and portable build**
 
 ```bash
 git add LICENSE NOTICE scripts/copy-schema.mjs tests/license.test.mjs package.json
 git commit -m "chore: adopt Apache-2.0 and portable build"
 ```
 
-- [ ] **Step 6: Add failing exact-version assertions**
+- [x] **Step 6: Add failing exact-version assertions**
 
 Add to the license test:
 
@@ -475,7 +477,7 @@ for (const [name, version] of Object.entries(pkg.devDependencies)) {
 Run: `node --import tsx --test tests/license.test.mjs`
 Expected: FAIL because `@types/node`, `tsx`, and `typescript` use `^`.
 
-- [ ] **Step 7: Pin the installed development versions**
+- [x] **Step 7: Pin the installed development versions**
 
 Run with the currently installed versions:
 
@@ -495,7 +497,7 @@ This must leave `package.json` with:
 
 Verify that `package-lock.json` was updated and that `npm ci --dry-run` is in sync.
 
-- [ ] **Step 8: Run tests, lockfile check and build**
+- [x] **Step 8: Run tests, lockfile check and build**
 
 Run:
 ```bash
@@ -505,7 +507,7 @@ npm run build
 ```
 Expected: PASS, lockfile in sync, build OK.
 
-- [ ] **Step 9: Commit pinned dependencies**
+- [x] **Step 9: Commit pinned dependencies**
 
 ```bash
 git add package.json package-lock.json tests/license.test.mjs
@@ -534,7 +536,7 @@ git commit -m "chore(deps): pin development dependency versions"
   - `npm run check` → typecheck + lint + format:check + test
 - Consumes: existing TypeScript configuration and current code.
 
-- [ ] **Step 1: Install exact quality tooling**
+- [x] **Step 1: Install exact quality tooling**
 
 ```bash
 npm install --save-dev --save-exact \
@@ -544,7 +546,7 @@ npm install --save-dev --save-exact \
 
 Verify all six dependencies have no `^` in `package.json`.
 
-- [ ] **Step 2: Create ESLint, Prettier, and EditorConfig policies**
+- [x] **Step 2: Create ESLint, Prettier, and EditorConfig policies**
 
 `eslint.config.js`:
 
@@ -629,7 +631,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 ```
 
-- [ ] **Step 3: Add quality scripts**
+- [x] **Step 3: Add quality scripts**
 
 Add to `package.json`:
 
@@ -640,12 +642,12 @@ Add to `package.json`:
 "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
 ```
 
-- [ ] **Step 4: Run lint and fix real findings**
+- [x] **Step 4: Run lint and fix real findings**
 
 Run: `npm run lint`
 Expected: PASS or a list of concrete findings. Fix the code; do not disable rules except `no-explicit-any` in tests.
 
-- [ ] **Step 5: Add CI quality gates**
+- [x] **Step 5: Add CI quality gates**
 
 In `.github/workflows/ci.yml`, after `Typecheck`, add:
 
@@ -656,7 +658,7 @@ In `.github/workflows/ci.yml`, after `Typecheck`, add:
         run: npm run format:check
 ```
 
-- [ ] **Step 6: Format the code**
+- [x] **Step 6: Format the code**
 
 Run:
 ```bash
@@ -665,16 +667,16 @@ npm run format:check
 ```
 Expected: PASS. Review the diff to ensure documentation, HTML, lockfile, and legal material were not reformatted.
 
-- [ ] **Step 7: Run the complete quality gate**
+- [x] **Step 7: Run the complete quality gate**
 
 Run:
 ```bash
 npm run check
 npm run build
 ```
-Expected: typecheck OK, lint OK, format OK, **72/72 tests**, build OK.
+Expected: typecheck OK, lint OK, format OK, **73/73 tests**, build OK.
 
-- [ ] **Step 8: Commit tooling and formatting**
+- [x] **Step 8: Commit tooling and formatting**
 
 ```bash
 git add eslint.config.js .prettierrc.json .prettierignore .editorconfig package.json package-lock.json .github/workflows/ci.yml
@@ -706,7 +708,7 @@ git commit -m "style: format source and tests with Prettier"
 - Consumes: endpoints and UI from Tasks 2–5.
 - Produces: user-facing contract, quality commands, and license references.
 
-- [ ] **Step 1: Write `docs/data-modes.md` and its English pair**
+- [x] **Step 1: Write `docs/data-modes.md` and its English pair**
 
 Include:
 
@@ -718,7 +720,7 @@ Include:
 - Limitations: synchronous snapshot, OS temp files, one snapshot.
 - Links to the other language and the user guide.
 
-- [ ] **Step 2: Update README and guides**
+- [x] **Step 2: Update README and guides**
 
 - README ES/EN: persistence section with both modes, restore, restart, and the Apache-2.0 license.
 - User guide ES/EN: add the new endpoints to the control section and a freeze → modify → restore → leave flow.
@@ -727,14 +729,14 @@ Include:
 - README ES/EN: `npm run lint`, `npm run format:check`, and `npm run check` commands.
 - PLAN ES/EN: delivery status, quality, and tests.
 
-The expected count is **72 tests** (65 current + 2 data + 3 API + 1 UI + 1 license). If `npm test` reports another number, update the documents to the real number before committing.
+The expected count is **73 tests** (65 current + 2 data + 3 API + 1 UI + 1 license + 1 freeze regression). If `npm test` reports another number, update the documents to the real number before committing.
 
-- [ ] **Step 3: Run documentation tests**
+- [x] **Step 3: Run documentation tests**
 
 Run: `node --import tsx --test tests/docs.test.mjs`
 Expected: PASS; every ES/EN pair and local link exists.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md README.en.md PLAN.md PLAN.en.md docs/data-modes.md docs/data-modes.en.md docs/user-guide.md docs/user-guide.en.md docs/capabilities.md docs/capabilities.en.md docs/frontend.md docs/frontend.en.md
@@ -747,7 +749,7 @@ git commit -m "docs: document data modes and Apache-2.0 license"
 
 **Files:** none; verification only.
 
-- [ ] **Step 1: Run static and automated checks**
+- [x] **Step 1: Run static and automated checks**
 
 ```bash
 npm run check
@@ -755,9 +757,9 @@ npm run build
 node --check web/js/main.js
 ```
 
-Expected: typecheck, lint, and format OK; **72/72 tests**; build OK.
+Expected: typecheck, lint, and format OK; **73/73 tests**; build OK.
 
-- [ ] **Step 2: Verify the browser panel**
+- [x] **Step 2: Verify the browser panel**
 
 Start the server with a temporary database and open `/ui/` in headless Chrome. Verify:
 
@@ -767,11 +769,11 @@ Start the server with a temporary database and open `/ui/` in headless Chrome. V
 - Create a product and `Restore data` removes it.
 - `Leave frozen mode` returns to `Persistent`.
 
-- [ ] **Step 3: Verify the persistent database is untouched**
+- [x] **Step 3: Verify the persistent database is untouched**
 
 With the server frozen, create a product, unfreeze, and query it: it must return `404`. Repeat with `restore` and confirm the documented behavior.
 
-- [ ] **Step 4: Check Git state**
+- [x] **Step 4: Check Git state**
 
 ```bash
 git status --short

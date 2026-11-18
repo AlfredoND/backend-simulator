@@ -61,7 +61,7 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Documentación bilingüe del modo de datos y de la licencia.
 
 ## Fase 8 — Verificación [COMPLETA]
-- `npm test`: 72/72 pruebas.
+- `npm test`: 73/73 pruebas.
 - `npm run typecheck`: sin errores.
 - `npm run lint` y `npm run format:check`: sin errores.
 - `npm run build`: OK, copia `schema.sql`.

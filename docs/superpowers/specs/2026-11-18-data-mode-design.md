@@ -1,7 +1,7 @@
 # Modo de datos congelado y restauración — Diseño
 
 **Fecha:** 2026-11-18
-**Estado:** Pendiente de aprobación
+**Estado:** Aprobado e implementado
 **Versión en inglés:** [2026-11-18-data-mode-design.en.md](2026-11-18-data-mode-design.en.md)
 
 ## 1. Intención y motivo
@@ -237,7 +237,7 @@ Nuevas pruebas de integración:
 9. OpenAPI contiene las rutas y resúmenes en inglés.
 10. `package.json` declara Apache-2.0, existen `LICENSE` y `NOTICE`, y la documentación enlaza la licencia.
 
-También se mantienen las 65 pruebas actuales y se actualizan los conteos y la documentación.
+La suite final es de 73 pruebas: 65 existentes más las nuevas de datos, API, UI, licencia y regresión de fallo al congelar.
 
 ## 10. Riesgos y mitigaciones
 

@@ -421,7 +421,7 @@ npm run check
 npm run build
 ```
 
-The 72 tests create temporary SQLite databases and random ports; they do not modify your development database. `npm run check` runs typecheck, Biome lint, formatting, and tests.
+The 73 tests create temporary SQLite databases and random ports; they do not modify your development database. `npm run check` runs typecheck, Biome lint, formatting, and tests.
 
 ## 13. Common issues
 

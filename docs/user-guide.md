@@ -421,7 +421,7 @@ npm run check
 npm run build
 ```
 
-Las 72 pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo. `npm run check` ejecuta typecheck, lint con Biome, formato y pruebas.
+Las 73 pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo. `npm run check` ejecuta typecheck, lint con Biome, formato y pruebas.
 
 ## 13. Problemas comunes
 

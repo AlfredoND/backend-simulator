@@ -1,7 +1,7 @@
 # Frozen data mode and restore — Design
 
 **Date:** 2026-11-18
-**Status:** Pending approval
+**Status:** Approved and implemented
 **Spanish version:** [2026-11-18-data-mode-design.md](2026-11-18-data-mode-design.md)
 
 ## 1. Intent and why
@@ -237,7 +237,7 @@ New integration tests:
 9. OpenAPI contains the routes and English summaries.
 10. `package.json` declares Apache-2.0, `LICENSE` and `NOTICE` exist, and documentation links the license.
 
-The existing 65 tests are preserved and the counts and documentation are updated.
+The final suite has 73 tests: the existing 65 plus the new data, API, UI, license, and freeze-failure regression tests.
 
 ## 10. Risks and mitigations
 

@@ -342,7 +342,7 @@ npm run format:check
 npm run check
 ```
 
-The 72 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, global authorization and groups, 429/500/503 scenarios, validation, ETag/412, bilingual OpenAPI, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server, frozen data mode, licensing, and bilingual documentation. Code under `src/` and `web/` includes JSDoc for contracts and decisions.
+The 73 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, global authorization and groups, 429/500/503 scenarios, validation, ETag/412, bilingual OpenAPI, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server, frozen data mode, licensing, and bilingual documentation. Code under `src/` and `web/` includes JSDoc for contracts and decisions.
 
 Quality is enforced with **Biome**: lint and formatting share one configuration (`biome.json`), `.editorconfig` fixes spaces and line endings, and `npm run check` runs typecheck, lint, format, and tests. Development dependencies are pinned to exact versions, without `^`. CI: `.github/workflows/ci.yml`.
 
