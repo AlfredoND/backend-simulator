@@ -11,4 +11,7 @@ test('el paquete declara Apache-2.0 y la licencia está presente', () => {
   assert.match(license, /Version 2\.0/);
   const notice = readFileSync(new URL('../NOTICE', import.meta.url), 'utf8');
   assert.match(notice, /Backend Simulator/);
+  for (const [name, version] of Object.entries(pkg.devDependencies)) {
+    assert.match(version, /^\d+\.\d+\.\d+$/, `${name} must be pinned to an exact version`);
+  }
 });
