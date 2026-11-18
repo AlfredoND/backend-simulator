@@ -1,12 +1,14 @@
 # Plan de entrega — Backend Simulator
 
+Idiomas: **Español** | [English](PLAN.en.md)
+
 Estado: **completado y verificado** (2026-11-18).
 
 Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, HTTPS/HTTP2 y proxy local.
 
 ## Fase 1 — Persistencia [COMPLETA]
 - Esquema de 82 tablas con FKs, CHECK, UNIQUE, NULLs, 34 índices, 1:1, 1:N y M:N.
-- Seed determinista de seis dominios con Unicode, estados variados, textos largos y dinero en céntimos.
+- Seed determinista de siete dominios con Unicode, estados variados, textos largos y dinero en céntimos.
 - Transacciones, rollback, WAL y consultas parametrizadas.
 - Resumen y datos adicionales mediante `/_control`.
 
@@ -32,7 +34,7 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - HTTP/2 TLS en puerto independiente, con fallback HTTP/1.1.
 - Proxy HTTP local opcional con peticiones absolutas y CONNECT, restringido a destinos locales.
 - OpenAPI dinámico en `/openapi.json` y UI en `/docs`.
-- README, `docs/http-lab.md`, `docs/capabilities.md` y `.env.example`.
+- README, guía de uso, documentación del laboratorio, matriz de capacidades y `.env.example`, con versiones en español e inglés.
 
 ## Fase 5 — Verificación [COMPLETA]
 - `npm test`: 37/37 pruebas.
