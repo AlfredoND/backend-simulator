@@ -69,6 +69,8 @@ interface CartTotals {
   coupon: Record<string, unknown> | null;
 }
 
+function couponFor(db: Db, code: null | undefined, subtotal: number): { coupon: null; discount: 0 };
+function couponFor(db: Db, code: string, subtotal: number): { coupon: Record<string, unknown>; discount: number };
 function couponFor(
   db: Db,
   code: string | undefined | null,
@@ -575,7 +577,7 @@ export function registerShopRoutes(router: Router, base: string): void {
       const db = dbOf(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['customer_id', 'coupon_code']);
-      const customerId = input.integer('customer_id', { required: true, min: 1 })!;
+      const customerId = input.integer('customer_id', { required: true, min: 1 });
       const couponCode = input.string('coupon_code', { maxLength: 40 });
       input.done();
       if (!db.get('SELECT 1 AS x FROM shop_customers WHERE id = ?', customerId))
@@ -630,8 +632,8 @@ export function registerShopRoutes(router: Router, base: string): void {
       if (cart.status !== 'open') throw conflict('El carrito no está abierto');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['variant_id', 'quantity']);
-      const variantId = input.integer('variant_id', { required: true, min: 1 })!;
-      const quantity = input.integer('quantity', { required: true, min: 1, max: 1000 })!;
+      const variantId = input.integer('variant_id', { required: true, min: 1 });
+      const quantity = input.integer('quantity', { required: true, min: 1, max: 1000 });
       input.done();
       const variant = db.get<{ id: number; price_cents: number | null; is_active: number; product_id: number }>(
         'SELECT id, price_cents, is_active, product_id FROM shop_variants WHERE id = ?',
@@ -693,7 +695,7 @@ export function registerShopRoutes(router: Router, base: string): void {
       if (!item) throw notFound('Línea de carrito no encontrada');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['quantity']);
-      const quantity = input.integer('quantity', { required: true, min: 0, max: 1000 })!;
+      const quantity = input.integer('quantity', { required: true, min: 0, max: 1000 });
       input.done();
       if (quantity === 0) {
         db.run('DELETE FROM shop_cart_items WHERE id = ?', itemId);
@@ -737,11 +739,11 @@ export function registerShopRoutes(router: Router, base: string): void {
       if (cart.status !== 'open') throw conflict('El carrito no está abierto');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['code']);
-      const code = input.string('code', { required: true, maxLength: 40 })!;
+      const code = input.string('code', { required: true, maxLength: 40 });
       input.done();
       const totals = cartTotals(db, cartId);
       const { coupon } = couponFor(db, code, totals.subtotal_cents);
-      db.run('UPDATE shop_carts SET coupon_id = ?, updated_at = ? WHERE id = ?', Number(coupon!.id), now(), cartId);
+      db.run('UPDATE shop_carts SET coupon_id = ?, updated_at = ? WHERE id = ?', Number(coupon.id), now(), cartId);
       sendJson(ctx, 200, { data: cartTotals(db, cartId) });
     },
     { summary: 'Aplica un cupón al carrito', tag: 'Shop · Carts' },
@@ -999,7 +1001,7 @@ export function registerShopRoutes(router: Router, base: string): void {
       const status = input.string('status', {
         required: true,
         enum: ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
-      })!;
+      });
       input.done();
       if (!(ORDER_TRANSITIONS[order.status] ?? []).includes(status)) {
         throw conflict(`Transición no permitida: ${order.status} -> ${status}`);
@@ -1084,7 +1086,7 @@ export function registerShopRoutes(router: Router, base: string): void {
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['amount_cents', 'reason']);
       const amount = input.integer('amount_cents', { min: 1 });
-      const reason = input.string('reason', { maxLength: 500, default: 'Reembolso solicitado por el cliente' })!;
+      const reason = input.string('reason', { maxLength: 500, default: 'Reembolso solicitado por el cliente' });
       input.done();
       const payment = db.get<{ id: number; status: string; amount_cents: number }>(
         'SELECT * FROM shop_payments WHERE order_id = ? ORDER BY id DESC LIMIT 1',
@@ -1180,7 +1182,7 @@ export function registerShopRoutes(router: Router, base: string): void {
       const status = input.string('status', {
         required: true,
         enum: ['label_created', 'in_transit', 'out_for_delivery', 'delivered', 'returned'],
-      })!;
+      });
       input.done();
       db.transaction(() => {
         db.run(
@@ -1220,9 +1222,9 @@ export function registerShopRoutes(router: Router, base: string): void {
       sendJson(ctx, 200, {
         data: {
           valid: true,
-          code: coupon!.code,
-          kind: coupon!.kind,
-          value: coupon!.value,
+          code: coupon.code,
+          kind: coupon.kind,
+          value: coupon.value,
           discount_cents: discount,
           subtotal_cents: subtotal,
           total_after_discount_cents: subtotal - discount,

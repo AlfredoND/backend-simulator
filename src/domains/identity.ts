@@ -99,8 +99,8 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     async (ctx) => {
       const body = await requestBody(ctx);
       const input = new Validator(body, ['email', 'password']);
-      const email = input.string('email', { required: true, email: true, maxLength: 254 })!;
-      const password = input.string('password', { required: true, min: 1, maxLength: 200 })!;
+      const email = input.string('email', { required: true, email: true, maxLength: 254 });
+      const password = input.string('password', { required: true, min: 1, maxLength: 200 });
       input.done();
       const db = dbOf(ctx);
       const user = db.get<Row & { password_hash: string }>(
@@ -148,7 +148,7 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     async (ctx) => {
       const body = await requestBody(ctx);
       const input = new Validator(body, ['refresh_token']);
-      const refreshToken = input.string('refresh_token', { required: true, maxLength: 300 })!;
+      const refreshToken = input.string('refresh_token', { required: true, maxLength: 300 });
       input.done();
       const db = dbOf(ctx);
       const session = db.get<Row>(
@@ -255,7 +255,7 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     async (ctx) => {
       const body = await requestBody(ctx);
       const input = new Validator(body, ['email']);
-      const email = input.string('email', { required: true, email: true })!;
+      const email = input.string('email', { required: true, email: true });
       input.done();
       const db = dbOf(ctx);
       const user = db.get<Row>('SELECT * FROM id_users WHERE LOWER(email) = LOWER(?)', email);
@@ -289,8 +289,8 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     async (ctx) => {
       const body = await requestBody(ctx);
       const input = new Validator(body, ['token', 'password']);
-      const token = input.string('token', { required: true, maxLength: 300 })!;
-      const password = input.string('password', { required: true, min: 8, maxLength: 200 })!;
+      const token = input.string('token', { required: true, maxLength: 300 });
+      const password = input.string('password', { required: true, min: 8, maxLength: 200 });
       input.done();
       const db = dbOf(ctx);
       const row = db.get<Row>(
@@ -326,11 +326,12 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       const user = requireUser(ctx);
       const body = await requestBody(ctx);
       const input = new Validator(body, ['current_password', 'new_password']);
-      const current = input.string('current_password', { required: true, maxLength: 200 })!;
-      const next = input.string('new_password', { required: true, min: 8, maxLength: 200 })!;
+      const current = input.string('current_password', { required: true, maxLength: 200 });
+      const next = input.string('new_password', { required: true, min: 8, maxLength: 200 });
       input.done();
       const db = dbOf(ctx);
-      const row = db.get<{ password_hash: string }>('SELECT password_hash FROM id_users WHERE id = ?', user.id)!;
+      const row = db.get<{ password_hash: string }>('SELECT password_hash FROM id_users WHERE id = ?', user.id);
+      if (!row) throw notFound('Usuario no encontrado');
       if (!verifyPassword(current, row.password_hash)) throw unauthorized('Contraseña actual incorrecta');
       db.run('UPDATE id_users SET password_hash = ?, updated_at = ? WHERE id = ?', hashPassword(next), now(), user.id);
       sendJson(ctx, 200, { data: { message: 'Contraseña actualizada.' } });
@@ -459,9 +460,9 @@ export function registerIdentityRoutes(router: Router, base: string): void {
         'locale',
         'timezone',
       ]);
-      const email = input.string('email', { required: true, email: true, maxLength: 254 })!;
-      const password = input.string('password', { required: true, min: 8, maxLength: 200 })!;
-      const displayName = input.string('display_name', { required: true, maxLength: 120 })!;
+      const email = input.string('email', { required: true, email: true, maxLength: 254 });
+      const password = input.string('password', { required: true, min: 8, maxLength: 200 });
+      const displayName = input.string('display_name', { required: true, maxLength: 120 });
       const status =
         input.string('status', { enum: ['active', 'inactive', 'suspended', 'pending'], default: 'active' }) ?? 'active';
       const isAdmin = input.boolean('is_admin', { default: false }) ?? false;
@@ -862,7 +863,9 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       if (!roleId && !roleName) throw validationError([{ field: 'role_id', message: 'role_id o role es obligatorio' }]);
       const role = roleId
         ? db.get<Row>('SELECT * FROM id_roles WHERE id = ?', roleId)
-        : db.get<Row>('SELECT * FROM id_roles WHERE name = ?', roleName!);
+        : roleName
+          ? db.get<Row>('SELECT * FROM id_roles WHERE name = ?', roleName)
+          : undefined;
       if (!role) throw notFound('Rol no encontrado');
       try {
         db.insert('id_user_roles', { user_id: id, role_id: Number(role.id), assigned_at: now() });
@@ -1066,7 +1069,7 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       if (!db.get('SELECT 1 AS x FROM id_groups WHERE id = ?', groupId)) throw notFound('Grupo no encontrado');
       const body = await requestBody(ctx);
       const input = new Validator(body, ['user_id', 'member_role']);
-      const userId = input.integer('user_id', { required: true, min: 1 })!;
+      const userId = input.integer('user_id', { required: true, min: 1 });
       const role = input.string('member_role', { enum: ['owner', 'member'], default: 'member' }) ?? 'member';
       input.done();
       if (!db.get('SELECT 1 AS x FROM id_users WHERE id = ?', userId)) throw notFound('Usuario no encontrado');
@@ -1138,7 +1141,9 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       if (!roleId && !roleName) throw validationError([{ field: 'role_id', message: 'role_id o role es obligatorio' }]);
       const role = roleId
         ? db.get<Row>('SELECT * FROM id_roles WHERE id = ?', roleId)
-        : db.get<Row>('SELECT * FROM id_roles WHERE name = ?', roleName!);
+        : roleName
+          ? db.get<Row>('SELECT * FROM id_roles WHERE name = ?', roleName)
+          : undefined;
       if (!role) throw notFound('Rol no encontrado');
       try {
         db.insert('id_group_roles', { group_id: groupId, role_id: Number(role.id), granted_at: now() });
@@ -1202,12 +1207,12 @@ export function registerIdentityRoutes(router: Router, base: string): void {
         'country',
         'is_default',
       ]);
-      const label = input.string('label', { required: true, maxLength: 60 })!;
-      const line1 = input.string('line1', { required: true, maxLength: 200 })!;
+      const label = input.string('label', { required: true, maxLength: 60 });
+      const line1 = input.string('line1', { required: true, maxLength: 200 });
       const line2 = input.string('line2', { nullable: true, maxLength: 200 }) ?? null;
-      const city = input.string('city', { required: true, maxLength: 100 })!;
+      const city = input.string('city', { required: true, maxLength: 100 });
       const region = input.string('region', { nullable: true, maxLength: 100 }) ?? null;
-      const postalCode = input.string('postal_code', { required: true, maxLength: 20 })!;
+      const postalCode = input.string('postal_code', { required: true, maxLength: 20 });
       const country = input.string('country', { maxLength: 2, default: 'ES' }) ?? 'ES';
       const isDefault = input.boolean('is_default', { default: false }) ?? false;
       input.done();
@@ -1392,7 +1397,7 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       const user = requireUser(ctx);
       const body = await requestBody(ctx);
       const input = new Validator(body, ['name', 'scopes', 'expires_in_days']);
-      const name = input.string('name', { required: true, maxLength: 120 })!;
+      const name = input.string('name', { required: true, maxLength: 120 });
       const days = input.integer('expires_in_days', { min: 1, max: 3650, default: 90 }) ?? 90;
       const scopes = input.array('scopes');
       input.done();

@@ -30,7 +30,7 @@ test('los enlaces locales de la documentación existen', () => {
   for (const file of docs) {
     const content = fs.readFileSync(path.join(root, file), 'utf8');
     for (const match of content.matchAll(/\]\(([^)]+)\)/g)) {
-      let target = match[1].split('#')[0];
+      const target = match[1].split('#')[0];
       if (!target || /^(https?:|mailto:)/.test(target)) continue;
       const resolved = path.resolve(path.dirname(path.join(root, file)), target);
       assert.ok(fs.existsSync(resolved), `${file} links to missing ${target}`);

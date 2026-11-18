@@ -136,7 +136,7 @@ function shapeRow(row: Row, def: ResourceDef): Row {
   return shaped;
 }
 
-function validateValue(name: string, field: FieldDef, value: unknown): SqlParam {
+function validateValue(field: FieldDef, value: unknown): SqlParam {
   if (value === null) {
     if (!field.nullable) throw new Error('no admite null');
     return null;
@@ -208,7 +208,7 @@ function validateBody(body: unknown, def: ResourceDef, mode: 'create' | 'put' | 
   }
   for (const [name, field] of Object.entries(def.fields)) {
     if (field.readOnly || field.hidden) continue;
-    const present = Object.prototype.hasOwnProperty.call(input, name);
+    const present = Object.hasOwn(input, name);
     if (!present) {
       if ((mode === 'create' || mode === 'put') && field.required) {
         errors.push({ field: name, message: 'es obligatorio' });
@@ -217,7 +217,7 @@ function validateBody(body: unknown, def: ResourceDef, mode: 'create' | 'put' | 
       continue;
     }
     try {
-      output[name] = validateValue(name, field, input[name]);
+      output[name] = validateValue(field, input[name]);
     } catch (error) {
       errors.push({ field: name, message: error instanceof Error ? error.message : 'valor inválido' });
     }
@@ -325,7 +325,7 @@ function buildWhere(ctx: Ctx, def: ResourceDef): WhereBuild {
   const params: SqlParam[] = [];
   const known = new Set(['page', 'per_page', 'limit', 'offset', 'sort', 'order', 'fields', 'q']);
 
-  for (const [key, raw] of ctx.query.entries()) {
+  for (const [key] of ctx.query.entries()) {
     if (known.has(key)) continue;
     let column = key;
     let op: '=' | '>=' | '<=' | '>' | '<' | 'LIKE' = '=';

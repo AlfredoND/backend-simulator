@@ -171,10 +171,10 @@ export function registerHrRoutes(router: Router, base: string): void {
       const db = dbOf(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['employee_id', 'start_date', 'end_date', 'days', 'reason']);
-      const employeeId = input.integer('employee_id', { required: true, min: 1 })!;
-      const startDate = input.date('start_date', { required: true })!;
-      const endDate = input.date('end_date', { required: true })!;
-      const days = input.integer('days', { required: true, min: 1, max: 365 })!;
+      const employeeId = input.integer('employee_id', { required: true, min: 1 });
+      const startDate = input.date('start_date', { required: true });
+      const endDate = input.date('end_date', { required: true });
+      const days = input.integer('days', { required: true, min: 1, max: 365 });
       const reason = input.string('reason', { nullable: true, maxLength: 2000 }) ?? null;
       input.done();
       if (endDate < startDate) throw validationError([{ field: 'end_date', message: 'debe ser >= start_date' }]);
@@ -252,7 +252,7 @@ export function registerHrRoutes(router: Router, base: string): void {
       if (vacation.status !== 'pending') throw conflict(`La solicitud ya está ${vacation.status}`);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['status']);
-      const status = input.string('status', { required: true, enum: ['approved', 'rejected'] })!;
+      const status = input.string('status', { required: true, enum: ['approved', 'rejected'] });
       input.done();
       if (status === 'approved') {
         const overlap = db.get(

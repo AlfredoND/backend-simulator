@@ -63,10 +63,6 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
-[hidden] {
-  display: none !important;
-}
-
 html {
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--header-height) + 24px);
@@ -1337,10 +1333,6 @@ textarea {
   color: var(--muted);
 }
 
-.is-hidden {
-  display: none !important;
-}
-
 @media (max-width: 960px) {
   .site-header {
     grid-template-columns: auto 1fr;
@@ -1463,7 +1455,18 @@ textarea {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations */
     animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component transitions */
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * Se declara al final para imponerse a las clases de componente (misma
+ * especificidad, posterior en la cascada) sin recurrir a `!important`.
+ */
+[hidden],
+.is-hidden {
+  display: none;
 }

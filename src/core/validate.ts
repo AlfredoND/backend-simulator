@@ -45,7 +45,7 @@ export class Validator {
 
   private raw(name: string): { present: boolean; value: unknown } {
     return {
-      present: Object.prototype.hasOwnProperty.call(this.input, name),
+      present: Object.hasOwn(this.input, name),
       value: this.input[name],
     };
   }
@@ -71,6 +71,9 @@ export class Validator {
     return { present, value };
   }
 
+  string(name: string, opts: FieldOptions & { required: true }): string;
+  string(name: string, opts: FieldOptions & { default: string }): string;
+  string(name: string, opts?: FieldOptions): string | undefined;
   string(name: string, opts: FieldOptions = {}): string | undefined {
     const entry = this.pre(name, opts);
     if (!entry) return this.values[name] as string | undefined;
@@ -93,6 +96,8 @@ export class Validator {
     return value;
   }
 
+  integer(name: string, opts: FieldOptions & { required: true }): number;
+  integer(name: string, opts?: FieldOptions): number | undefined;
   integer(name: string, opts: FieldOptions = {}): number | undefined {
     const entry = this.pre(name, opts);
     if (!entry) return this.values[name] as number | undefined;
@@ -107,6 +112,8 @@ export class Validator {
     return value;
   }
 
+  number(name: string, opts: FieldOptions & { required: true }): number;
+  number(name: string, opts?: FieldOptions): number | undefined;
   number(name: string, opts: FieldOptions = {}): number | undefined {
     const entry = this.pre(name, opts);
     if (!entry) return this.values[name] as number | undefined;
@@ -121,6 +128,8 @@ export class Validator {
     return value;
   }
 
+  boolean(name: string, opts: FieldOptions & { required: true }): boolean;
+  boolean(name: string, opts?: FieldOptions): boolean | undefined;
   boolean(name: string, opts: FieldOptions = {}): boolean | undefined {
     const entry = this.pre(name, opts);
     if (!entry) return this.values[name] as boolean | undefined;
@@ -132,6 +141,9 @@ export class Validator {
     return entry.value;
   }
 
+  date(name: string, opts: FieldOptions & { required: true }): string;
+  date(name: string, opts: FieldOptions & { default: string }): string;
+  date(name: string, opts?: FieldOptions): string | undefined;
   date(name: string, opts: FieldOptions = {}): string | undefined {
     const value = this.string(name, opts);
     if (value !== undefined && value !== null) {
@@ -143,6 +155,8 @@ export class Validator {
     return value;
   }
 
+  datetime(name: string, opts: FieldOptions & { required: true }): string;
+  datetime(name: string, opts?: FieldOptions): string | undefined;
   datetime(name: string, opts: FieldOptions = {}): string | undefined {
     const value = this.string(name, opts);
     if (value !== undefined && value !== null) {
@@ -154,6 +168,8 @@ export class Validator {
     return value;
   }
 
+  array(name: string, opts: FieldOptions & { required: true }): unknown[];
+  array(name: string, opts?: FieldOptions): unknown[] | undefined;
   array(name: string, opts: FieldOptions = {}): unknown[] | undefined {
     const entry = this.pre(name, opts);
     if (!entry) return this.values[name] as unknown[] | undefined;

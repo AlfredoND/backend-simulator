@@ -9,7 +9,7 @@
     "includes": [
       "**",
       "!!**/dist",
-      "!!docs/**",
+      "!!docs",
       "!!README.md",
       "!!README.en.md",
       "!!PLAN.md",

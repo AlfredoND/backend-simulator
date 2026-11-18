@@ -169,10 +169,11 @@ test('CRUD, ETag, If-None-Match, If-Match y 412', async () => {
   res = await server.json('GET', `/api/v1/shop/products/${id}`);
   assert.equal(res.status, 200);
   const etag = res.headers.get('etag');
-  assert.ok(etag?.startsWith('"'));
+  assert.ok(etag);
+  assert.ok(etag.startsWith('"'));
 
   res = await server.json('GET', `/api/v1/shop/products/${id}`, {
-    headers: { 'If-None-Match': etag! },
+    headers: { 'If-None-Match': etag },
   });
   assert.equal(res.status, 304);
 
@@ -183,7 +184,7 @@ test('CRUD, ETag, If-None-Match, If-Match y 412', async () => {
   assert.equal(res.status, 412);
 
   res = await server.json('PATCH', `/api/v1/shop/products/${id}`, {
-    headers: { 'If-Match': etag! },
+    headers: { 'If-Match': etag },
     body: { description: 'cambio aceptado' },
   });
   assert.equal(res.status, 200);

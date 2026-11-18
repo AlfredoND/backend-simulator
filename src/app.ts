@@ -289,7 +289,7 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
 
   const closeServer = (target: Server | HttpsServer | Http2SecureServer | null): Promise<void> =>
     new Promise<void>((resolve) => {
-      if (!target || !target.listening) {
+      if (!target?.listening) {
         resolve();
         return;
       }

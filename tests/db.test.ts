@@ -62,7 +62,8 @@ test('las claves foráneas y restricciones CHECK se aplican', () => {
 
 test('UNIQUE, NOT NULL y relaciones uno-a-uno se aplican', () => {
   const db = server.app.db;
-  const admin = db.get<{ email: string }>('SELECT email FROM id_users WHERE id = 1')!;
+  const admin = db.get<{ email: string }>('SELECT email FROM id_users WHERE id = 1');
+  assert.ok(admin);
   assert.throws(
     () =>
       db.insert('id_users', {

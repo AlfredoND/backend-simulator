@@ -32,11 +32,13 @@ after(async () => {
 });
 
 function httpsGet(path: string): Promise<{ status: number; body: string; headers: Record<string, unknown> }> {
+  const httpsPort = server.app.ports.https;
+  if (!httpsPort) throw new Error('HTTPS no está habilitado');
   return new Promise((resolve, reject) => {
     const req = httpsRequest(
       {
         hostname: 'localhost',
-        port: server.app.ports.https!,
+        port: httpsPort,
         path,
         rejectUnauthorized: false,
       },
@@ -90,8 +92,8 @@ test('HTTP/2 sobre TLS responde con versión 2.0', async () => {
 });
 
 test('proxy HTTP local reenvía peticiones absolutas y rechaza destinos externos', async () => {
-  assert.ok(server.app.ports.proxy);
-  const proxyPort = server.app.ports.proxy!;
+  const proxyPort = server.app.ports.proxy;
+  assert.ok(proxyPort);
   const target = `${server.base}/test/echo?via=proxy`;
 
   const proxied = await new Promise<{ status: number; body: string }>((resolve, reject) => {
@@ -124,8 +126,10 @@ test('proxy HTTP local reenvía peticiones absolutas y rechaza destinos externos
 });
 
 test('CONNECT crea un túnel hacia un destino local', async () => {
-  const proxyPort = server.app.ports.proxy!;
-  const targetPort = server.app.ports.http!;
+  const proxyPort = server.app.ports.proxy;
+  const targetPort = server.app.ports.http;
+  assert.ok(proxyPort);
+  assert.ok(targetPort);
   const response = await new Promise<string>((resolve, reject) => {
     const client = netConnect(proxyPort, '127.0.0.1', () => {
       client.write(`CONNECT 127.0.0.1:${targetPort} HTTP/1.1\r\nHost: 127.0.0.1:${targetPort}\r\n\r\n`);

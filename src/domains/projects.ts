@@ -409,7 +409,7 @@ export function registerProjectRoutes(router: Router, base: string): void {
         'parent_id',
         'position',
       ]);
-      const title = input.string('title', { required: true, maxLength: 300 })!;
+      const title = input.string('title', { required: true, maxLength: 300 });
       const description = input.string('description', { nullable: true, maxLength: 30_000 }) ?? null;
       const statusId = input.integer('status_id', { min: 1 });
       const statusName = input.string('status', { maxLength: 60 });
@@ -502,7 +502,7 @@ export function registerProjectRoutes(router: Router, base: string): void {
         'due_date',
         'estimate_minutes',
       ]);
-      const title = input.string('title', { required: true, maxLength: 300 })!;
+      const title = input.string('title', { required: true, maxLength: 300 });
       const description = input.string('description', { nullable: true, maxLength: 30_000 }) ?? null;
       const statusId = input.integer('status_id', { min: 1 });
       const statusName = input.string('status', { maxLength: 60 });
@@ -595,7 +595,7 @@ export function registerProjectRoutes(router: Router, base: string): void {
       const db = dbOf(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['user_id', 'member_role']);
-      const userId = input.integer('user_id', { required: true, min: 1 })!;
+      const userId = input.integer('user_id', { required: true, min: 1 });
       const role =
         input.string('member_role', { enum: ['owner', 'manager', 'member', 'viewer'], default: 'member' }) ?? 'member';
       input.done();
@@ -658,8 +658,8 @@ export function registerProjectRoutes(router: Router, base: string): void {
       if (!task) throw notFound('Tarea no encontrada');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['author_id', 'body']);
-      const authorId = input.integer('author_id', { required: true, min: 1 })!;
-      const text = input.string('body', { required: true, maxLength: 20_000 })!;
+      const authorId = input.integer('author_id', { required: true, min: 1 });
+      const text = input.string('body', { required: true, maxLength: 20_000 });
       input.done();
       if (!db.get('SELECT 1 AS x FROM id_users WHERE id = ?', authorId)) throw notFound('Autor no encontrado');
       const id = db.transaction(() => {

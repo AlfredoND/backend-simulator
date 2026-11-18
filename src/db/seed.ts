@@ -10,7 +10,7 @@
  */
 import { createHash, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 import type { Config } from '../core/config.js';
-import { Db } from './index.js';
+import type { Db } from './index.js';
 import { DOMAIN_TABLES } from './domain-tables.js';
 
 const DAY = 86_400_000;

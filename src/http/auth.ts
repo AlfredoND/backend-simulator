@@ -27,13 +27,6 @@ interface UserRow extends AuthUser {
   updated_at: string;
 }
 
-function activeUser(db: Db, userId: number): UserRow | undefined {
-  return db.get<UserRow>(
-    'SELECT id, email, display_name, status, is_admin, created_at, updated_at FROM id_users WHERE id = ?',
-    userId,
-  );
-}
-
 function ensureActive(user: UserRow): AuthUser {
   if (user.status !== 'active') throw forbidden('La cuenta no está activa');
   return {

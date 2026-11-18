@@ -12,7 +12,6 @@ import { readJsonBody, sendJson } from '../http/index.js';
 import { conflict, notFound, validationError } from '../core/errors.js';
 import { registerResource } from '../http/resource.js';
 import { Validator } from '../core/validate.js';
-import { paginationMeta, parsePagination } from '../http/query.js';
 
 const now = () => new Date().toISOString();
 function dbOf(ctx: Ctx) {
@@ -248,7 +247,7 @@ export function registerEducationRoutes(router: Router, base: string): void {
       if (!section) throw notFound('Sección no encontrada');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['student_id']);
-      const studentId = input.integer('student_id', { required: true, min: 1 })!;
+      const studentId = input.integer('student_id', { required: true, min: 1 });
       input.done();
       if (!db.get('SELECT 1 AS x FROM edu_students WHERE id = ?', studentId))
         throw notFound('Estudiante no encontrado');
@@ -449,7 +448,7 @@ export function registerEducationRoutes(router: Router, base: string): void {
       const db = dbOf(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['records']);
-      const records = input.array('records', { required: true })!;
+      const records = input.array('records', { required: true });
       input.done();
       if (records.length === 0) throw validationError([{ field: 'records', message: 'no puede estar vacío' }]);
       if (records.length > 500) throw validationError([{ field: 'records', message: 'máximo 500 registros' }]);
@@ -464,13 +463,13 @@ export function registerEducationRoutes(router: Router, base: string): void {
             'status',
             'notes',
           ]);
-          const studentId = itemInput.integer('student_id', { required: true, min: 1 })!;
-          const sectionId = itemInput.integer('section_id', { required: true, min: 1 })!;
-          const date = itemInput.date('attendance_date', { required: true })!;
+          const studentId = itemInput.integer('student_id', { required: true, min: 1 });
+          const sectionId = itemInput.integer('section_id', { required: true, min: 1 });
+          const date = itemInput.date('attendance_date', { required: true });
           const status = itemInput.string('status', {
             required: true,
             enum: ['present', 'absent', 'late', 'excused'],
-          })!;
+          });
           const notes = itemInput.string('notes', { nullable: true, maxLength: 2000 }) ?? null;
           try {
             itemInput.done();

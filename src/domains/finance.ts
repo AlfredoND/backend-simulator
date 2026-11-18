@@ -270,21 +270,25 @@ export function registerFinanceRoutes(router: Router, base: string): void {
         'reference',
         'occurred_at',
       ]);
-      const accountId = input.integer('account_id', { required: true, min: 1 })!;
+      const accountId = input.integer('account_id', { required: true, min: 1 });
       const kind = input.string('kind', { required: true, enum: ['debit', 'credit'] }) as 'debit' | 'credit';
-      const amount = input.integer('amount_cents', { required: true, min: 1 })!;
-      const description = input.string('description', { required: true, maxLength: 1000 })!;
-      const category = input.string('category', { nullable: true, maxLength: 80 }) ?? null;
+      const amount = input.integer('amount_cents', { required: true, min: 1 });
+      const description = input.string('description', { required: true, maxLength: 1000 });
+      // Se validan, pero el alta sigue usando la categoría y la fecha por defecto.
+      input.string('category', { nullable: true, maxLength: 80 });
       const reference = input.string('reference', { nullable: true, maxLength: 120 }) ?? null;
-      const occurredAt = input.datetime('occurred_at', { nullable: true }) ?? now();
+      input.datetime('occurred_at', { nullable: true });
       input.done();
       const referenceValue = reference ?? `TX-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
       try {
         const id = db.transaction(() => {
           recordAccountMovement(db, accountId, kind, amount, description, referenceValue);
-          return Number(
-            db.get<{ id: number }>('SELECT id FROM fin_transactions WHERE reference = ?', referenceValue)!.id,
+          const inserted = db.get<{ id: number }>(
+            'SELECT id FROM fin_transactions WHERE reference = ?',
+            referenceValue,
           );
+          if (!inserted) throw new Error('No se pudo registrar el movimiento contable');
+          return Number(inserted.id);
         });
         sendJson(
           ctx,
@@ -429,18 +433,18 @@ export function registerFinanceRoutes(router: Router, base: string): void {
         'items',
       ]);
       const supplierId = input.integer('supplier_id', { nullable: true, min: 1 }) ?? null;
-      const customerName = input.string('customer_name', { required: true, maxLength: 200 })!;
+      const customerName = input.string('customer_name', { required: true, maxLength: 200 });
       const status = input.string('status', { enum: ['draft', 'issued'], default: 'issued' }) ?? 'issued';
       const issueDate = input.date('issue_date', { default: today() }) ?? today();
       const dueDate = input.date('due_date', {
         default: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
-      })!;
+      });
       const currency = input.string('currency', { maxLength: 3, default: 'EUR' }) ?? 'EUR';
       const notes = input.string('notes', { nullable: true, maxLength: 4000 }) ?? null;
       const invoiceNumber =
         input.string('invoice_number', { maxLength: 60 }) ??
         `INV-${new Date().getUTCFullYear()}-${randomBytes(3).toString('hex').toUpperCase()}`;
-      const items = input.array('items', { required: true })!;
+      const items = input.array('items', { required: true });
       input.done();
       if (dueDate < issueDate) throw validationError([{ field: 'due_date', message: 'debe ser >= issue_date' }]);
       if (items.length === 0 || items.length > 50)
@@ -450,9 +454,9 @@ export function registerFinanceRoutes(router: Router, base: string): void {
       const lines: Array<{ description: string; quantity: number; unit: number; taxRate: number; total: number }> = [];
       for (let i = 0; i < items.length; i++) {
         const li = new Validator(items[i], ['description', 'quantity', 'unit_price_cents', 'tax_rate']);
-        const description = li.string('description', { required: true, maxLength: 500 })!;
-        const quantity = li.integer('quantity', { required: true, min: 1, max: 100_000 })!;
-        const unit = li.integer('unit_price_cents', { required: true, min: 0 })!;
+        const description = li.string('description', { required: true, maxLength: 500 });
+        const quantity = li.integer('quantity', { required: true, min: 1, max: 100_000 });
+        const unit = li.integer('unit_price_cents', { required: true, min: 0 });
         const taxRate = li.number('tax_rate', { min: 0, max: 1, default: 0.21 }) ?? 0.21;
         try {
           li.done();
@@ -512,7 +516,7 @@ export function registerFinanceRoutes(router: Router, base: string): void {
       if (!invoice) throw notFound('Factura no encontrada');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['status']);
-      const status = input.string('status', { required: true, enum: ['draft', 'issued', 'paid', 'overdue', 'void'] })!;
+      const status = input.string('status', { required: true, enum: ['draft', 'issued', 'paid', 'overdue', 'void'] });
       input.done();
       const transitions: Record<string, string[]> = {
         draft: ['issued', 'void'],
@@ -540,8 +544,8 @@ export function registerFinanceRoutes(router: Router, base: string): void {
       if (details.balance_cents <= 0) throw conflict('La factura ya está pagada');
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['account_id', 'method', 'amount_cents', 'reference']);
-      const accountId = input.integer('account_id', { required: true, min: 1 })!;
-      const method = input.string('method', { required: true, enum: ['transfer', 'card', 'cash', 'direct_debit'] })!;
+      const accountId = input.integer('account_id', { required: true, min: 1 });
+      const method = input.string('method', { required: true, enum: ['transfer', 'card', 'cash', 'direct_debit'] });
       const amount = input.integer('amount_cents', { min: 1, default: details.balance_cents }) ?? details.balance_cents;
       const reference = input.string('reference', { nullable: true, maxLength: 120 }) ?? null;
       input.done();
@@ -592,7 +596,7 @@ export function registerFinanceRoutes(router: Router, base: string): void {
       if (!['draft', 'submitted'].includes(expense.status)) throw conflict(`El gasto ya está ${expense.status}`);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['status', 'approved_by']);
-      const status = input.string('status', { required: true, enum: ['approved', 'rejected'] })!;
+      const status = input.string('status', { required: true, enum: ['approved', 'rejected'] });
       const approvedBy = input.integer('approved_by', { nullable: true, min: 1 }) ?? null;
       input.done();
       if (approvedBy && !db.get('SELECT 1 AS x FROM hr_employees WHERE id = ?', approvedBy))

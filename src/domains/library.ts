@@ -474,7 +474,7 @@ export function registerLibraryRoutes(router: Router, base: string): void {
       const input = new Validator(body, ['copy_id', 'book_id', 'reader_id', 'days']);
       const copyId = input.integer('copy_id', { min: 1 });
       const bookId = input.integer('book_id', { min: 1 });
-      const readerId = input.integer('reader_id', { required: true, min: 1 })!;
+      const readerId = input.integer('reader_id', { required: true, min: 1 });
       const days = input.integer('days', { min: 1, max: 60, default: 14 }) ?? 14;
       input.done();
       if (!copyId && !bookId)
@@ -489,10 +489,10 @@ export function registerLibraryRoutes(router: Router, base: string): void {
       let copy: { id: number; status: string; book_id: number; barcode: string } | undefined;
       if (copyId) {
         copy = db.get('SELECT id, status, book_id, barcode FROM lib_copies WHERE id = ?', copyId);
-      } else {
+      } else if (bookId) {
         copy = db.get(
           "SELECT id, status, book_id, barcode FROM lib_copies WHERE book_id = ? AND status = 'available' ORDER BY id LIMIT 1",
-          bookId!,
+          bookId,
         );
         if (!copy) throw conflict('No hay ejemplares disponibles para el libro');
       }
@@ -610,8 +610,8 @@ export function registerLibraryRoutes(router: Router, base: string): void {
       const db = dbOf(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['book_id', 'reader_id', 'expires_in_days']);
-      const bookId = input.integer('book_id', { required: true, min: 1 })!;
-      const readerId = input.integer('reader_id', { required: true, min: 1 })!;
+      const bookId = input.integer('book_id', { required: true, min: 1 });
+      const readerId = input.integer('reader_id', { required: true, min: 1 });
       const days = input.integer('expires_in_days', { min: 1, max: 60, default: 7 }) ?? 7;
       input.done();
       if (!db.get('SELECT 1 AS x FROM lib_books WHERE id = ?', bookId)) throw notFound('Libro no encontrado');

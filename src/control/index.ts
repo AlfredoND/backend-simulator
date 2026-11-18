@@ -360,7 +360,7 @@ export function registerControlRoutes(router: Router): void {
       requireControl(ctx);
       const body = await readJsonBody(ctx);
       const input = new Validator(body, ['entity', 'count']);
-      const entity = input.string('entity', { required: true, maxLength: 40 })!;
+      const entity = input.string('entity', { required: true, maxLength: 40 });
       const count = input.integer('count', { min: 1, max: 100, default: 1 }) ?? 1;
       input.done();
       const result = appendDemo(ctx, entity, count);

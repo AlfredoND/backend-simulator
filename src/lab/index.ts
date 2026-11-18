@@ -34,10 +34,6 @@ function integerParam(ctx: Ctx, name: string, fallback: number, min: number, max
   return value;
 }
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, n));
-}
-
 function safeEqual(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
