@@ -12,6 +12,8 @@ export interface Config {
   http2Port: number;
   proxyEnabled: boolean;
   proxyPort: number;
+  uiEnabled: boolean;
+  uiDir: string;
   dbPath: string;
   seedScale: number;
   maxBodyBytes: number;
@@ -83,6 +85,8 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     http2Port: int('HTTP2_PORT', 4444, 0, 65535),
     proxyEnabled: bool('PROXY_ENABLED', false),
     proxyPort: int('PROXY_PORT', 8080, 0, 65535),
+    uiEnabled: bool('UI_ENABLED', true),
+    uiDir: resolve(base, str('UI_DIR', './web')),
     dbPath: resolve(base, str('DB_PATH', './data/backend-simulator.sqlite')),
     seedScale: Number(str('SEED_SCALE', '1')),
     maxBodyBytes: int('MAX_BODY_BYTES', 10 * 1024 * 1024, 1024, 1024 * 1024 * 1024),

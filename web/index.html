@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Backend Simulator web console: health, API catalog and HTTP request laboratory.">
+  <meta name="color-scheme" content="light dark">
+  <title>Backend Simulator · Console</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="a11y.skip">Saltar al contenido</a>
+
+  <header class="site-header">
+    <a class="brand" href="#overview" aria-label="Backend Simulator">
+      <span class="brand-mark" aria-hidden="true">BS</span>
+      <span class="brand-copy">
+        <strong>Backend Simulator</strong>
+        <small data-i18n="brand.subtitle">Consola local de APIs y transporte HTTP</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Primary">
+      <a href="#overview" data-i18n="nav.overview">Resumen</a>
+      <a href="#lab" data-i18n="nav.lab">Request Lab</a>
+      <a href="#catalog" data-i18n="nav.catalog">Catálogo API</a>
+      <a href="#docs" data-i18n="nav.docs">Documentación</a>
+    </nav>
+
+    <div class="header-tools">
+      <span class="status-pill" id="connection-pill" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connection-text" data-i18n="status.checking">Conectando</span>
+      </span>
+      <button class="icon-button" id="language-toggle" type="button" aria-label="Switch language">EN</button>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Toggle theme">
+        <span aria-hidden="true">◐</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="overview">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="overview.eyebrow">Backend local de simulación</span></p>
+        <h1 data-i18n="overview.title">Inspecciona el backend. Prueba el transporte. Sin tocar producción.</h1>
+        <p class="hero-lede" data-i18n="overview.intro">Una consola ligera para explorar las APIs, lanzar peticiones y leer respuestas reales del simulador HTTP.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#lab" data-i18n="overview.labCta">Abrir Request Lab</a>
+          <a class="button button-secondary" href="/docs" target="_blank" rel="noreferrer" data-api-link="/docs" data-i18n="overview.docsCta">Ver API docs</a>
+        </div>
+
+        <div class="base-control">
+          <label for="api-base" data-i18n="overview.apiBase">Base URL de la API</label>
+          <div class="inline-input">
+            <input id="api-base" name="api-base" type="url" spellcheck="false" autocomplete="off">
+            <button class="button button-small" id="apply-base" type="button" data-i18n="overview.apply">Aplicar</button>
+          </div>
+          <p class="field-hint" data-i18n="overview.apiBaseHint">Se usa para el resumen y como base de las peticiones relativas.</p>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span class="metric-label" data-i18n="metric.health">Estado</span>
+            <strong id="metric-health">—</strong>
+            <small id="metric-health-detail" data-i18n="metric.waiting">Esperando</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label" data-i18n="metric.uptime">Uptime</span>
+            <strong id="metric-uptime">—</strong>
+            <small data-i18n="metric.sinceStart">desde el arranque</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label" data-i18n="metric.records">Registros</span>
+            <strong id="metric-records">—</strong>
+            <small data-i18n="metric.database">SQLite</small>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label" data-i18n="metric.domains">Dominios</span>
+            <strong id="metric-domains">—</strong>
+            <small data-i18n="metric.apis">APIs de negocio</small>
+          </article>
+        </div>
+        <div class="hero-panel-head">
+          <div>
+            <h2 data-i18n="overview.domainsTitle">Datos por dominio</h2>
+            <p data-i18n="overview.domainsHint">Conteo de tablas y registros listo para inspeccionar.</p>
+          </div>
+          <button class="button button-ghost button-small" id="refresh-overview" type="button" data-i18n="overview.refresh">Actualizar</button>
+        </div>
+        <div class="domain-grid" id="domain-grid">
+          <p class="muted" data-i18n="overview.loading">Cargando datos del backend…</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="lab">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-i18n="lab.eyebrow">HTTP Workbench</p>
+          <h2 data-i18n="lab.title">Request Lab</h2>
+          <p data-i18n="lab.intro">Construye una petición, ejecútala y examina la respuesta. Incluye atajos para los escenarios del laboratorio.</p>
+        </div>
+        <span class="section-tag">/test · /api/v1</span>
+      </div>
+
+      <div class="lab-grid">
+        <form class="panel request-panel" id="request-form">
+          <div class="panel-title-row">
+            <h3 data-i18n="lab.request">Petición</h3>
+            <span class="tiny-badge" data-i18n="lab.localOnly">Solo entorno local</span>
+          </div>
+
+          <div class="request-line">
+            <label class="sr-only" for="method-select" data-i18n="lab.method">Método</label>
+            <select id="method-select" name="method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>PATCH</option>
+              <option>DELETE</option>
+              <option>HEAD</option>
+              <option>OPTIONS</option>
+            </select>
+            <label class="sr-only" for="path-input" data-i18n="lab.path">Ruta</label>
+            <input id="path-input" name="path" type="text" value="/api/v1/shop/products?per_page=5" spellcheck="false" autocomplete="off">
+            <button class="button button-primary" id="send-button" type="submit" data-i18n="lab.send">Enviar</button>
+            <button class="button button-danger" id="abort-button" type="button" hidden data-i18n="lab.abort">Abortar</button>
+          </div>
+
+          <div class="field-row">
+            <div class="field grow">
+              <label for="token-input" data-i18n="lab.token">Bearer token</label>
+              <input id="token-input" name="token" type="password" placeholder="local-admin-token" spellcheck="false" autocomplete="off">
+            </div>
+            <button class="button button-small align-end" id="demo-token" type="button" data-i18n="lab.demoToken">Usar token demo</button>
+          </div>
+          <label class="check-row">
+            <input id="attach-auth" type="checkbox" checked>
+            <span data-i18n="lab.attachAuth">Añadir Authorization: Bearer a las peticiones</span>
+          </label>
+
+          <div class="field">
+            <div class="field-label-row">
+              <label data-i18n="lab.headers">Headers</label>
+              <button class="text-button" id="add-header" type="button" data-i18n="lab.addHeader">+ Añadir header</button>
+            </div>
+            <div class="header-rows" id="headers-list"></div>
+          </div>
+
+          <div class="field" id="body-field">
+            <label for="body-input" data-i18n="lab.body">Body</label>
+            <textarea id="body-input" name="body" rows="7" spellcheck="false" placeholder="{&quot;example&quot;: true}"></textarea>
+            <p class="field-hint" data-i18n="lab.bodyHint">Se envía tal cual. Añade Content-Type si necesitas JSON.</p>
+          </div>
+
+          <div class="field">
+            <span class="field-label" data-i18n="lab.presets">Presets</span>
+            <div class="chip-row" id="presets"></div>
+          </div>
+        </form>
+
+        <section class="panel response-panel" aria-live="polite">
+          <div class="panel-title-row">
+            <h3 data-i18n="lab.response">Respuesta</h3>
+            <button class="text-button" id="copy-response" type="button" disabled data-i18n="lab.copy">Copiar</button>
+          </div>
+
+          <div class="response-empty" id="response-empty">
+            <div class="empty-icon" aria-hidden="true">↗</div>
+            <h4 data-i18n="lab.emptyTitle">Aún no hay respuesta</h4>
+            <p data-i18n="lab.emptyText">Envía una petición o carga un preset para empezar.</p>
+          </div>
+
+          <div id="response-content" hidden>
+            <div class="response-summary">
+              <span class="response-status" id="response-status">—</span>
+              <span id="response-meta" class="response-meta"></span>
+            </div>
+            <p class="response-url" id="response-url"></p>
+            <div class="response-block">
+              <div class="response-block-head">
+                <h4 data-i18n="lab.headersTitle">Headers</h4>
+                <span id="response-headers-count" class="counter"></span>
+              </div>
+              <dl class="response-headers" id="response-headers"></dl>
+            </div>
+            <div class="response-block">
+              <h4 data-i18n="lab.bodyTitle">Body</h4>
+              <pre class="response-body" id="response-body"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="section" id="catalog">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-i18n="catalog.eyebrow">Endpoint directory</p>
+          <h2 data-i18n="catalog.title">Catálogo de APIs</h2>
+          <p data-i18n="catalog.intro">Carga cualquier endpoint en el Request Lab. Los ejemplos usan los datos semilla.</p>
+        </div>
+        <div class="catalog-search">
+          <label class="sr-only" for="catalog-search" data-i18n="catalog.search">Buscar endpoints</label>
+          <input id="catalog-search" type="search" spellcheck="false" data-i18n-placeholder="catalog.searchPlaceholder" placeholder="Filtrar por ruta o nombre…">
+        </div>
+      </div>
+      <div id="catalog-root" class="catalog-root"></div>
+      <p class="empty-state" id="catalog-empty" hidden data-i18n="catalog.empty">No hay endpoints que coincidan.</p>
+    </section>
+
+    <section class="section" id="docs">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" data-i18n="docs.eyebrow">Reference</p>
+          <h2 data-i18n="docs.title">Documentación y atajos</h2>
+          <p data-i18n="docs.intro">La interfaz no oculta el contrato: abre OpenAPI, revisa credenciales o copia un comando.</p>
+        </div>
+      </div>
+
+      <div class="docs-grid">
+        <article class="doc-card">
+          <span class="doc-icon" aria-hidden="true">API</span>
+          <h3 data-i18n="docs.linksTitle">Contratos HTTP</h3>
+          <p data-i18n="docs.linksHint">Especificación generada desde el backend, siempre sincronizada con las rutas.</p>
+          <div class="doc-links">
+            <a class="button button-small" href="/openapi.json" target="_blank" rel="noreferrer" data-api-link="/openapi.json">OpenAPI JSON</a>
+            <a class="button button-small button-secondary" href="/docs" target="_blank" rel="noreferrer" data-api-link="/docs">Swagger UI</a>
+          </div>
+        </article>
+
+        <article class="doc-card">
+          <span class="doc-icon" aria-hidden="true">CLI</span>
+          <h3 data-i18n="docs.quickstartTitle">Arranque rápido</h3>
+          <pre class="snippet"><code>npm install
+npm start
+# UI:  http://localhost:4000/ui/
+# API: http://localhost:4000/api/v1</code></pre>
+          <p data-i18n="docs.quickstartHint">La interfaz no requiere build ni framework; se sirve como archivos estáticos.</p>
+        </article>
+
+        <article class="doc-card">
+          <span class="doc-icon" aria-hidden="true">KEY</span>
+          <h3 data-i18n="docs.credentialsTitle">Credenciales de simulación</h3>
+          <p data-i18n="docs.credentialsHint">Valores locales de prueba. No son secretos reales.</p>
+          <div class="credentials">
+            <div class="credential-row">
+              <span>Admin</span>
+              <code>admin@simulator.local / Admin123!</code>
+              <button class="copy-button" type="button" data-copy="admin@simulator.local / Admin123!" data-i18n="docs.copy">Copiar</button>
+            </div>
+            <div class="credential-row">
+              <span data-i18n="docs.token">Bearer</span>
+              <code>local-admin-token</code>
+              <button class="copy-button" type="button" data-copy="local-admin-token" data-i18n="docs.copy">Copiar</button>
+            </div>
+            <div class="credential-row">
+              <span>API key</span>
+              <code>local-test-api-key</code>
+              <button class="copy-button" type="button" data-copy="local-test-api-key" data-i18n="docs.copy">Copiar</button>
+            </div>
+            <div class="credential-row">
+              <span data-i18n="docs.control">Control</span>
+              <code>local-control-token</code>
+              <button class="copy-button" type="button" data-copy="local-control-token" data-i18n="docs.copy">Copiar</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="doc-card">
+          <span class="doc-icon" aria-hidden="true">!</span>
+          <h3 data-i18n="docs.securityTitle">Límites del entorno</h3>
+          <p data-i18n="docs.securityText">Todo es local: no uses estas credenciales fuera del simulador. El proxy y las redirecciones solo permiten destinos locales.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><strong>Backend Simulator</strong> · <span data-i18n="footer.note">Entorno local de simulación HTTP. Sin producción, sin secretos reales.</span></p>
+    <div class="footer-links">
+      <a href="/health" data-api-link="/health">/health</a>
+      <a href="/test" data-api-link="/test">/test</a>
+      <a href="/openapi.json" data-api-link="/openapi.json">/openapi.json</a>
+      <a href="/docs" data-api-link="/docs">/docs</a>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

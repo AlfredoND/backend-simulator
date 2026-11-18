@@ -21,6 +21,7 @@ import { handleLab } from './lab/index.js';
 import { buildOpenApi, docsHtml } from './http/openapi.js';
 import { ensureCertificates } from './transport/tls.js';
 import { createLocalProxy } from './transport/proxy.js';
+import { serveStatic } from './http/static.js';
 
 export interface AppInstance {
   config: Config;
@@ -63,6 +64,7 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
         openapi: '/openapi.json',
         domains: ['identity', 'projects', 'shop', 'library', 'education', 'hr', 'finance'],
         lab: '/test',
+        ui: config.uiEnabled ? '/ui/' : null,
         health: '/health',
       },
     });
@@ -110,6 +112,10 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
       try {
         const pathname = ctx.url.pathname;
         const method = (req.method ?? 'GET').toUpperCase();
+        if (config.uiEnabled && (pathname === '/ui' || pathname.startsWith('/ui/'))) {
+          await serveStatic(ctx, '/ui', config.uiDir);
+          return;
+        }
         if (pathname === '/test' || pathname.startsWith('/test/')) {
           await handleLab(ctx);
           return;
