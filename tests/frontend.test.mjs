@@ -12,6 +12,7 @@ import {
   headerRowsToObject,
   headersToRows,
   isValidHttpUrl,
+  modeErrorKey,
   normalizeBaseUrl,
   prettyPayload,
   statusTone,
@@ -93,6 +94,19 @@ test('las traducciones cubren el HTML y los IDs usados por la UI existen', () =>
   const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
   const referenced = [...main.matchAll(/\$\('#([^']+)'\)/g)].map((match) => match[1]);
   for (const id of referenced) assert.ok(ids.has(id), `missing DOM id: ${id}`);
+});
+
+test('el modo de datos localiza los errores de control', () => {
+  assert.equal(modeErrorKey(401), 'mode.errorUnauthorized');
+  assert.equal(modeErrorKey(409), 'mode.errorConflict');
+  assert.equal(modeErrorKey(500), 'mode.errorStatus');
+  for (const lang of ['es', 'en']) {
+    for (const key of ['mode.errorUnauthorized', 'mode.errorConflict', 'mode.errorStatus']) {
+      assert.notEqual(t(lang, key), key, `missing ${lang} translation: ${key}`);
+    }
+  }
+  assert.match(t('en', 'mode.errorStatus', { status: 500 }), /HTTP 500/);
+  assert.doesNotMatch(t('en', 'mode.errorUnauthorized'), /[áéíóúñ¿]/i);
 });
 
 test('la consola expone los controles del modo de datos', () => {

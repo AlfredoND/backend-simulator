@@ -19,6 +19,7 @@ import {
   headerRowsToObject,
   headersToRows,
   isValidHttpUrl,
+  modeErrorKey,
   normalizeBaseUrl,
   prettyPayload,
   statusTone,
@@ -326,8 +327,7 @@ async function runModeAction(action) {
   try {
     const result = await controlRequest(state.apiBase, path, { token, method: 'POST' });
     if (!result.ok) {
-      const detail = result.body?.error?.message ?? `HTTP ${result.status}`;
-      showToast(`${t(state.lang, 'mode.error')} ${detail}`, true);
+      showToast(t(state.lang, modeErrorKey(result.status), { status: result.status }), true);
       return;
     }
     if (result.body?.data) state.mode = result.body.data;

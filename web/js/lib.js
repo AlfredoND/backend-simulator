@@ -56,6 +56,14 @@ export function statusTone(status) {
   return 'neutral';
 }
 
+/** Maps a control API status to a localized data-mode error message key. */
+export function modeErrorKey(status) {
+  const value = Number(status);
+  if (value === 401) return 'mode.errorUnauthorized';
+  if (value === 409) return 'mode.errorConflict';
+  return 'mode.errorStatus';
+}
+
 /** Decides whether a response body should be decoded as text. */
 export function isTextContentType(contentType) {
   const type = String(contentType ?? '').toLowerCase();
@@ -74,7 +82,7 @@ export function isTextContentType(contentType) {
 export function prettyPayload(text, contentType = '') {
   const raw = String(text ?? '');
   if (!raw) return '';
-  if (contentType.toLowerCase().includes('json') || /^[\s]*[\[{]/.test(raw)) {
+  if (contentType.toLowerCase().includes('json') || /^\s*[[{]/.test(raw)) {
     try {
       return JSON.stringify(JSON.parse(raw), null, 2);
     } catch {
