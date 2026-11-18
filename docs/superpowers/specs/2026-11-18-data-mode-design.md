@@ -237,7 +237,7 @@ Nuevas pruebas de integración:
 9. OpenAPI contiene las rutas y resúmenes en inglés.
 10. `package.json` declara Apache-2.0, existen `LICENSE` y `NOTICE`, y la documentación enlaza la licencia.
 
-La suite final es de 73 pruebas: 65 existentes más las nuevas de datos, API, UI, licencia y regresión de fallo al congelar.
+La suite final es de 74 pruebas: 65 existentes más las nuevas de datos, API, UI, licencia, regresión de fallo al congelar y localización de errores.
 
 ## 10. Riesgos y mitigaciones
 

@@ -57,11 +57,11 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - Bilingual data mode panel in the console, with the control token in `sessionStorage`.
 - Apache-2.0 license with `LICENSE`, `NOTICE`, and `package.json` metadata.
 - Development dependencies pinned to exact versions, without `^`.
-- Biome quality: `biome.json`, `.editorconfig`, `npm run lint`, `npm run format:check`, and `npm run check`.
+- Biome quality: `biome.json`, `.editorconfig`, `npm run lint` (fails on warnings), `npm run format:check`, and `npm run check`.
 - Bilingual documentation for data modes and the license.
 
 ## Phase 8 — Verification [COMPLETE]
-- `npm test`: 73/73 tests.
+- `npm test`: 74/74 tests.
 - `npm run typecheck`: no errors.
 - `npm run lint` and `npm run format:check`: no errors.
 - `npm run build`: OK, copies `schema.sql`.

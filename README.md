@@ -342,9 +342,9 @@ npm run format:check
 npm run check
 ```
 
-Las 73 pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autorización global y grupos, escenarios 429/500/503, validación, ETag/412, OpenAPI bilingüe, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2, proxy, servidor estático, modo de datos congelado, licencia y documentación bilingüe. El código de `src/` y `web/` incluye JSDoc de contratos y decisiones.
+Las 74 pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autorización global y grupos, escenarios 429/500/503, validación, ETag/412, OpenAPI bilingüe, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2, proxy, servidor estático, modo de datos congelado, licencia y documentación bilingüe. El código de `src/` y `web/` incluye JSDoc de contratos y decisiones.
 
-La calidad se aplica con **Biome**: lint y formato comparten una sola configuración (`biome.json`), `.editorconfig` fija espacios y fin de línea, y `npm run check` ejecuta typecheck, lint, formato y pruebas. Las dependencias de desarrollo están fijadas a versiones exactas, sin `^`. CI: `.github/workflows/ci.yml`.
+La calidad se aplica con **Biome**: lint y formato comparten una sola configuración (`biome.json`), `.editorconfig` fija espacios y fin de línea, y `npm run check` ejecuta typecheck, lint, formato y pruebas. `npm run lint` falla ante cualquier warning. Las dependencias de desarrollo están fijadas a versiones exactas, sin `^`. CI: `.github/workflows/ci.yml`.
 
 ## Límites y seguridad
 

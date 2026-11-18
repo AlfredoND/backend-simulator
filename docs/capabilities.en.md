@@ -102,7 +102,7 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 ## Verification
 
 ```text
-npm test           73 tests, 73 pass
+npm test           74 tests, 74 pass
 npm run typecheck  no errors
 npm run lint       no errors
 npm run format:check  no changes

@@ -674,7 +674,7 @@ Run:
 npm run check
 npm run build
 ```
-Expected: typecheck OK, lint OK, format OK, **73/73 tests**, build OK.
+Expected: typecheck OK, lint OK, format OK, **74/74 tests**, build OK.
 
 - [x] **Step 8: Commit tooling and formatting**
 
@@ -729,7 +729,7 @@ Include:
 - README ES/EN: `npm run lint`, `npm run format:check`, and `npm run check` commands.
 - PLAN ES/EN: delivery status, quality, and tests.
 
-The expected count is **73 tests** (65 current + 2 data + 3 API + 1 UI + 1 license + 1 freeze regression). If `npm test` reports another number, update the documents to the real number before committing.
+The expected count is **74 tests** (65 current + 2 data + 3 API + 1 UI + 1 license + 1 freeze regression + 1 error-localization test). If `npm test` reports another number, update the documents to the real number before committing.
 
 - [x] **Step 3: Run documentation tests**
 
@@ -757,7 +757,7 @@ npm run build
 node --check web/js/main.js
 ```
 
-Expected: typecheck, lint, and format OK; **73/73 tests**; build OK.
+Expected: typecheck, lint, and format OK; **74/74 tests**; build OK.
 
 - [x] **Step 2: Verify the browser panel**
 

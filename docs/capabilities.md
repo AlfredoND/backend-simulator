@@ -102,7 +102,7 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 ## Verificación
 
 ```text
-npm test           73 pruebas, 73 pasan
+npm test           74 pruebas, 74 pasan
 npm run typecheck  sin errores
 npm run lint       sin errores
 npm run format:check  sin cambios

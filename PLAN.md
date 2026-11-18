@@ -57,11 +57,11 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Panel bilingüe de modo de datos en la consola, con token de control en `sessionStorage`.
 - Licencia Apache-2.0 con `LICENSE`, `NOTICE` y metadatos en `package.json`.
 - Dependencias de desarrollo fijadas a versiones exactas, sin `^`.
-- Calidad con Biome: `biome.json`, `.editorconfig`, `npm run lint`, `npm run format:check` y `npm run check`.
+- Calidad con Biome: `biome.json`, `.editorconfig`, `npm run lint` (falla ante warnings), `npm run format:check` y `npm run check`.
 - Documentación bilingüe del modo de datos y de la licencia.
 
 ## Fase 8 — Verificación [COMPLETA]
-- `npm test`: 73/73 pruebas.
+- `npm test`: 74/74 pruebas.
 - `npm run typecheck`: sin errores.
 - `npm run lint` y `npm run format:check`: sin errores.
 - `npm run build`: OK, copia `schema.sql`.

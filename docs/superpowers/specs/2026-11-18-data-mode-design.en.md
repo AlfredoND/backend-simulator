@@ -237,7 +237,7 @@ New integration tests:
 9. OpenAPI contains the routes and English summaries.
 10. `package.json` declares Apache-2.0, `LICENSE` and `NOTICE` exist, and documentation links the license.
 
-The final suite has 73 tests: the existing 65 plus the new data, API, UI, license, and freeze-failure regression tests.
+The final suite has 74 tests: the existing 65 plus the new data, API, UI, license, freeze-failure regression, and error-localization tests.
 
 ## 10. Risks and mitigations
 
