@@ -51,11 +51,22 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - CI en `.github/workflows/ci.yml` y pruebas de consistencia documental.
 - JSDoc de contratos, seguridad y decisiones arquitectónicas en todo el código de `src/` y `web/`.
 
-## Fase 7 — Verificación [COMPLETA]
-- `npm test`: 65/65 pruebas.
+## Fase 7 — Modo de datos, licencia y calidad [COMPLETA]
+- Modo persistente y modo congelado con copia descartable, restauración de imagen y salida al modo persistente.
+- Endpoints `/_control/mode`, `/_control/freeze`, `/_control/restore` y `/_control/unfreeze`.
+- Panel bilingüe de modo de datos en la consola, con token de control en `sessionStorage`.
+- Licencia Apache-2.0 con `LICENSE`, `NOTICE` y metadatos en `package.json`.
+- Dependencias de desarrollo fijadas a versiones exactas, sin `^`.
+- Calidad con Biome: `biome.json`, `.editorconfig`, `npm run lint`, `npm run format:check` y `npm run check`.
+- Documentación bilingüe del modo de datos y de la licencia.
+
+## Fase 8 — Verificación [COMPLETA]
+- `npm test`: 72/72 pruebas.
 - `npm run typecheck`: sin errores.
+- `npm run lint` y `npm run format:check`: sin errores.
 - `npm run build`: OK, copia `schema.sql`.
-- Cobertura: persistencia, APIs, autorización/grupos, escenarios, OpenAPI bilingüe, laboratorio, protocolos TLS/HTTP2/proxy y micro frontend.
+- `npm audit`: 0 vulnerabilidades.
+- Cobertura: persistencia, APIs, autorización/grupos, escenarios, OpenAPI bilingüe, laboratorio, protocolos TLS/HTTP2/proxy, micro frontend, modo de datos congelado y calidad.
 
 ## Limitaciones conocidas
 - WebSocket no implementado (SSE sí).
@@ -66,3 +77,5 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Reset de dominios con dependencias externas (identidad/RRHH) puede dejar referencias opcionales a NULL.
 - El rate limit global es en memoria y por proceso; no está pensado para despliegues distribuidos.
 - La UI es estática y deliberadamente simple: no incluye router SPA ni framework.
+- El modo congelado usa un snapshot síncrono y una sola imagen por proceso; no sobrevive a reinicios.
+- Biome aporta lint y formato rápidos, pero no análisis type-aware como `typescript-eslint`.

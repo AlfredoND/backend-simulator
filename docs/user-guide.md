@@ -391,19 +391,37 @@ curl -s -X POST http://localhost:4000/_control/seed \
   -H 'X-Control-Token: local-control-token' \
   -H 'Content-Type: application/json' \
   -d '{"entity":"products","count":5}'
+
+# Estado del modo de datos
+curl -s http://localhost:4000/_control/mode
+
+# Congelar: trabajar sobre una copia descartable
+curl -s -X POST http://localhost:4000/_control/freeze \
+  -H 'X-Control-Token: local-control-token'
+
+# Restaurar la imagen congelada (o los datos semilla en persistente)
+curl -s -X POST http://localhost:4000/_control/restore \
+  -H 'X-Control-Token: local-control-token'
+
+# Descartar la copia y volver a la base persistente
+curl -s -X POST http://localhost:4000/_control/unfreeze \
+  -H 'X-Control-Token: local-control-token'
 ```
 
-Los endpoints destructivos exigen `X-Control-Token`. Los datos persisten entre reinicios normales. Para empezar de cero, elimina la base con el servidor detenido o usa `/_control/reset`.
+Los endpoints destructivos exigen `X-Control-Token`. En modo persistente los cambios sobreviven a los reinicios; `/_control/restore` vuelve a los datos semilla. En modo congelado se trabaja sobre una copia: `/_control/reset` y `/_control/seed` afectan solo a la copia, y `/_control/unfreeze` descarta todo y recupera la base persistente intacta. Al reiniciar, el servidor siempre arranca en modo persistente. Contrato completo: [modos de datos](data-modes.md).
 
 ## 12. Pruebas
 
 ```bash
 npm test
 npm run typecheck
+npm run lint
+npm run format:check
+npm run check
 npm run build
 ```
 
-Las 65 pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo.
+Las 72 pruebas crean bases SQLite temporales y puertos aleatorios; no modifican tu base de desarrollo. `npm run check` ejecuta typecheck, lint con Biome, formato y pruebas.
 
 ## 13. Problemas comunes
 
@@ -457,6 +475,7 @@ El servidor cierra HTTP, HTTPS, HTTP/2, proxy y SQLite de forma ordenada.
 - [README](../README.md) · [English README](../README.en.md)
 - [Micro frontend](frontend.md) · [English](frontend.en.md)
 - [Autorización y escenarios](auth-and-scenarios.md) · [English](auth-and-scenarios.en.md)
+- [Modos de datos](data-modes.md) · [English](data-modes.en.md)
 - [Laboratorio HTTP](http-lab.md) · [English](http-lab.en.md)
 - [Matriz de capacidades](capabilities.md) · [English](capabilities.en.md)
 - [OpenAPI](http://localhost:4000/openapi.json)

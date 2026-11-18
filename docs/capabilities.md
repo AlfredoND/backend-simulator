@@ -69,6 +69,8 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 | Roles de grupo | Sí | `id_group_roles`, `/groups/:id/roles` | `tests/auth-policy.test.ts` |
 | Escenarios 429/500/503 en todas las APIs | Sí | `X-Simulate-Error`, `simulate_error`, rate limit global | `tests/resilience.test.ts` |
 | OpenAPI bilingüe | Sí | `/openapi.json`, `/openapi.en.json`, `/docs?lang=en` | `tests/openapi.test.ts` |
+| Modo de datos persistente/congelado | Sí | `/_control/freeze`, `/_control/restore`, `/_control/unfreeze`, `/_control/mode` | `tests/data-mode.test.ts` |
+| Calidad con Biome | Sí | `biome.json`, `.editorconfig`, `npm run check` | `npm run lint`, `npm run format:check` |
 | JSDoc de contratos y arquitectura | Sí | `src/` y `web/` | `npm run typecheck` |
 | HTTP/3 / QUIC | No | Fuera del alcance | — |
 | DNS personalizado | No | Fuera del alcance | — |
@@ -94,16 +96,18 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 | Relaciones 1:1, 1:N, M:N | Sí | Perfiles, stats, autores-libros, roles-permisos, etiquetas |
 | Agregaciones y JOIN | Sí | Stats de proyectos/tiendas/cursos/finanzas |
 | Reset por dominio / total | Sí | `/_control/reset/:domain`, `/_control/reset` |
+| Restauración congelada / semilla | Sí | `/_control/restore`; `/_control/unfreeze` |
 | Datos adicionales | Sí | `/_control/seed` (`users`, `tasks`, `products`, `books`, `students`, `employees`, `transactions`) |
 
 ## Verificación
 
 ```text
-npm test       65 pruebas, 65 pasan
+npm test           72 pruebas, 72 pasan
 npm run typecheck  sin errores
-npm run build      OK
-npm run typecheck   sin errores
-npm run build       compila y copia schema.sql
+npm run lint       sin errores
+npm run format:check  sin cambios
+npm run build      compila y copia schema.sql
+npm audit          0 vulnerabilidades
 ```
 
 Última ejecución verificada: 2026-11-18.

@@ -28,7 +28,7 @@ Las rutas de sesión autenticada (`logout`, `me`, `change-password`) exigen iden
 | `/api/v1/hr` | `hr:read` | `hr:write` |
 | `/api/v1/finance` | `finance:read` | `finance:write` |
 
-Las rutas de `/test`, `/ui`, `/docs`, `/openapi*.json`, `/health` y `/_control/stats|domains|config` siguen siendo públicas. Las operaciones destructivas de control exigen `X-Control-Token`.
+Las rutas de `/test`, `/ui`, `/docs`, `/openapi*.json`, `/health` y `/_control/stats|domains|config|mode` siguen siendo públicas. Las operaciones destructivas de control (`reset`, `seed`, `freeze`, `restore`, `unfreeze`) exigen `X-Control-Token`.
 
 ```bash
 # 401 sin credenciales

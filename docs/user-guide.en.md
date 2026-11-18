@@ -391,19 +391,37 @@ curl -s -X POST http://localhost:4000/_control/seed \
   -H 'X-Control-Token: local-control-token' \
   -H 'Content-Type: application/json' \
   -d '{"entity":"products","count":5}'
+
+# Data mode status
+curl -s http://localhost:4000/_control/mode
+
+# Freeze: work on a disposable copy
+curl -s -X POST http://localhost:4000/_control/freeze \
+  -H 'X-Control-Token: local-control-token'
+
+# Restore the frozen image (or seed data in persistent mode)
+curl -s -X POST http://localhost:4000/_control/restore \
+  -H 'X-Control-Token: local-control-token'
+
+# Discard the copy and return to the persistent database
+curl -s -X POST http://localhost:4000/_control/unfreeze \
+  -H 'X-Control-Token: local-control-token'
 ```
 
-Destructive endpoints require `X-Control-Token`. Data persists across normal restarts. To start from scratch, delete the database while the server is stopped or use `/_control/reset`.
+Destructive endpoints require `X-Control-Token`. In persistent mode changes survive restarts; `/_control/restore` returns to seed data. In frozen mode work happens on a copy: `/_control/reset` and `/_control/seed` affect only the copy, and `/_control/unfreeze` discards everything and recovers the untouched persistent database. On restart, the server always starts in persistent mode. Full contract: [data modes](data-modes.en.md).
 
 ## 12. Tests
 
 ```bash
 npm test
 npm run typecheck
+npm run lint
+npm run format:check
+npm run check
 npm run build
 ```
 
-The 65 tests create temporary SQLite databases and random ports; they do not modify your development database.
+The 72 tests create temporary SQLite databases and random ports; they do not modify your development database. `npm run check` runs typecheck, Biome lint, formatting, and tests.
 
 ## 13. Common issues
 
@@ -457,6 +475,7 @@ The server closes HTTP, HTTPS, HTTP/2, proxy and SQLite cleanly.
 - [README (English)](../README.en.md) · [Español](../README.md)
 - [Micro frontend](frontend.en.md) · [Español](frontend.md)
 - [Authorization and scenarios](auth-and-scenarios.en.md) · [Español](auth-and-scenarios.md)
+- [Data modes](data-modes.en.md) · [Español](data-modes.md)
 - [HTTP laboratory](http-lab.en.md) · [Español](http-lab.md)
 - [Capability matrix](capabilities.en.md) · [Español](capabilities.md)
 - [OpenAPI](http://localhost:4000/openapi.json)

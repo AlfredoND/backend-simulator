@@ -7,6 +7,7 @@ The project includes a static micro frontend for operating the simulator from a 
 ## Features
 
 - **Overview**: backend health, uptime, record count, domains and per-domain counts.
+- **Data mode**: panel to freeze the database, restore the image or seed data, and return to persistent mode.
 - **Request Lab**: HTTP request builder with method, path, headers, body, Bearer token, abort and response status, time, size, headers and body.
 - **API catalog**: sample endpoints by domain, searchable and loadable into the Request Lab.
 - **Documentation**: OpenAPI (ES/EN) and Swagger UI links, local credentials, startup commands and environment limits.
@@ -58,11 +59,12 @@ web/
 ## Data flow
 
 1. The UI builds the API URL from the configured base.
-2. `GET /health` and `GET /_control/stats` populate the overview.
+2. `GET /health`, `GET /_control/stats`, and `GET /_control/mode` populate the overview and data mode panel.
 3. The Request Lab runs `fetch` with the selected method, headers, body and Bearer token.
 4. The response is displayed without interpreting the backend contract: status, headers and the real body.
 5. The token is stored only in `sessionStorage`; theme, language and API base are stored in `localStorage`.
-6. With `AUTH_REQUIRED=true`, `/api/v1` requests need permission; the demo token is preloaded so the catalog works when the UI opens.
+6. The panel's control token is stored in `sessionStorage` and sent as `X-Control-Token` only for freeze, restore, and unfreeze.
+7. With `AUTH_REQUIRED=true`, `/api/v1` requests need permission; the demo token is preloaded so the catalog works when the UI opens.
 
 ## Backend static server
 
@@ -119,13 +121,12 @@ Color tokens, radii, typography and shadows live in `:root` and `html[data-theme
 ## Tests
 
 ```bash
-npm test
-npm run typecheck
+npm run check
 ```
 
 Specific coverage:
 
 - `tests/ui.test.ts`: static assets, MIME, CSP, `/ui` redirect, HEAD/OPTIONS, 404, 405 and path traversal.
-- `tests/frontend.test.mjs`: pure URL, formatting, status, body and header helpers.
+- `tests/frontend.test.mjs`: pure URL, formatting, status, body and header helpers, plus the data mode panel contract.
 
 Visual verification was performed with headless Chrome against a real backend: overview, authenticated request, language switch and theme switch.

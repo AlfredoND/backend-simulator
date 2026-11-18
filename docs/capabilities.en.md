@@ -69,6 +69,8 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 | Group roles | Yes | `id_group_roles`, `/groups/:id/roles` | `tests/auth-policy.test.ts` |
 | 429/500/503 scenarios on every API | Yes | `X-Simulate-Error`, `simulate_error`, global rate limit | `tests/resilience.test.ts` |
 | Bilingual OpenAPI | Yes | `/openapi.json`, `/openapi.en.json`, `/docs?lang=en` | `tests/openapi.test.ts` |
+| Persistent/frozen data mode | Yes | `/_control/freeze`, `/_control/restore`, `/_control/unfreeze`, `/_control/mode` | `tests/data-mode.test.ts` |
+| Biome quality | Yes | `biome.json`, `.editorconfig`, `npm run check` | `npm run lint`, `npm run format:check` |
 | Contract and architecture JSDoc | Yes | `src/` and `web/` | `npm run typecheck` |
 | HTTP/3 / QUIC | No | Out of scope | — |
 | Custom DNS | No | Out of scope | — |
@@ -94,16 +96,18 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 | 1:1, 1:N, M:N relationships | Yes | Profiles, stats, book authors, role permissions, labels |
 | Aggregations and JOINs | Yes | Project/shop/course/finance stats |
 | Per-domain / full reset | Yes | `/_control/reset/:domain`, `/_control/reset` |
+| Frozen / seed restore | Yes | `/_control/restore`; `/_control/unfreeze` |
 | Extra data | Yes | `/_control/seed` (`users`, `tasks`, `products`, `books`, `students`, `employees`, `transactions`) |
 
 ## Verification
 
 ```text
-npm test       65 tests, 65 pass
+npm test           72 tests, 72 pass
 npm run typecheck  no errors
-npm run build      OK
-npm run typecheck   no errors
-npm run build       compiles and copies schema.sql
+npm run lint       no errors
+npm run format:check  no changes
+npm run build      compiles and copies schema.sql
+npm audit          0 vulnerabilities
 ```
 
 Last verified run: 2026-11-18.

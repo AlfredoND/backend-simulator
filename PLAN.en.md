@@ -51,11 +51,22 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - CI at `.github/workflows/ci.yml` and documentation consistency tests.
 - JSDoc for contracts, security and architectural decisions across `src/` and `web/`.
 
-## Phase 7 — Verification [COMPLETE]
-- `npm test`: 65/65 tests.
+## Phase 7 — Data mode, license and quality [COMPLETE]
+- Persistent and frozen modes with a disposable copy, image restore, and return to persistent mode.
+- `/_control/mode`, `/_control/freeze`, `/_control/restore`, and `/_control/unfreeze` endpoints.
+- Bilingual data mode panel in the console, with the control token in `sessionStorage`.
+- Apache-2.0 license with `LICENSE`, `NOTICE`, and `package.json` metadata.
+- Development dependencies pinned to exact versions, without `^`.
+- Biome quality: `biome.json`, `.editorconfig`, `npm run lint`, `npm run format:check`, and `npm run check`.
+- Bilingual documentation for data modes and the license.
+
+## Phase 8 — Verification [COMPLETE]
+- `npm test`: 72/72 tests.
 - `npm run typecheck`: no errors.
+- `npm run lint` and `npm run format:check`: no errors.
 - `npm run build`: OK, copies `schema.sql`.
-- Coverage: persistence, APIs, authorization/groups, scenarios, bilingual OpenAPI, laboratory, TLS/HTTP2/proxy protocols and micro frontend.
+- `npm audit`: 0 vulnerabilities.
+- Coverage: persistence, APIs, authorization/groups, scenarios, bilingual OpenAPI, laboratory, TLS/HTTP2/proxy protocols, micro frontend, frozen data mode, and quality.
 
 ## Known limitations
 - WebSocket not implemented (SSE is available).
@@ -66,3 +77,5 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - Resetting domains with external dependencies (identity/HR) may leave optional NULL references.
 - The global rate limit is in memory and per process; it is not designed for distributed deployments.
 - The UI is static and deliberately simple: no SPA router or framework.
+- Frozen mode uses a synchronous snapshot and a single image per process; it does not survive restarts.
+- Biome provides fast linting and formatting, but not type-aware analysis like `typescript-eslint`.

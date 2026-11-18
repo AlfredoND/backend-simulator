@@ -73,6 +73,7 @@ It is vanilla JavaScript with ES modules: no framework, no UI dependencies and n
 | Step-by-step guide | [docs/user-guide.md](docs/user-guide.md) | [docs/user-guide.en.md](docs/user-guide.en.md) |
 | Micro frontend | [docs/frontend.md](docs/frontend.md) | [docs/frontend.en.md](docs/frontend.en.md) |
 | Authorization and scenarios | [docs/auth-and-scenarios.md](docs/auth-and-scenarios.md) | [docs/auth-and-scenarios.en.md](docs/auth-and-scenarios.en.md) |
+| Data modes | [docs/data-modes.md](docs/data-modes.md) | [docs/data-modes.en.md](docs/data-modes.en.md) |
 | HTTP laboratory | [docs/http-lab.md](docs/http-lab.md) | [docs/http-lab.en.md](docs/http-lab.en.md) |
 | Capability matrix | [docs/capabilities.md](docs/capabilities.md) | [docs/capabilities.en.md](docs/capabilities.en.md) |
 | Delivery plan | [PLAN.md](PLAN.md) | [PLAN.en.md](PLAN.en.md) |
@@ -256,6 +257,27 @@ curl -X POST http://localhost:4000/_control/reset \
 - Extra data: `POST /_control/seed` with `{"entity":"users|tasks|products|books|students|employees|transactions","count":N}` and `X-Control-Token`.
 - Resetting identity or HR may leave optional `NULL` references in other domains. Shop, library, education and projects can be reset independently.
 
+### Persistent and frozen mode
+
+- **Persistent:** changes are saved to `DB_PATH` and survive restarts.
+- **Frozen:** an image of the current state is created and work happens on a disposable copy; the main database is untouched.
+
+```bash
+# Freeze and work on the copy
+curl -X POST http://localhost:4000/_control/freeze \
+  -H 'X-Control-Token: local-control-token'
+
+# Restore the frozen image (or seed data in persistent mode)
+curl -X POST http://localhost:4000/_control/restore \
+  -H 'X-Control-Token: local-control-token'
+
+# Discard the copy and return to the persistent database
+curl -X POST http://localhost:4000/_control/unfreeze \
+  -H 'X-Control-Token: local-control-token'
+```
+
+`GET /_control/mode` shows the active mode and `GET /_control/stats` includes it in `data_mode`. While frozen, `/_control/reset` and `/_control/seed` affect only the copy. Restarting always returns to the persistent database. Full contract: [data modes](docs/data-modes.en.md).
+
 ## Configuration
 
 Copy `.env.example`. Environment variables take precedence; `.env` is loaded when present.
@@ -315,9 +337,14 @@ docs/                    guide, frontend, laboratory, capabilities and Spanish v
 ```bash
 npm test
 npm run typecheck
+npm run lint
+npm run format:check
+npm run check
 ```
 
-The 65 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, global authorization and groups, 429/500/503 scenarios, validation, ETag/412, bilingual OpenAPI, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server and bilingual documentation. Code under `src/` and `web/` includes JSDoc for contracts and decisions. CI: `.github/workflows/ci.yml`.
+The 72 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, global authorization and groups, 429/500/503 scenarios, validation, ETag/412, bilingual OpenAPI, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server, frozen data mode, licensing, and bilingual documentation. Code under `src/` and `web/` includes JSDoc for contracts and decisions.
+
+Quality is enforced with **Biome**: lint and formatting share one configuration (`biome.json`), `.editorconfig` fixes spaces and line endings, and `npm run check` runs typecheck, lint, format, and tests. Development dependencies are pinned to exact versions, without `^`. CI: `.github/workflows/ci.yml`.
 
 ## Limits and security
 
@@ -332,3 +359,7 @@ This server is local-only:
 - Destructive operations require `X-Control-Token`.
 - Queries use bound parameters and column/table allowlists.
 - Received code is never executed and user paths never access arbitrary files.
+
+## License
+
+This project is distributed under the **Apache License 2.0**. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

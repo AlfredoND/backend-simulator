@@ -7,6 +7,7 @@ El proyecto incluye un micro frontend estático para operar el simulador desde e
 ## Qué ofrece
 
 - **Resumen**: salud del backend, uptime, número de registros, dominios y conteo por dominio.
+- **Modo de datos**: panel para congelar la base, restaurar la imagen o los datos semilla y volver al modo persistente.
 - **Request Lab**: constructor de peticiones HTTP con método, ruta, headers, body, token Bearer, aborto y visualización de estado, tiempo, tamaño, headers y cuerpo.
 - **Catálogo de APIs**: endpoints de ejemplo por dominio, con búsqueda y carga directa en el Request Lab.
 - **Documentación**: enlaces a OpenAPI (ES/EN) y Swagger UI, credenciales locales, comandos de arranque y límites del entorno.
@@ -58,11 +59,12 @@ web/
 ## Flujo de datos
 
 1. La UI calcula la URL de la API a partir de la base configurada.
-2. `GET /health` y `GET /_control/stats` alimentan el resumen.
+2. `GET /health`, `GET /_control/stats` y `GET /_control/mode` alimentan el resumen y el panel de modo.
 3. El Request Lab ejecuta `fetch` con el método, headers, body y Bearer token indicados.
 4. La respuesta se muestra sin interpretar el contrato del backend: estado, headers y cuerpo real.
 5. El token se guarda solo en `sessionStorage`; tema, idioma y API base se guardan en `localStorage`.
-6. Con `AUTH_REQUIRED=true` las peticiones a `/api/v1` necesitan permiso; el token demo se precarga para que el catálogo funcione al abrir la UI.
+6. El token de control del panel se guarda en `sessionStorage` y se envía como `X-Control-Token` solo en congelar, restaurar y salir del congelado.
+7. Con `AUTH_REQUIRED=true` las peticiones a `/api/v1` necesitan permiso; el token demo se precarga para que el catálogo funcione al abrir la UI.
 
 ## Servidor estático del backend
 
@@ -119,13 +121,12 @@ Los tokens de color, radios, tipografía y sombras están en `:root` y `html[dat
 ## Pruebas
 
 ```bash
-npm test
-npm run typecheck
+npm run check
 ```
 
 Cobertura específica:
 
 - `tests/ui.test.ts`: estáticos, MIME, CSP, redirect `/ui`, HEAD/OPTIONS, 404, 405 y path traversal.
-- `tests/frontend.test.mjs`: funciones puras de URLs, formatos, estados, cuerpos y headers.
+- `tests/frontend.test.mjs`: funciones puras de URLs, formatos, estados, cuerpos, headers y contrato del panel de modo.
 
 La verificación visual se realizó con Chrome headless contra un backend real: resumen, petición autenticada, cambio de idioma y tema.

@@ -73,6 +73,7 @@ Es JavaScript nativo con ES modules: sin framework, sin dependencias de UI y sin
 | Guía paso a paso      | [docs/user-guide.md](docs/user-guide.md)     | [docs/user-guide.en.md](docs/user-guide.en.md)     |
 | Micro frontend        | [docs/frontend.md](docs/frontend.md)         | [docs/frontend.en.md](docs/frontend.en.md)         |
 | Autorización y escenarios | [docs/auth-and-scenarios.md](docs/auth-and-scenarios.md) | [docs/auth-and-scenarios.en.md](docs/auth-and-scenarios.en.md) |
+| Modos de datos        | [docs/data-modes.md](docs/data-modes.md)     | [docs/data-modes.en.md](docs/data-modes.en.md)     |
 | Laboratorio HTTP      | [docs/http-lab.md](docs/http-lab.md)         | [docs/http-lab.en.md](docs/http-lab.en.md)         |
 | Matriz de capacidades | [docs/capabilities.md](docs/capabilities.md) | [docs/capabilities.en.md](docs/capabilities.en.md) |
 | Plan de entrega       | [PLAN.md](PLAN.md)                           | [PLAN.en.md](PLAN.en.md)                           |
@@ -256,6 +257,27 @@ curl -X POST http://localhost:4000/_control/reset \
 - Datos adicionales: `POST /_control/seed` con `{"entity":"users|tasks|products|books|students|employees|transactions","count":N}` y `X-Control-Token`.
 - Resetear identidad o RRHH puede dejar referencias opcionales a `NULL` en otros dominios. Shop, library, education y projects se restauran de forma autocontenida.
 
+### Modo persistente y modo congelado
+
+- **Persistente:** los cambios se guardan en `DB_PATH` y sobreviven a los reinicios.
+- **Congelado:** se crea una imagen del estado actual y se trabaja sobre una copia descartable; la base principal no se modifica.
+
+```bash
+# Congelar y trabajar sobre la copia
+curl -X POST http://localhost:4000/_control/freeze \
+  -H 'X-Control-Token: local-control-token'
+
+# Restaurar la imagen congelada (o los datos semilla en persistente)
+curl -X POST http://localhost:4000/_control/restore \
+  -H 'X-Control-Token: local-control-token'
+
+# Descartar la copia y volver a la base persistente
+curl -X POST http://localhost:4000/_control/unfreeze \
+  -H 'X-Control-Token: local-control-token'
+```
+
+`GET /_control/mode` muestra el modo activo y `GET /_control/stats` lo incluye en `data_mode`. En congelado, `/_control/reset` y `/_control/seed` afectan solo a la copia. Al reiniciar se vuelve siempre a la base persistente. Contrato completo: [modos de datos](docs/data-modes.md).
+
 ## Configuración
 
 Copia `.env.example`. Las variables del entorno tienen prioridad; `.env` se carga si existe.
@@ -315,9 +337,14 @@ docs/                    guía, frontend, laboratorio, capacidades y versiones e
 ```bash
 npm test
 npm run typecheck
+npm run lint
+npm run format:check
+npm run check
 ```
 
-Las 65 pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autorización global y grupos, escenarios 429/500/503, validación, ETag/412, OpenAPI bilingüe, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2, proxy, servidor estático y documentación bilingüe. El código de `src/` y `web/` incluye JSDoc de contratos y decisiones. CI: `.github/workflows/ci.yml`.
+Las 72 pruebas usan bases SQLite temporales y puertos aleatorios; no tocan la base de desarrollo. Cubren restricciones relacionales, transacciones, autorización global y grupos, escenarios 429/500/503, validación, ETag/412, OpenAPI bilingüe, operaciones de negocio, laboratorio HTTP, compresión, rangos, streaming, HTTPS, HTTP/2, proxy, servidor estático, modo de datos congelado, licencia y documentación bilingüe. El código de `src/` y `web/` incluye JSDoc de contratos y decisiones.
+
+La calidad se aplica con **Biome**: lint y formato comparten una sola configuración (`biome.json`), `.editorconfig` fija espacios y fin de línea, y `npm run check` ejecuta typecheck, lint, formato y pruebas. Las dependencias de desarrollo están fijadas a versiones exactas, sin `^`. CI: `.github/workflows/ci.yml`.
 
 ## Límites y seguridad
 
@@ -332,3 +359,7 @@ Este servidor es exclusivamente local:
 - Las operaciones destructivas exigen `X-Control-Token`.
 - Las consultas usan parámetros ligados y listas blancas de columnas/tablas.
 - No se ejecuta código recibido ni se accede a archivos por rutas de usuario.
+
+## Licencia
+
+Este proyecto se distribuye bajo **Apache License 2.0**. Consulta [LICENSE](LICENSE) y [NOTICE](NOTICE).

@@ -28,7 +28,7 @@ Authenticated session routes (`logout`, `me`, `change-password`) require identit
 | `/api/v1/hr` | `hr:read` | `hr:write` |
 | `/api/v1/finance` | `finance:read` | `finance:write` |
 
-`/test`, `/ui`, `/docs`, `/openapi*.json`, `/health` and `/_control/stats|domains|config` remain public. Destructive control operations require `X-Control-Token`.
+`/test`, `/ui`, `/docs`, `/openapi*.json`, `/health` and `/_control/stats|domains|config|mode` remain public. Destructive control operations (`reset`, `seed`, `freeze`, `restore`, `unfreeze`) require `X-Control-Token`.
 
 ```bash
 # 401 without credentials
