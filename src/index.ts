@@ -1,3 +1,7 @@
+/**
+ * @file Process entrypoint. Builds the application, starts every enabled
+ * transport and installs graceful shutdown handlers.
+ */
 import { createApp } from './app.js';
 
 const app = createApp();

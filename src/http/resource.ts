@@ -1,11 +1,22 @@
+/**
+ * @file Declarative CRUD resource engine.
+ *
+ * One `ResourceDef` drives validation, SQL, filtering, pagination, ETags,
+ * OpenAPI request schemas and conventional routes. Table/column names come
+ * only from the definition; every value is bound. This is a convention for
+ * simple entities, not a dynamic endpoint engine: custom transactional routes
+ * live in domain modules.
+ */
 import type { Ctx, Router } from './router.js';
 import type { RequestContext } from './index.js';
 import { readJsonBody, sendJson } from './index.js';
 import { HttpError, conflict, notFound, preconditionFailed, validationError } from '../core/errors.js';
 import { escapeLike, paginationMeta, parsePagination } from './query.js';
 
+/** Supported JSON-facing column types. */
 export type FieldType = 'string' | 'integer' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'json';
 
+/** Validation, visibility and query capabilities for one column. */
 export interface FieldDef {
   type: FieldType;
   required?: boolean;
@@ -23,6 +34,7 @@ export interface FieldDef {
   description?: string;
 }
 
+/** Complete contract for a conventional CRUD resource. */
 export interface ResourceDef {
   table: string;
   path: string;
@@ -43,6 +55,66 @@ type Row = Record<string, unknown>;
 type SqlParam = string | number | bigint | null | Uint8Array;
 
 const ID = 'id';
+
+/** English names for generated resource summaries/descriptions. */
+export const ENGLISH_RESOURCE_NAMES: Record<string, { one: string; many: string }> = {
+  'actividad': { one: 'activity', many: 'activities' },
+  'adjunto': { one: 'attachment', many: 'attachments' },
+  'almacén': { one: 'warehouse', many: 'warehouses' },
+  'asignatura': { one: 'subject', many: 'subjects' },
+  'asistencia': { one: 'attendance record', many: 'attendance records' },
+  'autor': { one: 'author', many: 'authors' },
+  'autor de libro': { one: 'book author', many: 'book authors' },
+  'calificación': { one: 'grade', many: 'grades' },
+  'categoría': { one: 'category', many: 'categories' },
+  'cliente': { one: 'customer', many: 'customers' },
+  'comentario': { one: 'comment', many: 'comments' },
+  'contrato': { one: 'contract', many: 'contracts' },
+  'cuenta': { one: 'account', many: 'accounts' },
+  'cupón': { one: 'coupon', many: 'coupons' },
+  'curso': { one: 'course', many: 'courses' },
+  'departamento': { one: 'department', many: 'departments' },
+  'dirección': { one: 'address', many: 'addresses' },
+  'editorial': { one: 'publisher', many: 'publishers' },
+  'ejemplar': { one: 'copy', many: 'copies' },
+  'empleado': { one: 'employee', many: 'employees' },
+  'equipo': { one: 'team', many: 'teams' },
+  'estado': { one: 'status', many: 'statuses' },
+  'estudiante': { one: 'student', many: 'students' },
+  'etiqueta': { one: 'label', many: 'labels' },
+  'etiqueta de tarea': { one: 'task label', many: 'task labels' },
+  'evaluación': { one: 'evaluation', many: 'evaluations' },
+  'gasto': { one: 'expense', many: 'expenses' },
+  'género': { one: 'genre', many: 'genres' },
+  'género de libro': { one: 'book genre', many: 'book genres' },
+  'grupo': { one: 'group', many: 'groups' },
+  'imagen': { one: 'image', many: 'images' },
+  'inventario': { one: 'inventory record', many: 'inventory records' },
+  'lector': { one: 'reader', many: 'readers' },
+  'libro': { one: 'book', many: 'books' },
+  'marca': { one: 'brand', many: 'brands' },
+  'material': { one: 'material', many: 'materials' },
+  'matrícula': { one: 'enrollment', many: 'enrollments' },
+  'método de pago': { one: 'payment method', many: 'payment methods' },
+  'miembro de equipo': { one: 'team member', many: 'team members' },
+  'miembro de proyecto': { one: 'project member', many: 'project members' },
+  'multa': { one: 'fine', many: 'fines' },
+  'permiso': { one: 'permission', many: 'permissions' },
+  'presupuesto': { one: 'budget', many: 'budgets' },
+  'producto': { one: 'product', many: 'products' },
+  'profesor': { one: 'teacher', many: 'teachers' },
+  'proveedor': { one: 'supplier', many: 'suppliers' },
+  'proyecto': { one: 'project', many: 'projects' },
+  'puesto': { one: 'position', many: 'positions' },
+  'reseña': { one: 'review', many: 'reviews' },
+  'rol': { one: 'role', many: 'roles' },
+  'salario': { one: 'salary', many: 'salaries' },
+  'sección': { one: 'section', many: 'sections' },
+  'tarea': { one: 'task', many: 'tasks' },
+  'transportista': { one: 'carrier', many: 'carriers' },
+  'vacación': { one: 'vacation', many: 'vacations' },
+  'variante': { one: 'variant', many: 'variants' },
+};
 
 function visibleFields(def: ResourceDef): string[] {
   return Object.entries(def.fields)
@@ -431,10 +503,18 @@ function getById(ctx: Ctx, def: ResourceDef, id: number): Row {
   return shapeRow(row, def);
 }
 
+/**
+ * Registers list/read/create/put/patch/delete routes.
+ *
+ * ETags are derived from `updated_at` when configured (or present in fields).
+ * PUT requires configured required fields; PATCH is partial. Deletes translate
+ * FK restrictions into 409 instead of leaking SQLite errors.
+ */
 export function registerResource(router: Router, basePath: string, def: ResourceDef): void {
   const collection = `${basePath}/${def.path.replace(/^\/+|\/+$/g, '')}`;
   const item = `${collection}/:id`;
   const tag = def.tag;
+  const names = ENGLISH_RESOURCE_NAMES[def.singular] ?? { one: def.singular, many: `${def.singular}s` };
 
   router.add('GET', collection, (ctx) => {
     def.authorize?.(ctx, 'read');
@@ -453,6 +533,7 @@ export function registerResource(router: Router, basePath: string, def: Resource
     sendJson(ctx, 200, { data: rows.map((r) => shapeRow(r, def)), meta: paginationMeta(pagination, total) });
   }, {
     summary: `Lista ${def.singular}`,
+    summaryEn: `List ${names.many}`,
     tag,
     parameters: listParameters(def),
     responses: {
@@ -478,6 +559,7 @@ export function registerResource(router: Router, basePath: string, def: Resource
     sendJson(ctx, 200, { data: row }, { ETag: etag });
   }, {
     summary: `Obtiene ${def.singular} por id`,
+    summaryEn: `Get ${names.one} by ID`,
     tag,
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
     responses: {
@@ -507,6 +589,7 @@ export function registerResource(router: Router, basePath: string, def: Resource
     }
   }, {
     summary: `Crea ${def.singular}`,
+    summaryEn: `Create ${names.one}`,
     tag,
     requestBody: requestBodySchema(def, false),
     responses: {
@@ -549,12 +632,12 @@ export function registerResource(router: Router, basePath: string, def: Resource
     }
   };
   router.add('PUT', item, updateHandler(false), {
-    summary: `Reemplaza ${def.singular}`, tag,
+    summary: `Reemplaza ${def.singular}`, summaryEn: `Replace ${names.one}`, tag,
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
     requestBody: requestBodySchema(def, false),
   });
   router.add('PATCH', item, updateHandler(true), {
-    summary: `Actualiza parcialmente ${def.singular}`, tag,
+    summary: `Actualiza parcialmente ${def.singular}`, summaryEn: `Partially update ${names.one}`, tag,
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
     requestBody: requestBodySchema(def, true),
   });
@@ -573,10 +656,11 @@ export function registerResource(router: Router, basePath: string, def: Resource
         if (error instanceof HttpError) throw error;
         dbError(error);
       }
-    }, { summary: `Elimina ${def.singular}`, tag, responses: { '204': { description: 'Eliminado' }, '409': { $ref: '#/components/responses/ConflictError' } } });
+    }, { summary: `Elimina ${def.singular}`, summaryEn: `Delete ${names.one}`, tag, responses: { '204': { description: 'Eliminado' }, '409': { $ref: '#/components/responses/ConflictError' } } });
   }
 }
 
+/** Parses a positive integer route/query id with a field-scoped 422. */
 export function idOrThrow(raw: string | undefined, field = 'id'): number {
   if (!raw || !/^\d+$/.test(raw) || Number(raw) <= 0) {
     throw validationError([{ field, message: 'debe ser un entero positivo' }]);
@@ -584,6 +668,7 @@ export function idOrThrow(raw: string | undefined, field = 'id'): number {
   return Number(raw);
 }
 
+/** Reads a finite numeric query parameter, optionally required. */
 export function numberQuery(ctx: Ctx, name: string, fallback?: number): number {
   const raw = ctx.query.get(name);
   if (raw === null || raw === '') {

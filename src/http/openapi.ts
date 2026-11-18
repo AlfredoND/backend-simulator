@@ -1,7 +1,47 @@
+/**
+ * @file OpenAPI 3.0 generator and Swagger UI page.
+ *
+ * The specification is derived from router metadata, so paths cannot drift
+ * from implementation. Spanish and English are generated from the same route
+ * graph; generic CRUD English summaries come from the resource helper, custom
+ * routes use the translation catalogue in `openapi-i18n.ts`.
+ */
 import type { Router } from './router.js';
 import type { Config } from '../core/config.js';
+import {
+  INFO_DESCRIPTION,
+  TAG_DESCRIPTIONS_EN,
+  translateDescription,
+  translateSummary,
+  type ApiLanguage,
+} from './openapi-i18n.js';
 
 type OpenApiObject = Record<string, unknown>;
+
+function localizeResponses(responses: Record<string, unknown>, lang: ApiLanguage): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(responses).map(([status, response]) => {
+      if (!response || typeof response !== 'object' || !('description' in response)) return [status, response];
+      const description = (response as { description?: unknown }).description;
+      return [
+        status,
+        typeof description === 'string'
+          ? { ...response, description: translateDescription(description, lang) }
+          : response,
+      ];
+    }),
+  );
+}
+
+function localizeParameters(parameters: unknown[], lang: ApiLanguage): unknown[] {
+  return parameters.map((parameter) => {
+    if (!parameter || typeof parameter !== 'object' || !('description' in parameter)) return parameter;
+    const description = (parameter as { description?: unknown }).description;
+    return typeof description === 'string'
+      ? { ...parameter, description: translateDescription(description, lang) }
+      : parameter;
+  });
+}
 
 const TAG_DESCRIPTIONS: Record<string, string> = {
   'Identity · Auth': 'Autenticación, sesiones, tokens y recuperación simulada.',
@@ -110,7 +150,13 @@ function labOperations(): Array<{ method: string; path: string; summary: string;
   ];
 }
 
-export function buildOpenApi(router: Router, config: Config, serverUrl: string): OpenApiObject {
+/** Builds the localized OpenAPI document for a concrete request origin. */
+export function buildOpenApi(
+  router: Router,
+  config: Config,
+  serverUrl: string,
+  lang: ApiLanguage = 'es',
+): OpenApiObject {
   const paths: Record<string, Record<string, unknown>> = {};
   const tags = new Set<string>();
 
@@ -127,10 +173,12 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
         pathParams.push({ name: match[1], in: 'path', required: true, schema: { type: match[1].toLowerCase().includes('id') ? 'integer' : 'string' } });
       }
     }
-    const parameters = [...pathParams, ...(doc.parameters ?? [])];
+    const parameters = localizeParameters([...pathParams, ...(doc.parameters ?? [])], lang);
     const needsBody = ['post', 'put', 'patch'].includes(method);
     const operation: OpenApiObject = {
-      summary: doc.summary ?? `${route.method} ${route.path}`,
+      summary: lang === 'en'
+        ? translateSummary(doc.summary, doc.summaryEn, lang) || `${route.method} ${route.path}`
+        : (doc.summary ?? `${route.method} ${route.path}`),
       tags: [tag],
       operationId: `${method}_${route.path}`.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
       ...(parameters.length ? { parameters } : {}),
@@ -139,10 +187,10 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
         required: false,
         content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } },
       } : undefined),
-      responses: {
+      responses: localizeResponses({
         ...(doc.responses ?? { '200': { description: 'Operación exitosa' } }),
         '500': { $ref: '#/components/responses/InternalError' },
-      },
+      }, lang),
     };
     if (operation.requestBody === undefined) delete operation.requestBody;
     (paths[openApiPath] ??= {})[method] = operation;
@@ -152,23 +200,23 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
     tags.add('HTTP Lab');
     const parameters = op.parameters ?? [];
     const operation: OpenApiObject = {
-      summary: op.summary,
+      summary: lang === 'en' ? translateSummary(op.summary, undefined, lang) : op.summary,
       tags: op.tags,
       operationId: `${op.method}_${op.path}`.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
-      ...(parameters.length ? { parameters } : {}),
+      ...(parameters.length ? { parameters: localizeParameters(parameters, lang) } : {}),
       ...(op.security ? { security: op.security } : {}),
-      responses: {
+      responses: localizeResponses({
         ...(op.responses ?? { '200': { description: 'Respuesta simulada' } }),
         '500': { $ref: '#/components/responses/InternalError' },
-      },
+      }, lang),
     };
     (paths[op.path] ??= {})[op.method] = operation;
   }
 
   const servers = [
     { url: serverUrl, description: 'HTTP/1.1' },
-    ...(config.httpsEnabled ? [{ url: `https://localhost:${config.httpsPort}`, description: 'HTTPS (certificado local)' }] : []),
-    ...(config.http2Enabled ? [{ url: `https://localhost:${config.http2Port}`, description: 'HTTP/2 sobre TLS' }] : []),
+    ...(config.httpsEnabled ? [{ url: `https://localhost:${config.httpsPort}`, description: translateDescription('HTTPS (certificado local)', lang) }] : []),
+    ...(config.http2Enabled ? [{ url: `https://localhost:${config.http2Port}`, description: translateDescription('HTTP/2 sobre TLS', lang) }] : []),
   ];
 
   return {
@@ -176,10 +224,15 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
     info: {
       title: 'Backend Simulator',
       version: '1.0.0',
-      description: 'Local HTTP backend simulator with business APIs and a transport laboratory. Simulador local de backend HTTP con APIs de negocio y laboratorio de transporte. Todo el servidor es local y utiliza SQLite.',
+      description: INFO_DESCRIPTION[lang],
     },
     servers,
-    tags: [...tags].sort().map((name) => ({ name, description: TAG_DESCRIPTIONS[name] ?? name })),
+    tags: [...tags].sort().map((name) => ({
+      name,
+      description: lang === 'en'
+        ? (TAG_DESCRIPTIONS_EN[name] ?? name)
+        : (TAG_DESCRIPTIONS[name] ?? name),
+    })),
     paths,
     components: {
       securitySchemes: {
@@ -194,8 +247,8 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
           example: {
             error: {
               code: 'VALIDATION_ERROR',
-              message: 'Datos inválidos',
-              details: [{ field: 'email', message: 'email inválido' }],
+              message: translateDescription('Datos inválidos', lang),
+              details: [{ field: 'email', message: translateDescription('email inválido', lang) }],
               request_id: '4d1d…',
             },
           },
@@ -227,34 +280,53 @@ export function buildOpenApi(router: Router, config: Config, serverUrl: string):
         },
       },
       responses: {
-        BadRequest: { description: 'Solicitud inválida', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        Unauthorized: { description: 'No autenticado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        Forbidden: { description: 'Sin permisos', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        NotFound: { description: 'No encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        ConflictError: { description: 'Conflicto', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        ValidationError: { description: 'Validación fallida', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        InternalError: { description: 'Error interno', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        BadRequest: { description: translateDescription('Solicitud inválida', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        Unauthorized: { description: translateDescription('No autenticado', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        Forbidden: { description: translateDescription('Sin permisos', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        NotFound: { description: translateDescription('No encontrado', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        ConflictError: { description: translateDescription('Conflicto', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        ValidationError: { description: translateDescription('Validación fallida', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        InternalError: { description: translateDescription('Error interno', lang), content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
       },
     },
   };
 }
 
-export function docsHtml(): string {
+/** Renders the Swagger UI page for the selected language and spec URL. */
+export function docsHtml(lang: ApiLanguage = 'es'): string {
+  const english = lang === 'en';
+  const specUrl = english ? '/openapi.en.json' : '/openapi.json';
+  const title = english ? 'API documentation' : 'Documentación de la API';
+  const specLabel = english ? 'OpenAPI specification' : 'Especificación OpenAPI';
+  const languageLabel = english ? 'Language' : 'Idioma';
   return `<!doctype html>
-<html lang="es">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Backend Simulator · API</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
-  <style>body{margin:0;background:#fafafa}.fallback{padding:2rem;font-family:system-ui,sans-serif}</style>
+  <style>
+    body{margin:0;background:#fafafa;font-family:system-ui,sans-serif}
+    .fallback{padding:2rem}
+    .docs-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 20px;background:#10211b;color:#dff3e8;font-size:13px}
+    .docs-bar strong{margin-right:auto}
+    .docs-bar a{color:#c6f26b;text-decoration:none}
+    .docs-bar a[aria-current="page"]{font-weight:700;text-decoration:underline}
+  </style>
 </head>
 <body>
-  <div id="swagger-ui"><div class="fallback"><h1>Backend Simulator</h1><p>OpenAPI specification: <a href="/openapi.json">/openapi.json</a> · Especificación OpenAPI: <a href="/openapi.json">/openapi.json</a>.</p></div></div>
+  <nav class="docs-bar" aria-label="${title}">
+    <strong>Backend Simulator</strong>
+    <span>${title}</span>
+    <span>${specLabel}: <a href="${specUrl}">${specUrl}</a></span>
+    <span>${languageLabel}: <a href="/docs?lang=es" ${english ? '' : 'aria-current="page"'}>Español</a> · <a href="/docs?lang=en" ${english ? 'aria-current="page"' : ''}>English</a></span>
+  </nav>
+  <div id="swagger-ui"><div class="fallback"><h1>Backend Simulator</h1><p>${specLabel}: <a href="${specUrl}">${specUrl}</a></p></div></div>
   <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
     if (window.SwaggerUIBundle) {
-      SwaggerUIBundle({ url: '/openapi.json', dom_id: '#swagger-ui', deepLinking: true, displayRequestDuration: true });
+      SwaggerUIBundle({ url: '${specUrl}', dom_id: '#swagger-ui', deepLinking: true, displayRequestDuration: true });
     }
   </script>
 </body>

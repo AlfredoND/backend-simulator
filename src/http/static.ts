@@ -1,3 +1,10 @@
+/**
+ * @file Safe static-file serving for the micro frontend.
+ *
+ * Only GET/HEAD/OPTIONS are accepted. Paths are URL-decoded, resolved and
+ * checked against the UI root with realpath, blocking traversal and symlink
+ * escapes. HTML receives a restrictive CSP; unknown files return 404.
+ */
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import type { Ctx } from './router.js';
@@ -33,6 +40,7 @@ const CSP = [
   "frame-ancestors 'none'",
 ].join('; ');
 
+/** Serves a file under `prefix` from `rootDir`, or throws a structured HTTP error. */
 export async function serveStatic(ctx: Ctx, prefix: string, rootDir: string): Promise<void> {
   const method = (ctx.req.method ?? 'GET').toUpperCase();
   if (method === 'OPTIONS') {

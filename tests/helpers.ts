@@ -35,6 +35,7 @@ export async function startTestServer(overrides: Partial<Config> = {}): Promise<
     proxyEnabled: false,
     uiEnabled: true,
     uiDir: join(process.cwd(), 'web'),
+    authRequired: false,
     logLevel: 'silent',
     ...overrides,
   });

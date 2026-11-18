@@ -1,3 +1,13 @@
+/**
+ * @file Deterministic seed data and protected data lifecycle.
+ *
+ * Design decisions:
+ * - Fixed dates, formulas and explicit IDs make every fresh database identical.
+ * - Inserts run in one transaction; a failure never leaves partial domains.
+ * - Seeds load only when `_meta.seeded` is absent. Normal startup is non-destructive.
+ * - Reset operations intentionally rebuild seed IDs so external references stay stable
+ *   where possible; cross-domain optional references may become NULL.
+ */
 import { createHash, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 import type { Config } from '../core/config.js';
 import { Db } from './index.js';
@@ -34,12 +44,14 @@ const pick = <T>(arr: readonly T[], n: number): T => arr[Math.abs(n) % arr.lengt
 const money = (min: number, max: number, n: number): number =>
   Math.round(min + (Math.abs(Math.sin(n * 12.9898)) % 1) * (max - min));
 
+/** Creates the PBKDF2 representation used by simulation accounts. */
 export function hashPassword(password: string, salt = 'backend-simulator-seed'): string {
   const iterations = 20_000;
   const hash = pbkdf2Sync(password, salt, iterations, 32, 'sha256').toString('hex');
   return `pbkdf2$${iterations}$${salt}$${hash}`;
 }
 
+/** Verifies a password against the stored PBKDF2 format in constant time. */
 export function verifyPassword(password: string, stored: string): boolean {
   const parts = stored.split('$');
   if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false;
@@ -50,26 +62,35 @@ export function verifyPassword(password: string, stored: string): boolean {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
+/** Hashes opaque tokens before persistence; raw tokens are never stored. */
 export const hashToken = (token: string): string =>
   createHash('sha256').update(token, 'utf8').digest('hex');
 
+/** Generates a prefixed, high-entropy local token. */
 export const newOpaqueToken = (prefix: string): string =>
   `${prefix}_${createHash('sha256').update(`${Date.now()}:${Math.random()}:${process.hrtime.bigint()}`).digest('base64url').slice(0, 32)}`;
 
 function seedIdentity(db: Db, config: Config): void {
-  const total = Math.max(20, Math.round(60 * config.seedScale));
+  const total = Math.max(20, Math.round(80 * config.seedScale));
   const normalHash = hashPassword(config.seedPassword);
   const adminHash = hashPassword(config.adminPassword, 'admin-salt');
   const viewerHash = hashPassword('Viewer123!', 'viewer-salt');
+  const knownIdentities: Record<number, { email: string; name: string; roleId: number | null }> = {
+    1: { email: config.adminEmail, name: 'Admin Simulator', roleId: 1 },
+    2: { email: 'viewer@simulator.local', name: 'Vera Observadora', roleId: 4 },
+    3: { email: 'developer@simulator.local', name: 'Dani Developer', roleId: 3 },
+    4: { email: 'manager@simulator.local', name: 'Marta Manager', roleId: 2 },
+    5: { email: 'auditor@simulator.local', name: 'Aurelio Auditor', roleId: 5 },
+    6: { email: 'support@simulator.local', name: 'Sofía Support', roleId: 6 },
+    7: { email: 'viewer2@simulator.local', name: 'Valeria Viewer', roleId: 4 },
+    8: { email: 'groupviewer@simulator.local', name: 'Greta Group Viewer', roleId: null },
+  };
 
   for (let i = 1; i <= total; i++) {
+    const known = knownIdentities[i];
     const isAdmin = i === 1;
-    const email = isAdmin ? config.adminEmail : i === 2 ? 'viewer@simulator.local' : `user${i}@example.com`;
-    const name = isAdmin
-      ? 'Admin Simulator'
-      : i === 2
-        ? 'Vera Observadora'
-        : `${pick(FIRST, i * 7)} ${pick(LAST, i * 3)}`;
+    const email = known?.email ?? `user${i}@example.com`;
+    const name = known?.name ?? `${pick(FIRST, i * 7)} ${pick(LAST, i * 3)}`;
     const hash = isAdmin ? adminHash : i === 2 ? viewerHash : normalHash;
     const status = i % 13 === 0 ? 'suspended' : i % 11 === 0 ? 'pending' : i % 7 === 0 ? 'inactive' : 'active';
     db.insert('id_users', {
@@ -158,38 +179,65 @@ function seedIdentity(db: Db, config: Config): void {
 
   let urId = 0;
   for (let i = 1; i <= total; i++) {
-    db.insert('id_user_roles', {
-      id: ++urId,
-      user_id: i,
-      role_id: i === 1 ? 1 : i === 2 ? 4 : ((i - 3) % 4) + 3,
-      assigned_at: iso(-400 + i),
-    });
-    if (i % 9 === 0 && i !== 3 && !db.get('SELECT 1 AS x FROM id_user_roles WHERE user_id = ? AND role_id = 3', i)) {
+    const directRoleId = knownIdentities[i]?.roleId ?? null;
+    if (directRoleId !== null) {
+      db.insert('id_user_roles', {
+        id: ++urId,
+        user_id: i,
+        role_id: directRoleId,
+        assigned_at: iso(-400 + i),
+      });
+    }
+    if (i % 9 === 0 && i !== 3 && i !== 8 && !db.get('SELECT 1 AS x FROM id_user_roles WHERE user_id = ? AND role_id = 3', i)) {
       db.insert('id_user_roles', { id: ++urId, user_id: i, role_id: 3, assigned_at: iso(-100 + i) });
     }
   }
 
-  const groups = [
-    'Ingeniería', 'Diseño de producto', 'Operaciones', 'Atención al cliente',
-    'Dirección', 'Calidad', 'Investigación', 'Seguridad',
+  const groupDefinitions: Array<{ name: string; roleId: number; explicitMembers: number[] }> = [
+    { name: 'Ingeniería', roleId: 3, explicitMembers: [3] },
+    { name: 'Diseño de producto', roleId: 4, explicitMembers: [7] },
+    { name: 'Operaciones', roleId: 2, explicitMembers: [4] },
+    { name: 'Atención al cliente', roleId: 6, explicitMembers: [6] },
+    { name: 'Dirección', roleId: 2, explicitMembers: [1] },
+    { name: 'Calidad', roleId: 5, explicitMembers: [5] },
+    { name: 'Investigación', roleId: 3, explicitMembers: [] },
+    { name: 'Seguridad', roleId: 5, explicitMembers: [] },
+    { name: 'Observadores', roleId: 4, explicitMembers: [8] },
+    { name: 'Auditores', roleId: 5, explicitMembers: [5] },
+    { name: 'Soporte', roleId: 6, explicitMembers: [6] },
+    { name: 'Gestión', roleId: 2, explicitMembers: [4] },
   ];
-  groups.forEach((name, idx) => {
+  let groupMemberId = 0;
+  groupDefinitions.forEach((group, idx) => {
+    const groupId = idx + 1;
     db.insert('id_groups', {
-      id: idx + 1,
-      name,
-      description: `Grupo interno ${name}`,
+      id: groupId,
+      name: group.name,
+      description: `Grupo interno ${group.name}`,
       created_at: iso(-550 + idx * 10),
     });
-    for (let k = 0; k < 5; k++) {
-      const user = ((idx * 7 + k) % total) + 1;
-      db.insert('id_group_members', {
-        id: idx * 5 + k + 1,
-        group_id: idx + 1,
-        user_id: user,
-        member_role: k === 0 ? 'owner' : 'member',
-        joined_at: iso(-400 + idx * 5 + k),
-      });
+    db.insert('id_group_roles', {
+      id: groupId,
+      group_id: groupId,
+      role_id: group.roleId,
+      granted_at: iso(-500 + idx * 10),
+    });
+    const members = new Set<number>(group.explicitMembers.filter((user) => user <= total));
+    let candidate = 0;
+    const generatedUsers = Math.max(1, total - 8);
+    while (members.size < 5) {
+      members.add(9 + ((idx * 7 + candidate * 3) % generatedUsers));
+      candidate++;
     }
+    [...members].slice(0, 5).forEach((user, position) => {
+      db.insert('id_group_members', {
+        id: ++groupMemberId,
+        group_id: groupId,
+        user_id: user,
+        member_role: position === 0 ? 'owner' : 'member',
+        joined_at: iso(-400 + idx * 5 + position),
+      });
+    });
   });
 
   let addrId = 0;
@@ -1451,6 +1499,7 @@ const SEEDERS: Record<string, (db: Db, config: Config) => void> = {
   finance: seedFinance,
 };
 
+/** Seeds every domain atomically, used only for an empty database. */
 export function seedAll(db: Db, config: Config): void {
   db.transaction(() => {
     for (const domain of Object.keys(SEEDERS)) {
@@ -1467,6 +1516,7 @@ export function seedAll(db: Db, config: Config): void {
   });
 }
 
+/** Seeds a domain without deleting it; mainly useful for empty secondary databases. */
 export function seedDomain(db: Db, domain: string, config: Config): void {
   const seeder = SEEDERS[domain];
   if (!seeder) throw new Error(`No existe seeder para el dominio ${domain}`);
@@ -1480,6 +1530,7 @@ export function seedDomain(db: Db, domain: string, config: Config): void {
   });
 }
 
+/** Replaces one domain with deterministic seed data inside a transaction. */
 export function resetDomain(db: Db, domain: string, config: Config): void {
   const tables = DOMAIN_TABLES[domain];
   if (!tables) throw new Error(`Dominio desconocido: ${domain}`);
@@ -1494,6 +1545,7 @@ export function resetDomain(db: Db, domain: string, config: Config): void {
   });
 }
 
+/** Rebuilds every table in FK-safe order and seeds all domains atomically. */
 export function resetAll(db: Db, config: Config): void {
   const domains = Object.keys(DOMAIN_TABLES).reverse();
   db.transaction(() => {
@@ -1513,6 +1565,7 @@ export function resetAll(db: Db, config: Config): void {
   });
 }
 
+/** Seeds an empty database and reports whether data was created. */
 export function ensureSeeded(db: Db, config: Config): boolean {
   const seeded = db.get<{ value: string }>("SELECT value FROM _meta WHERE key = 'seeded'");
   if (seeded) return false;

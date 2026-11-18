@@ -1,3 +1,11 @@
+/**
+ * @file HTTP primitives: body limits/parsing, response envelopes, cookies,
+ * request ids and centralized error rendering.
+ *
+ * Responses are always length-delimited except deliberate streaming handlers.
+ * HEAD suppresses bodies while preserving Content-Length; 204/304 never carry
+ * payloads. The configured byte limit protects both JSON and raw lab bodies.
+ */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import type { Config } from '../core/config.js';
@@ -6,12 +14,14 @@ import type { Logger } from '../core/logger.js';
 import { HttpError, badRequest, payloadTooLarge, unauthorized, unsupportedMedia } from '../core/errors.js';
 import type { Ctx } from './router.js';
 
+/** Shared services injected into every request context. */
 export interface App {
   config: Config;
   db: Db;
   log: Logger;
 }
 
+/** Router context plus application services. */
 export interface RequestContext extends Ctx {
   app: App;
   bodyCache?: Buffer;
@@ -19,10 +29,12 @@ export interface RequestContext extends Ctx {
 
 const NO_BODY_STATUS = new Set([204, 304]);
 
+/** Exposes the correlation id on every response. */
 export function setRequestIdHeader(ctx: Ctx, requestId: string): void {
   ctx.res.setHeader('X-Request-Id', requestId);
 }
 
+/** Reads a request body while enforcing the configured byte ceiling (413). */
 export async function readRawBody(ctx: Ctx, limit?: number): Promise<Buffer> {
   const max = limit ?? (ctx as RequestContext).app.config.maxBodyBytes;
   const declared = Number(ctx.req.headers['content-length'] ?? 0);
@@ -44,10 +56,12 @@ export async function readRawBody(ctx: Ctx, limit?: number): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+/** Returns the lower-case media type without parameters. */
 export function contentTypeOf(ctx: Ctx): string {
   return String(ctx.req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
 }
 
+/** Validates Content-Type and parses JSON, producing 400/413/415 consistently. */
 export async function readJsonBody<T = unknown>(ctx: Ctx): Promise<T> {
   const type = contentTypeOf(ctx);
   if (!type) throw unsupportedMedia('Falta el header Content-Type; se esperaba application/json');
@@ -63,6 +77,7 @@ export async function readJsonBody<T = unknown>(ctx: Ctx): Promise<T> {
   }
 }
 
+/** Lenient cookie parser used for echo/auth scenarios. */
 export function parseCookies(header: string | undefined): Record<string, string> {
   const result: Record<string, string> = {};
   if (!header) return result;
@@ -76,8 +91,10 @@ export function parseCookies(header: string | undefined): Record<string, string>
   return result;
 }
 
+/** Headers accepted by the response helpers, including repeated values. */
 export type ResponseHeaders = Record<string, string | string[] | number>;
 
+/** Sends a JSON document, suppressing the body for HEAD/204/304. */
 export function sendJson(ctx: Ctx, status: number, payload: unknown, headers: ResponseHeaders = {}): void {
   const body = JSON.stringify(payload);
   const buf = Buffer.from(body, 'utf8');
@@ -95,6 +112,7 @@ export function sendJson(ctx: Ctx, status: number, payload: unknown, headers: Re
   else ctx.res.end(buf);
 }
 
+/** Sends UTF-8 text with an explicit content type. */
 export function sendText(ctx: Ctx, status: number, text: string, contentType = 'text/plain; charset=utf-8', headers: ResponseHeaders = {}): void {
   const buf = Buffer.from(text, 'utf8');
   for (const [key, value] of Object.entries(headers)) ctx.res.setHeader(key, value);
@@ -105,6 +123,7 @@ export function sendText(ctx: Ctx, status: number, text: string, contentType = '
   else ctx.res.end(buf);
 }
 
+/** Sends binary data with a known length. */
 export function sendBuffer(ctx: Ctx, status: number, body: Buffer, contentType: string, headers: ResponseHeaders = {}): void {
   for (const [key, value] of Object.entries(headers)) ctx.res.setHeader(key, value);
   ctx.res.statusCode = status;
@@ -114,6 +133,7 @@ export function sendBuffer(ctx: Ctx, status: number, body: Buffer, contentType: 
   else ctx.res.end(body);
 }
 
+/** Renders known HttpErrors and hides/logs unexpected failures as 500. */
 export function sendError(ctx: Ctx, error: unknown): void {
   const app = (ctx as RequestContext).app;
   let httpError: HttpError;
@@ -144,6 +164,7 @@ export function sendError(ctx: Ctx, error: unknown): void {
   sendJson(ctx, httpError.status, payload);
 }
 
+/** Builds the per-request context and applies common response headers. */
 export function createContext(
   app: App,
   req: IncomingMessage,
@@ -166,6 +187,7 @@ export function createContext(
   };
 }
 
+/** Extracts a Bearer credential or raises a 401 with a challenge. */
 export function requireAuthHeader(ctx: Ctx): string {
   const header = ctx.req.headers.authorization;
   if (!header) throw unauthorized('Falta el header Authorization');

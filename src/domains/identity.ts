@@ -8,7 +8,15 @@ import { registerResource } from '../http/resource.js';
 import type { ResourceDef } from '../http/resource.js';
 import { Validator } from '../core/validate.js';
 import { hashPassword, hashToken, verifyPassword } from '../db/seed.js';
-import { effectivePermissionCodes, requirePermission, requireUser, resolveUser, userRoles } from '../http/auth.js';
+import {
+  effectivePermissionCodes,
+  effectiveRoles,
+  requirePermission,
+  requireUser,
+  resolveUser,
+  userGroups,
+  userRoles,
+} from '../http/auth.js';
 import { escapeLike, paginationMeta, parsePagination } from '../http/query.js';
 
 type Row = Record<string, unknown>;
@@ -39,7 +47,9 @@ function mePayload(ctx: Ctx, userId: number) {
   return {
     user,
     profile: profileOf(db, userId),
-    roles: userRoles(db, userId),
+    roles: effectiveRoles(db, userId),
+    direct_roles: userRoles(db, userId),
+    groups: userGroups(db, userId),
     permissions: permissionsForUser(db, userId, Number(user.is_admin)),
   };
 }
@@ -290,8 +300,16 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     if (!Number.isInteger(id) || id <= 0) throw validationError([{ field: 'id', message: 'entero positivo' }]);
     const db = dbOf(ctx);
     const user = publicUser(db, id);
-    sendJson(ctx, 200, { data: { ...user, profile: profileOf(db, id), roles: userRoles(db, id) } });
-  }, { summary: 'Obtiene un usuario con perfil y roles', tag: 'Identity · Users', security: [{ bearerAuth: [] }] });
+    sendJson(ctx, 200, {
+      data: {
+        ...user,
+        profile: profileOf(db, id),
+        roles: effectiveRoles(db, id),
+        direct_roles: userRoles(db, id),
+        groups: userGroups(db, id),
+      },
+    });
+  }, { summary: 'Obtiene un usuario con perfil, roles y grupos', tag: 'Identity · Users', security: [{ bearerAuth: [] }] });
 
   router.add('POST', `${root}/users`, async (ctx) => {
     const actor = requirePermission(ctx, 'identity:write');
@@ -546,8 +564,11 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     const id = Number(ctx.params.id);
     const db = dbOf(ctx);
     publicUser(db, id);
-    sendJson(ctx, 200, { data: userRoles(db, id) });
-  }, { summary: 'Lista roles de un usuario', tag: 'Identity · RBAC', security: [{ bearerAuth: [] }] });
+    sendJson(ctx, 200, {
+      data: userRoles(db, id),
+      meta: { effective_roles: effectiveRoles(db, id), groups: userGroups(db, id) },
+    });
+  }, { summary: 'Lista roles directos y efectivos de un usuario', tag: 'Identity · RBAC', security: [{ bearerAuth: [] }] });
 
   router.add('POST', `${root}/users/:id/roles`, async (ctx) => {
     requirePermission(ctx, 'identity:write');
@@ -590,7 +611,9 @@ export function registerIdentityRoutes(router: Router, base: string): void {
       data: {
         user_id: id,
         is_admin: Boolean(user.is_admin),
-        roles: userRoles(db, id),
+        roles: effectiveRoles(db, id),
+        direct_roles: userRoles(db, id),
+        groups: userGroups(db, id),
         permissions: permissionsForUser(db, id, Number(user.is_admin)),
       },
     });
@@ -739,6 +762,52 @@ export function registerIdentityRoutes(router: Router, base: string): void {
     ctx.res.statusCode = 204;
     ctx.res.end();
   }, { summary: 'Quita un miembro de un grupo', tag: 'Identity · Groups', security: [{ bearerAuth: [] }] });
+
+  router.add('GET', `${root}/groups/:id/roles`, (ctx) => {
+    requirePermission(ctx, 'identity:read');
+    const groupId = Number(ctx.params.id);
+    const db = dbOf(ctx);
+    if (!db.get('SELECT 1 AS x FROM id_groups WHERE id = ?', groupId)) throw notFound('Grupo no encontrado');
+    const rows = db.all<Row>(
+      `SELECT r.id, r.name, r.description, gr.granted_at
+       FROM id_roles r JOIN id_group_roles gr ON gr.role_id = r.id
+       WHERE gr.group_id = ? ORDER BY r.name`,
+      groupId,
+    );
+    sendJson(ctx, 200, { data: rows });
+  }, { summary: 'Lista roles concedidos a un grupo', tag: 'Identity · Groups', security: [{ bearerAuth: [] }] });
+
+  router.add('POST', `${root}/groups/:id/roles`, async (ctx) => {
+    requirePermission(ctx, 'identity:write');
+    const groupId = Number(ctx.params.id);
+    const db = dbOf(ctx);
+    if (!db.get('SELECT 1 AS x FROM id_groups WHERE id = ?', groupId)) throw notFound('Grupo no encontrado');
+    const body = await requestBody(ctx);
+    const input = new Validator(body, ['role_id', 'role']);
+    const roleId = input.integer('role_id', { min: 1 });
+    const roleName = input.string('role', { maxLength: 60 });
+    input.done();
+    if (!roleId && !roleName) throw validationError([{ field: 'role_id', message: 'role_id o role es obligatorio' }]);
+    const role = roleId
+      ? db.get<Row>('SELECT * FROM id_roles WHERE id = ?', roleId)
+      : db.get<Row>('SELECT * FROM id_roles WHERE name = ?', roleName!);
+    if (!role) throw notFound('Rol no encontrado');
+    try {
+      db.insert('id_group_roles', { group_id: groupId, role_id: Number(role.id), granted_at: now() });
+    } catch (error) {
+      constraintError(error);
+    }
+    sendJson(ctx, 201, { data: { group_id: groupId, role: { id: role.id, name: role.name } } });
+  }, { summary: 'Concede un rol a un grupo', tag: 'Identity · Groups', security: [{ bearerAuth: [] }] });
+
+  router.add('DELETE', `${root}/groups/:id/roles/:roleId`, (ctx) => {
+    requirePermission(ctx, 'identity:write');
+    const db = dbOf(ctx);
+    const result = db.run('DELETE FROM id_group_roles WHERE group_id = ? AND role_id = ?', Number(ctx.params.id), Number(ctx.params.roleId));
+    if (result.changes === 0) throw notFound('Rol del grupo no encontrado');
+    ctx.res.statusCode = 204;
+    ctx.res.end();
+  }, { summary: 'Retira un rol de un grupo', tag: 'Identity · Groups', security: [{ bearerAuth: [] }] });
 
   // ---------- Direcciones ----------
   router.add('GET', `${root}/users/:id/addresses`, (ctx) => {

@@ -1,7 +1,12 @@
+/**
+ * @file Domain-to-table registry used by statistics and protected resets.
+ * Arrays are parent-first; reset reverses them to satisfy foreign keys.
+ */
+/** Ordered table groups for every resettable domain. */
 export const DOMAIN_TABLES: Record<string, string[]> = {
   identity: [
     'id_users', 'id_profiles', 'id_roles', 'id_permissions', 'id_user_roles',
-    'id_role_permissions', 'id_groups', 'id_group_members', 'id_sessions',
+    'id_role_permissions', 'id_groups', 'id_group_members', 'id_group_roles', 'id_sessions',
     'id_tokens', 'id_api_keys', 'id_addresses', 'id_preferences',
   ],
   projects: [
@@ -36,8 +41,10 @@ export const DOMAIN_TABLES: Record<string, string[]> = {
   ],
 };
 
+/** Known domain identifiers. */
 export const DOMAINS = Object.keys(DOMAIN_TABLES);
 
+/** Validates a user-provided domain name before using it in trusted SQL. */
 export function assertDomain(domain: string): string {
   if (!DOMAIN_TABLES[domain]) {
     throw new Error(`Dominio desconocido: ${domain}. Válidos: ${DOMAINS.join(', ')}`);

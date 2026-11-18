@@ -1,3 +1,11 @@
+/**
+ * @file Application composition root.
+ *
+ * Request order is intentional: static UI, HTTP laboratory, CORS preflight,
+ * global authorization, cross-cutting scenarios, router. This keeps the lab
+ * independent from SQLite and prevents simulated failures from masking 401/403.
+ * The same listener is mounted on HTTP, HTTPS and HTTP/2 servers.
+ */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createServer as createHttpsServer, type Server as HttpsServer } from 'node:https';
 import { createSecureServer as createHttp2SecureServer, type Http2SecureServer } from 'node:http2';
@@ -22,7 +30,14 @@ import { buildOpenApi, docsHtml } from './http/openapi.js';
 import { ensureCertificates } from './transport/tls.js';
 import { createLocalProxy } from './transport/proxy.js';
 import { serveStatic } from './http/static.js';
+import { enforceApiAccess } from './http/access.js';
+import { applyApiScenarios } from './http/resilience.js';
 
+/**
+ * Fully composed application instance. `start` launches every enabled
+ * listener on the configured (or ephemeral) ports; `close` drains them and
+ * closes SQLite. Tests use the same instance without spawning a process.
+ */
 export interface AppInstance {
   config: Config;
   db: Db;
@@ -37,6 +52,13 @@ export interface AppInstance {
   close(): Promise<void>;
 }
 
+/**
+ * Creates an isolated application context.
+ *
+ * Side effects: opens SQLite, applies the idempotent schema, seeds only an
+ * empty database and creates TLS material when required. No existing data is
+ * deleted at startup. Overrides support tests and embedders.
+ */
 export function createApp(overrides: Partial<Config> = {}): AppInstance {
   const config = loadConfig(overrides);
   const log = createLogger(config.logLevel);
@@ -62,6 +84,8 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
         version: '1.0.0',
         documentation: '/docs',
         openapi: '/openapi.json',
+        openapi_en: '/openapi.en.json',
+        docs_en: '/docs?lang=en',
         domains: ['identity', 'projects', 'shop', 'library', 'education', 'hr', 'finance'],
         lab: '/test',
         ui: config.uiEnabled ? '/ui/' : null,
@@ -84,12 +108,20 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
   router.add('GET', '/openapi.json', (ctx) => {
     const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
     const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
-    sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`), { 'Cache-Control': 'no-store' });
-  }, { summary: 'Especificación OpenAPI 3.0' });
+    const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
+    sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, lang), { 'Cache-Control': 'no-store' });
+  }, { summary: 'Especificación OpenAPI 3.0', summaryEn: 'OpenAPI 3.0 specification' });
+
+  router.add('GET', '/openapi.en.json', (ctx) => {
+    const host = ctx.req.headers.host ?? `${config.host}:${config.port}`;
+    const scheme = (ctx.req.socket as { encrypted?: boolean }).encrypted ? 'https' : 'http';
+    sendJson(ctx, 200, buildOpenApi(router, config, `${scheme}://${host}`, 'en'), { 'Cache-Control': 'no-store' });
+  }, { summary: 'Especificación OpenAPI 3.0 en inglés', summaryEn: 'OpenAPI 3.0 specification in English' });
 
   router.add('GET', '/docs', (ctx) => {
-    sendText(ctx, 200, docsHtml(), 'text/html; charset=utf-8');
-  }, { summary: 'Documentación interactiva' });
+    const lang = ctx.query.get('lang') === 'en' ? 'en' : 'es';
+    sendText(ctx, 200, docsHtml(lang), 'text/html; charset=utf-8');
+  }, { summary: 'Documentación interactiva', summaryEn: 'Interactive documentation' });
 
   const requestListener = (req: IncomingMessage, res: ServerResponse) => {
     const isHead = (req.method ?? 'GET').toUpperCase() === 'HEAD';
@@ -97,7 +129,10 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
     const started = performance.now();
     res.setHeader('Server', 'Backend-Simulator/1.0');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Expose-Headers', 'X-Request-Id, ETag, Location, Retry-After');
+    res.setHeader(
+      'Access-Control-Expose-Headers',
+      'X-Request-Id, ETag, Location, Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset',
+    );
     res.on('finish', () => {
       log.debug('request', {
         method: req.method,
@@ -128,11 +163,13 @@ export function createApp(overrides: Partial<Config> = {}): AppInstance {
           res.statusCode = 204;
           res.setHeader('Allow', allowed.join(', '));
           res.setHeader('Access-Control-Allow-Methods', allowed.join(', '));
-          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Api-Key, X-Control-Token, Idempotency-Key, Range, If-None-Match, If-Modified-Since');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Api-Key, X-Control-Token, Idempotency-Key, Range, If-None-Match, If-Modified-Since, X-Simulate-Error');
           res.setHeader('Access-Control-Max-Age', '600');
           res.end();
           return;
         }
+        const authUser = enforceApiAccess(ctx, config);
+        applyApiScenarios(ctx, config, authUser);
         const match = router.match(method, pathname);
         if (!match) {
           const allowed = router.allowedMethods(pathname);

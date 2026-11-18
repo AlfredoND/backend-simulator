@@ -1,8 +1,18 @@
+/**
+ * @file Environment configuration.
+ *
+ * Precedence: explicit overrides > process.env > optional `.env` file >
+ * defaults. Paths are resolved from the current working directory. Invalid
+ * numeric/boolean values fail fast instead of producing inconsistent runtime
+ * states. Secrets are simulation defaults and documented as such.
+ */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+/** Supported structured log levels. */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
+/** Effective, validated runtime settings shared by every module. */
 export interface Config {
   host: string;
   port: number;
@@ -14,6 +24,10 @@ export interface Config {
   proxyPort: number;
   uiEnabled: boolean;
   uiDir: string;
+  authRequired: boolean;
+  apiRateLimitMax: number;
+  apiRateLimitWindowMs: number;
+  faultInjectionEnabled: boolean;
   dbPath: string;
   seedScale: number;
   maxBodyBytes: number;
@@ -73,6 +87,7 @@ function str(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+/** Loads `.env` once and validates all environment-backed settings. */
 export function loadConfig(overrides: Partial<Config> = {}): Config {
   loadDotEnv();
   const base = process.cwd();
@@ -87,6 +102,10 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     proxyPort: int('PROXY_PORT', 8080, 0, 65535),
     uiEnabled: bool('UI_ENABLED', true),
     uiDir: resolve(base, str('UI_DIR', './web')),
+    authRequired: bool('AUTH_REQUIRED', true),
+    apiRateLimitMax: int('API_RATE_LIMIT_MAX', 0, 0, 1_000_000),
+    apiRateLimitWindowMs: int('API_RATE_LIMIT_WINDOW_MS', 60_000, 100, 3_600_000),
+    faultInjectionEnabled: bool('FAULT_INJECTION_ENABLED', true),
     dbPath: resolve(base, str('DB_PATH', './data/backend-simulator.sqlite')),
     seedScale: Number(str('SEED_SCALE', '1')),
     maxBodyBytes: int('MAX_BODY_BYTES', 10 * 1024 * 1024, 1024, 1024 * 1024 * 1024),

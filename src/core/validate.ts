@@ -1,7 +1,15 @@
+/**
+ * @file Imperative body validation for custom domain operations.
+ *
+ * The generated CRUD path has its own declarative field schema; this validator
+ * covers nested/transactional payloads. It accumulates field errors and throws
+ * a single 422 envelope, keeping responses consistent.
+ */
 import { validationError } from './errors.js';
 
 type Value = string | number | boolean | null;
 
+/** Constraints accepted by a validated field. */
 export interface FieldOptions {
   required?: boolean;
   nullable?: boolean;
@@ -14,6 +22,10 @@ export interface FieldOptions {
   default?: unknown;
 }
 
+/**
+ * Accumulates type/enum/range errors while normalizing accepted values.
+ * `done()` is the commit point: callers must not touch the database before it.
+ */
 export class Validator {
   private readonly input: Record<string, unknown>;
   private readonly errors: Array<{ field: string; message: string }> = [];
@@ -156,6 +168,7 @@ export class Validator {
   }
 }
 
+/** Narrows a scalar JSON value to an integer or throws a field-scoped 422. */
 export function asInt(value: Value, field: string): number {
   if (typeof value === 'number' && Number.isInteger(value)) return value;
   throw validationError([{ field, message: 'debe ser un entero' }]);

@@ -80,6 +80,15 @@ CREATE TABLE IF NOT EXISTS id_group_members (
   UNIQUE (group_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS id_group_roles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  group_id INTEGER NOT NULL REFERENCES id_groups(id) ON DELETE CASCADE,
+  role_id INTEGER NOT NULL REFERENCES id_roles(id) ON DELETE CASCADE,
+  granted_at TEXT NOT NULL,
+  UNIQUE (group_id, role_id)
+);
+CREATE INDEX IF NOT EXISTS idx_group_roles_group ON id_group_roles(group_id);
+
 CREATE TABLE IF NOT EXISTS id_sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES id_users(id) ON DELETE CASCADE,

@@ -1,12 +1,17 @@
 import type { Ctx } from './router.js';
 import { validationError } from '../core/errors.js';
 
+/**
+ * @file Pagination and LIKE escaping shared by list endpoints.
+ */
+/** Normalized 1-based page/offset contract. */
 export interface Pagination {
   page: number;
   perPage: number;
   offset: number;
 }
 
+/** Parses `page`, `per_page`/`limit` and `offset` with explicit bounds. */
 export function parsePagination(ctx: Ctx, maxPerPage: number): Pagination {
   const getInt = (name: string, fallback: number, min: number, max: number): number => {
     const raw = ctx.query.get(name);
@@ -27,10 +32,12 @@ export function parsePagination(ctx: Ctx, maxPerPage: number): Pagination {
   return { page, perPage, offset };
 }
 
+/** Escapes user text for SQLite LIKE, used with `ESCAPE '\'`. */
 export function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (m) => `\\${m}`);
 }
 
+/** Builds the stable pagination envelope published by list endpoints. */
 export function paginationMeta(pagination: Pagination, total: number) {
   const totalPages = Math.ceil(total / pagination.perPage);
   return {

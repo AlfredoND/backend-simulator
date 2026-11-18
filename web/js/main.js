@@ -34,7 +34,7 @@ const state = {
     ? storedTheme
     : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
   apiBase: normalizeBaseUrl(local.getItem('bs.apiBase') || defaultApiBase),
-  token: session.getItem('bs.token') || '',
+  token: session.getItem('bs.token') ?? 'local-admin-token',
   attachAuth: session.getItem('bs.attachAuth') !== 'false',
   connection: 'checking',
   stats: null,

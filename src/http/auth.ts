@@ -1,3 +1,11 @@
+/**
+ * @file Identity resolution and permission checks.
+ *
+ * Bearer sessions/tokens and API keys are hashed before lookup. Effective
+ * permissions are the union of direct user roles and roles granted to the
+ * user's groups; group policy is evaluated per request so changes propagate
+ * without reissuing tokens. Raw credentials never leave the request.
+ */
 import type { IncomingMessage } from 'node:http';
 import type { Db } from '../db/index.js';
 import { hashToken } from '../db/seed.js';
@@ -5,6 +13,7 @@ import { forbidden, unauthorized } from '../core/errors.js';
 import type { Ctx } from './router.js';
 import type { RequestContext } from './index.js';
 
+/** Minimal authenticated principal stored in request scope. */
 export interface AuthUser {
   id: number;
   email: string;
@@ -36,6 +45,10 @@ function ensureActive(user: UserRow): AuthUser {
   };
 }
 
+/**
+ * Resolves Bearer sessions, API tokens or `X-API-Key`.
+ * Missing credentials return null; invalid/expired credentials throw 401.
+ */
 export function resolveUser(ctx: Ctx): AuthUser | null {
   const app = (ctx as RequestContext).app;
   const db = app.db;
@@ -92,31 +105,42 @@ export function resolveUser(ctx: Ctx): AuthUser | null {
   return null;
 }
 
+/** Requires an active authenticated principal. */
 export function requireUser(ctx: Ctx): AuthUser {
   const user = resolveUser(ctx);
   if (!user) throw unauthorized('Se requiere autenticación');
   return user;
 }
 
+/** Union of direct and group-derived permission codes; admins receive `*`. */
 export function effectivePermissionCodes(db: Db, userId: number, isAdmin: number): string[] {
   if (isAdmin) return ['*'];
   const rows = db.all<{ code: string }>(
     `SELECT DISTINCT p.code
      FROM id_permissions p
      JOIN id_role_permissions rp ON rp.permission_id = p.id
-     JOIN id_user_roles ur ON ur.role_id = rp.role_id
-     WHERE ur.user_id = ?
+     WHERE rp.role_id IN (
+       SELECT role_id FROM id_user_roles WHERE user_id = ?
+       UNION
+       SELECT gr.role_id
+       FROM id_group_roles gr
+       JOIN id_group_members gm ON gm.group_id = gr.group_id
+       WHERE gm.user_id = ?
+     )
      ORDER BY p.code`,
+    userId,
     userId,
   );
   return rows.map((r) => r.code);
 }
 
+/** Tests one permission for a resolved principal. */
 export function hasPermission(db: Db, user: AuthUser, code: string): boolean {
   if (user.is_admin) return true;
   return effectivePermissionCodes(db, user.id, user.is_admin).includes(code);
 }
 
+/** Requires authentication and one permission, producing 401/403. */
 export function requirePermission(ctx: Ctx, code: string): AuthUser {
   const user = requireUser(ctx);
   const app = (ctx as RequestContext).app;
@@ -126,6 +150,7 @@ export function requirePermission(ctx: Ctx, code: string): AuthUser {
   return user;
 }
 
+/** Reads a Bearer credential without throwing. */
 export function bearerFromRequest(req: IncomingMessage): string | undefined {
   const header = req.headers.authorization;
   if (!header) return undefined;
@@ -133,6 +158,7 @@ export function bearerFromRequest(req: IncomingMessage): string | undefined {
   return match ? match[1].trim() : undefined;
 }
 
+/** Direct roles assigned to a user. */
 export function userRoles(db: Db, userId: number): Array<{ id: number; name: string }> {
   return db.all<{ id: number; name: string }>(
     `SELECT r.id, r.name FROM id_roles r
@@ -140,4 +166,44 @@ export function userRoles(db: Db, userId: number): Array<{ id: number; name: str
      WHERE ur.user_id = ? ORDER BY r.name`,
     userId,
   );
+}
+
+/** Direct and group-derived roles. */
+export function effectiveRoles(db: Db, userId: number): Array<{ id: number; name: string }> {
+  return db.all<{ id: number; name: string }>(
+    `SELECT r.id, r.name
+     FROM id_roles r
+     WHERE r.id IN (
+       SELECT role_id FROM id_user_roles WHERE user_id = ?
+       UNION
+       SELECT gr.role_id
+       FROM id_group_roles gr
+       JOIN id_group_members gm ON gm.group_id = gr.group_id
+       WHERE gm.user_id = ?
+     )
+     ORDER BY r.name`,
+    userId,
+    userId,
+  );
+}
+
+/** Group memberships with the roles each group grants. */
+export function userGroups(db: Db, userId: number): Array<{ id: number; name: string; member_role: string; roles: string[] }> {
+  const rows = db.all<{ id: number; name: string; member_role: string; roles: string | null }>(
+    `SELECT g.id, g.name, gm.member_role,
+       (SELECT GROUP_CONCAT(r.name, ', ')
+        FROM id_group_roles gr JOIN id_roles r ON r.id = gr.role_id
+        WHERE gr.group_id = g.id) AS roles
+     FROM id_groups g
+     JOIN id_group_members gm ON gm.group_id = g.id
+     WHERE gm.user_id = ?
+     ORDER BY g.name`,
+    userId,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    member_role: row.member_role,
+    roles: row.roles ? row.roles.split(', ') : [],
+  }));
 }
