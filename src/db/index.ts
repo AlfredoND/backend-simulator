@@ -39,7 +39,6 @@ export class Db {
   readonly path: string;
   private readonly persistent: DatabaseSync;
   private active: DatabaseSync;
-  private working: DatabaseSync | null = null;
   private freezeDir: string | null = null;
   private snapshotPath: string | null = null;
   private workingPath: string | null = null;
@@ -99,22 +98,42 @@ export class Db {
       const work = join(dir, 'working.sqlite');
       copyFileSync(snapshot, work);
       connection = this.open(work);
+      const frozenAt = new Date().toISOString();
+      const baselineRecords = this.totalRecords(this.persistent);
+      const activeRecords = this.totalRecords(connection);
+
       this.freezeDir = dir;
       this.snapshotPath = snapshot;
       this.workingPath = work;
-      this.working = connection;
       this.active = connection;
-      this.frozenAt = new Date().toISOString();
-      this.baselineRecords = this.totalRecords(this.persistent);
+      this.frozenAt = frozenAt;
+      this.baselineRecords = baselineRecords;
       this.dataMode = 'frozen';
-      return this.state();
+      return {
+        mode: 'frozen',
+        frozen_at: frozenAt,
+        baseline_records: baselineRecords,
+        active_records: activeRecords,
+        persistent_records: baselineRecords,
+      };
     } catch (error) {
       try {
         connection?.close();
       } catch {
         // La conexión pudo fallar antes de abrirse.
       }
-      rmSync(dir, { recursive: true, force: true });
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // La limpieza es best-effort; la conexión persistente sigue activa.
+      }
+      this.active = this.persistent;
+      this.freezeDir = null;
+      this.snapshotPath = null;
+      this.workingPath = null;
+      this.frozenAt = null;
+      this.baselineRecords = null;
+      this.dataMode = 'persistent';
       throw error;
     }
   }
@@ -130,7 +149,6 @@ export class Db {
       }
     }
     this.active = this.persistent;
-    this.working = null;
     this.cleanupFrozen();
     return this.state();
   }
@@ -141,29 +159,51 @@ export class Db {
       throw new Error('La base no está congelada');
     }
     const nextPath = join(this.freezeDir, `working-${randomUUID()}.sqlite`);
-    let next: DatabaseSync;
+    let next: DatabaseSync | null = null;
     try {
       copyFileSync(this.snapshotPath, nextPath);
       next = this.open(nextPath);
+      const activeRecords = this.totalRecords(next);
+      const persistentRecords = this.totalRecords(this.persistent);
+
+      const previous = this.active;
+      const previousPath = this.workingPath;
+      this.active = next;
+      this.workingPath = nextPath;
+      if (previous !== this.persistent) {
+        try {
+          previous.close();
+        } catch {
+          // La copia anterior pudo cerrarse durante una restauración fallida.
+        }
+      }
+      if (previousPath) {
+        try {
+          this.removeDatabaseFiles(previousPath);
+        } catch {
+          // La limpieza es best-effort; la copia nueva ya está activa.
+        }
+      }
+      return {
+        mode: 'frozen',
+        frozen_at: this.frozenAt,
+        baseline_records: this.baselineRecords,
+        active_records: activeRecords,
+        persistent_records: persistentRecords,
+      };
     } catch (error) {
-      rmSync(nextPath, { force: true });
+      try {
+        next?.close();
+      } catch {
+        // La copia nueva pudo fallar antes de abrirse.
+      }
+      try {
+        rmSync(nextPath, { force: true });
+      } catch {
+        // La limpieza es best-effort; la copia anterior sigue activa.
+      }
       throw error;
     }
-
-    const previous = this.active;
-    const previousPath = this.workingPath;
-    this.active = next;
-    this.working = next;
-    this.workingPath = nextPath;
-    if (previous !== this.persistent) {
-      try {
-        previous.close();
-      } catch {
-        // La copia anterior pudo cerrarse durante una restauración fallida.
-      }
-    }
-    if (previousPath) this.removeDatabaseFiles(previousPath);
-    return this.state();
   }
 
   /** Clears frozen metadata and removes the temporary directory. */
@@ -172,11 +212,16 @@ export class Db {
     this.freezeDir = null;
     this.snapshotPath = null;
     this.workingPath = null;
-    this.working = null;
     this.frozenAt = null;
     this.baselineRecords = null;
     this.dataMode = 'persistent';
-    if (dir) rmSync(dir, { recursive: true, force: true });
+    if (dir) {
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // La limpieza es best-effort; la base persistente ya está activa.
+      }
+    }
   }
 
   /** Removes a SQLite database and its WAL sidecars. */
@@ -283,14 +328,17 @@ export class Db {
         // La copia ya estaba cerrada.
       }
     }
-    this.working = null;
     try {
       this.persistent.close();
     } catch {
       // ya cerrada
     }
     if (this.freezeDir) {
-      rmSync(this.freezeDir, { recursive: true, force: true });
+      try {
+        rmSync(this.freezeDir, { recursive: true, force: true });
+      } catch {
+        // La limpieza es best-effort durante el cierre.
+      }
       this.freezeDir = null;
     }
   }

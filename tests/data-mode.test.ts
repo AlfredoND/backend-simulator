@@ -90,6 +90,20 @@ test('un cierre en congelado deja intacta la base persistente', () => {
   }
 });
 
+test('un fallo al congelar conserva la conexión persistente activa', () => {
+  const { dir, db } = createDb();
+  try {
+    db.run('DROP TABLE fin_budgets');
+    assert.throws(() => db.freeze());
+    assert.equal(db.mode, 'persistent');
+    assert.ok(db.count('pr_labels') > 0);
+    assert.equal(db.get<{ ok: number }>('SELECT 1 AS ok')?.ok, 1);
+  } finally {
+    db.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('control: expone el modo, protege acciones y valida transiciones', async () => {
   const server = await startTestServer();
   const token = { 'X-Control-Token': CONTROL_TOKEN };
