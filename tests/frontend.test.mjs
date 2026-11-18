@@ -1,3 +1,4 @@
+/** Pure micro frontend helpers and i18n/DOM contract checks. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

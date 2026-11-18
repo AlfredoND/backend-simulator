@@ -1,3 +1,4 @@
+/** Static micro frontend serving, CSP, traversal protection and HEAD/OPTIONS. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { request as httpRequest } from 'node:http';

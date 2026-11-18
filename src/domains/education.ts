@@ -1,3 +1,10 @@
+/**
+ * @file Education domain: students, courses, sections, grades and attendance.
+ *
+ * Enrollment checks section capacity and duplicate course/term pairs before
+ * inserting. Grades are stored 0–100 with an automatic letter, and bulk
+ * attendance is an idempotent upsert keyed by student/section/date.
+ */
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
 import type { RequestContext } from '../http/index.js';
@@ -20,6 +27,7 @@ function letterFor(score: number): string {
   return 'F';
 }
 
+/** Registers `/api/v1/education` enrollment, grade, attendance and report routes. */
 export function registerEducationRoutes(router: Router, base: string): void {
   const root = `${base}/education`;
 

@@ -1,3 +1,4 @@
+/** HTTP transport laboratory coverage: echo, bodies, redirects, streams and errors. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { request as httpRequest } from 'node:http';

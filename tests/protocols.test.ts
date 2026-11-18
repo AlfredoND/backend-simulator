@@ -1,3 +1,4 @@
+/** TLS, HTTP/2 and local proxy protocol verification. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { request as httpsRequest } from 'node:https';

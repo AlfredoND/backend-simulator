@@ -1,3 +1,6 @@
+/**
+ * @file CLI helper that ensures local HTTPS certificate/key material exists.
+ */
 import { loadConfig } from '../src/core/config.js';
 import { createLogger } from '../src/core/logger.js';
 import { ensureCertificates } from '../src/transport/tls.js';

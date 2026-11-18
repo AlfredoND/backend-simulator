@@ -1,3 +1,4 @@
+/** Cross-cutting 429/500/503 injection and global rate limiting. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, type TestServer } from './helpers.js';

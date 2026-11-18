@@ -1,3 +1,4 @@
+/** Integration coverage for auth, CRUD, business flows, ETags and control endpoints. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ADMIN_TOKEN, CONTROL_TOKEN, TEST_API_KEY, VIEWER_TOKEN, startTestServer, type TestServer } from './helpers.js';

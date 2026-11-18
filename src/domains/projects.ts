@@ -1,3 +1,10 @@
+/**
+ * @file Projects domain: teams, projects, tasks, labels and activity.
+ *
+ * Status changes and creation of nested tasks are transactional and emit
+ * activity entries. List filtering is explicit to keep aggregate/stat queries
+ * predictable instead of exposing arbitrary columns.
+ */
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
 import type { RequestContext } from '../http/index.js';
@@ -75,6 +82,7 @@ function logActivity(ctx: Ctx, projectId: number, taskId: number | null, action:
   });
 }
 
+/** Registers `/api/v1/projects` CRUD plus task/member/activity operations. */
 export function registerProjectRoutes(router: Router, base: string): void {
   const root = `${base}/projects`;
 

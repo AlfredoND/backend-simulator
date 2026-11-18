@@ -1,3 +1,11 @@
+/**
+ * @file Micro frontend controller.
+ *
+ * Owns UI state (language, theme, API base, session token), renders the
+ * dashboard/catalog and sends Request Lab calls. Dynamic backend values are
+ * inserted with textContent; no received HTML is executed. Preferences live in
+ * localStorage and the credential only in sessionStorage.
+ */
 import { applyTranslations, t } from './i18n.js';
 import { catalog, presets } from './catalog.js';
 import { getJson, performRequest } from './api.js';
@@ -89,6 +97,7 @@ const elements = {
 
 let toastTimer;
 
+/** Shows a short-lived accessible status/error toast. */
 function showToast(message, isError = false) {
   window.clearTimeout(toastTimer);
   elements.toast.textContent = message;
@@ -99,6 +108,7 @@ function showToast(message, isError = false) {
   }, 3200);
 }
 
+/** Updates the backend connection indicator in the current language. */
 function setConnection(next) {
   state.connection = next;
   elements.connectionPill.classList.toggle('is-online', next === 'online');
@@ -178,6 +188,7 @@ function updateBodyAvailability() {
   elements.bodyField.classList.toggle('is-disabled', disabled);
 }
 
+/** Reapplies translations and re-renders dynamic lists after a language change. */
 function updateStaticLanguage() {
   applyTranslations(document, state.lang);
   document.documentElement.lang = state.lang;
@@ -220,6 +231,7 @@ function applyPreset(preset) {
   elements.path.focus({ preventScroll: true });
 }
 
+/** Renders per-domain table/record totals from `_control/stats`. */
 function renderDomains(stats) {
   const domains = stats.domains ?? {};
   elements.domainGrid.replaceChildren();
@@ -266,6 +278,7 @@ function renderOverviewError() {
   elements.domainGrid.append(message, retry);
 }
 
+/** Loads health and domain statistics; failures leave the console usable offline. */
 async function refreshOverview() {
   setConnection('checking');
   elements.refreshOverview.disabled = true;
@@ -323,6 +336,7 @@ function formatResponseBody(result) {
   return truncated.truncated ? `${truncated.text}\n\n${t(state.lang, 'lab.truncated')}` : truncated.text;
 }
 
+/** Renders status, timing, size, headers and a bounded response body. */
 function renderResponse(result) {
   elements.responseEmpty.hidden = true;
   elements.responseContent.hidden = false;
@@ -355,6 +369,7 @@ function renderRequestError(error) {
   elements.copyResponse.disabled = false;
 }
 
+/** Runs the Request Lab request, supporting reset/abort and error rendering. */
 async function handleSend(event) {
   event.preventDefault();
   const method = elements.method.value;
@@ -407,6 +422,7 @@ async function handleSend(event) {
   }
 }
 
+/** Filters and renders the bilingual endpoint catalogue. */
 function renderCatalog() {
   const query = elements.catalogSearch.value.trim().toLowerCase();
   elements.catalogRoot.replaceChildren();
@@ -578,6 +594,7 @@ function bindEvents() {
   });
 }
 
+/** Applies persisted preferences, binds events and starts the first data load. */
 function initialize() {
   elements.apiBase.value = state.apiBase;
   elements.token.value = state.token;

@@ -1,3 +1,10 @@
+/**
+ * @file HR domain: organization, employees, contracts, payroll and vacations.
+ *
+ * Vacation requests validate date order, overlaps and annual balance before
+ * insertion; approval rechecks overlaps. Termination closes active contracts
+ * and sets the termination date in one transaction.
+ */
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
 import type { RequestContext } from '../http/index.js';
@@ -14,6 +21,7 @@ function dbOf(ctx: Ctx) {
   return (ctx as RequestContext).app.db;
 }
 
+/** Registers `/api/v1/hr` organization, payroll, vacation and report routes. */
 export function registerHrRoutes(router: Router, base: string): void {
   const root = `${base}/hr`;
 

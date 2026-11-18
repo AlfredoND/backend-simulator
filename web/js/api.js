@@ -1,5 +1,11 @@
+/**
+ * @file Fetch client for the micro frontend.
+ * Adds the optional Bearer credential, bounds nothing locally (the backend owns
+ * limits), decodes text/binary bodies and returns transport metadata for display.
+ */
 import { buildRequestUrl, decodeResponseBody } from './lib.js';
 
+/** Executes one user-defined HTTP request and returns its full response view. */
 export async function performRequest({
   baseUrl,
   path,
@@ -48,6 +54,7 @@ export async function performRequest({
   };
 }
 
+/** Fetches and parses a public JSON endpoint used by the dashboard. */
 export async function getJson(baseUrl, path, signal) {
   const result = await performRequest({ baseUrl, path, signal, attachAuth: false });
   if (!result.ok) {

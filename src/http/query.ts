@@ -1,3 +1,7 @@
+/**
+ * @file Pagination and SQL LIKE helpers for list endpoints.
+ * Keeps page bounds and response metadata consistent across domains.
+ */
 import type { Ctx } from './router.js';
 import { validationError } from '../core/errors.js';
 

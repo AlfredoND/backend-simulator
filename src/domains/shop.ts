@@ -1,3 +1,11 @@
+/**
+ * @file Shop domain: catalog, carts, orders, payments, shipping and refunds.
+ *
+ * Checkout is the key transaction: prices, coupon, tax, stock, order, items,
+ * payment and shipment commit atomically. Inventory decrements only available
+ * quantity (`quantity - reserved`), so a failure leaves every row untouched.
+ * Amounts are integer cents to avoid floating-point money errors.
+ */
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
@@ -170,6 +178,7 @@ const ORDER_TRANSITIONS: Record<string, string[]> = {
   refunded: [],
 };
 
+/** Registers `/api/v1/shop` catalog, cart, checkout and fulfillment routes. */
 export function registerShopRoutes(router: Router, base: string): void {
   const root = `${base}/shop`;
 

@@ -1,3 +1,4 @@
+/** Relational integrity, constraints, rollback and aggregate verification. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, type TestServer } from './helpers.js';

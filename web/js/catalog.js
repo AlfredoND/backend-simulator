@@ -1,3 +1,9 @@
+/**
+ * @file Bilingual endpoint catalogue and quick presets.
+ * Entries are loaded into the Request Lab; they are display-only metadata.
+ */
+
+/** Grouped sample endpoints used by the API catalogue view. */
 export const catalog = [
   {
     id: 'identity',
@@ -212,6 +218,7 @@ export const catalog = [
   },
 ];
 
+/** Short transport scenarios shown above the request builder. */
 export const presets = [
   { label: { es: 'Health', en: 'Health' }, method: 'GET', path: '/health' },
   { label: { es: 'Echo', en: 'Echo' }, method: 'GET', path: '/test/echo?hello=world' },

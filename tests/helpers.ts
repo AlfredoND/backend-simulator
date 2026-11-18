@@ -1,3 +1,4 @@
+/** Shared test harness: isolated SQLite app, ephemeral port and HTTP helpers. */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

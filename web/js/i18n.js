@@ -1,3 +1,7 @@
+/**
+ * @file Static Spanish/English UI dictionary.
+ * HTML is tagged with data-i18n attributes; dynamic strings call `t`.
+ */
 const messages = {
   es: {
     'a11y.skip': 'Saltar al contenido',
@@ -219,6 +223,7 @@ const messages = {
   },
 };
 
+/** Resolves a message with `{placeholder}` interpolation and safe fallback. */
 export function t(lang, key, params = {}) {
   const dictionary = messages[lang] ?? messages.es;
   const template = dictionary[key] ?? messages.en[key] ?? key;
@@ -231,6 +236,7 @@ function translatedAttribute(element, lang, attribute, setter) {
   setter(t(lang, key));
 }
 
+/** Applies dictionary values to text, placeholder, title and aria attributes. */
 export function applyTranslations(root, lang) {
   document.documentElement.lang = lang;
   for (const element of root.querySelectorAll('[data-i18n]')) {

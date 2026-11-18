@@ -1,3 +1,10 @@
+/**
+ * @file Protected data-control plane.
+ *
+ * Statistics are public; destructive reset/seed endpoints require a constant-
+ * time control-token check. Domain resets reuse deterministic seeders and are
+ * transaction-scoped. This module never exposes password/token hashes.
+ */
 import { timingSafeEqual } from 'node:crypto';
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
@@ -167,6 +174,7 @@ function appendDemo(ctx: Ctx, entity: string, count: number): Record<string, unk
   });
 }
 
+/** Registers `/_control` statistics, reset and extra-data endpoints. */
 export function registerControlRoutes(router: Router): void {
   router.add('GET', '/_control/stats', (ctx) => {
     sendJson(ctx, 200, { data: stats(ctx) });

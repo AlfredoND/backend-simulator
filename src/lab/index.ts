@@ -1,3 +1,11 @@
+/**
+ * @file Independent HTTP transport laboratory (`/test`).
+ *
+ * No SQLite or domain state is touched. Handlers intentionally expose raw
+ * transport edge cases: malformed frames, socket resets, incomplete responses,
+ * compression, ranges, trailers, delays, rate limits and idempotent replays.
+ * In-memory simulation state is process-local by design.
+ */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib';
 import type { Ctx } from '../http/router.js';
@@ -189,6 +197,10 @@ async function delayedResponse(ctx: Ctx): Promise<void> {
   }
 }
 
+/**
+ * Dispatches a `/test` request. The function owns the response (including raw
+ * socket paths) and rethrows typed HTTP errors to the central renderer.
+ */
 export async function handleLab(ctx: Ctx): Promise<void> {
   const config = configOf(ctx);
   const path = (ctx.url.pathname.replace(/\/+$/, '') || '/test');

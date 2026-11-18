@@ -1,3 +1,10 @@
+/**
+ * @file Identity domain: authentication, users, profiles, RBAC and groups.
+ *
+ * Sessions and API keys are stored as hashes; passwords use PBKDF2. Public
+ * auth endpoints are explicit, while session-bound routes use route guards.
+ * Group roles are additive and resolved at request time.
+ */
 import { randomBytes } from 'node:crypto';
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
@@ -76,6 +83,11 @@ function requestBody(ctx: Ctx): Promise<unknown> {
   return readJsonBody(ctx);
 }
 
+/**
+ * Registers `/api/v1/identity`.
+ * Custom flows cover login/refresh/recovery, nested RBAC and group-role
+ * management; simple entities reuse the declarative CRUD helper.
+ */
 export function registerIdentityRoutes(router: Router, base: string): void {
   const root = `${base}/identity`;
 

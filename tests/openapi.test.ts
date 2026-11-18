@@ -1,3 +1,4 @@
+/** Spanish/English OpenAPI parity, translations and docs UI. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, type TestServer } from './helpers.js';

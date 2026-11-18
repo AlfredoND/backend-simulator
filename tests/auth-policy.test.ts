@@ -1,3 +1,4 @@
+/** Global auth policy, group-derived permissions and scoped users. */
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startTestServer, type TestServer } from './helpers.js';

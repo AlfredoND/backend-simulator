@@ -1,3 +1,10 @@
+/**
+ * @file Finance domain: accounts, ledger, invoices, expenses and budgets.
+ *
+ * Every money movement updates the account balance and inserts a ledger row in
+ * the same transaction. Invoice creation calculates subtotal/tax/total from its
+ * lines; payments reject overpayment and move the invoice to paid exactly once.
+ */
 import { randomBytes } from 'node:crypto';
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
@@ -49,6 +56,7 @@ function recordAccountMovement(db: Db, accountId: number, kind: 'debit' | 'credi
   });
 }
 
+/** Registers `/api/v1/finance` accounting, invoicing, payment and report routes. */
 export function registerFinanceRoutes(router: Router, base: string): void {
   const root = `${base}/finance`;
 

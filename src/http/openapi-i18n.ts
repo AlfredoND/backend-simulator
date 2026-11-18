@@ -261,6 +261,7 @@ const DESCRIPTIONS_EN: Record<string, string> = {
   'email inválido': 'invalid email',
 };
 
+/** Localized API descriptions shown in the OpenAPI `info` block. */
 export const INFO_DESCRIPTION = {
   es: 'Simulador local de backend HTTP con APIs de negocio y laboratorio de transporte. Todo el servidor es local y utiliza SQLite.',
   en: 'Local HTTP backend simulator with business APIs and a transport laboratory. Everything runs locally and uses SQLite.',
@@ -295,7 +296,10 @@ export function translateDescription(description: string, lang: ApiLanguage): st
   return translateGenericDescription(description, lang) ?? description;
 }
 
-/** Finds summaries that would still be Spanish in the English specification. */
+/**
+ * Audit helper: finds custom summaries without an English variant or catalogue
+ * entry. Tests require an empty result so the English spec cannot regress.
+ */
 export function missingEnglishSummaries(routes: Array<{ doc: { summary?: string; summaryEn?: string } }>): string[] {
   const missing = new Set<string>();
   for (const route of routes) {

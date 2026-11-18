@@ -1,3 +1,10 @@
+/**
+ * @file Library domain: catalog, copies, loans, reservations and fines.
+ *
+ * Loan and return operations update copy state and loan/fine rows in one
+ * transaction. Availability is derived from copy status, while overdue state is
+ * computed against the current date so seeded future dates remain meaningful.
+ */
 import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
 import type { RequestContext } from '../http/index.js';
@@ -36,6 +43,7 @@ function activeLoans(db: Db, readerId: number): number {
   )?.n ?? 0);
 }
 
+/** Registers `/api/v1/library` catalog, lending, reservation and fine routes. */
 export function registerLibraryRoutes(router: Router, base: string): void {
   const root = `${base}/library`;
 
