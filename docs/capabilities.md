@@ -65,6 +65,11 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 | HTTP/2 | Sí | Servidor TLS independiente, ALPN h2 | `tests/protocols.test.ts` |
 | Proxy HTTP | Sí (local) | `PROXY_ENABLED`; peticiones absolutas y CONNECT; destinos locales | `tests/protocols.test.ts` |
 | Micro frontend estático | Sí | `/ui/`; overview, Request Lab, catálogo, i18n y tema | `tests/ui.test.ts`, `tests/frontend.test.mjs` |
+| Autorización global por dominio | Sí | `AUTH_REQUIRED=true`; `<dominio>:read/write` | `tests/auth-policy.test.ts` |
+| Roles de grupo | Sí | `id_group_roles`, `/groups/:id/roles` | `tests/auth-policy.test.ts` |
+| Escenarios 429/500/503 en todas las APIs | Sí | `X-Simulate-Error`, `simulate_error`, rate limit global | `tests/resilience.test.ts` |
+| OpenAPI bilingüe | Sí | `/openapi.json`, `/openapi.en.json`, `/docs?lang=en` | `tests/openapi.test.ts` |
+| JSDoc de contratos y arquitectura | Sí | `src/` y `web/` | `npm run typecheck` |
 | HTTP/3 / QUIC | No | Fuera del alcance | — |
 | DNS personalizado | No | Fuera del alcance | — |
 | Respuestas HTTP malformadas | Sí (HTTP/1.1) | `/test/raw/*` | `tests/lab.test.ts` |
@@ -73,16 +78,16 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 
 | Escenario | Estado | Evidencia |
 |---|---|---|
-| 401 autenticación | Sí | `/api/v1/identity/users` sin token |
-| 403 permisos | Sí | POST de usuario con token viewer |
+| 401 autenticación | Sí | Cualquier `/api/v1` sin token con `AUTH_REQUIRED=true` |
+| 403 permisos | Sí | POST de negocio con token viewer o grupo de solo lectura |
 | 404 recurso | Sí | Cualquier recurso inexistente |
 | 409 conflicto | Sí | Emails duplicados, checkout sin stock, reservas duplicadas |
 | 412 precondición | Sí | `If-Match` obsoleto en recursos |
 | 413 payload | Sí | `MAX_BODY_BYTES` |
 | 415 Content-Type | Sí | Cuerpos JSON con tipo incorrecto |
 | 422 validación | Sí | Campos desconocidos, tipos y límites |
-| 429 límite | Sí | Laboratorio; las APIs no aplican rate limit global |
-| 500/503 controlados | Sí | `/test/error/500`, `/test/error/503` |
+| 429 límite | Sí | `X-Simulate-Error: 429` o `API_RATE_LIMIT_MAX` en cualquier `/api/v1` |
+| 500/503 controlados | Sí | `/test/error/*` y `X-Simulate-Error` en cualquier `/api/v1` |
 | Rollback transaccional | Sí | Checkout, cancelación, devolución, pagos, facturas |
 | Datos NULL | Sí | Perfiles, fechas, referencias opcionales |
 | Unicode y textos largos | Sí | Nombres, descripciones, bios |
@@ -94,7 +99,9 @@ Leyenda: **Sí** = escenario real implementado y cubierto por pruebas; **Parcial
 ## Verificación
 
 ```text
-npm test       48 pruebas, 48 pasan
+npm test       65 pruebas, 65 pasan
+npm run typecheck  sin errores
+npm run build      OK
 npm run typecheck   sin errores
 npm run build       compila y copia schema.sql
 ```

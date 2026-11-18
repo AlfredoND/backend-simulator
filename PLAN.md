@@ -33,7 +33,7 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - HTTPS con certificado autogenerado.
 - HTTP/2 TLS en puerto independiente, con fallback HTTP/1.1.
 - Proxy HTTP local opcional con peticiones absolutas y CONNECT, restringido a destinos locales.
-- OpenAPI dinámico en `/openapi.json` y UI en `/docs`.
+- OpenAPI dinámico y bilingüe en `/openapi.json`, `/openapi.en.json` y UI en `/docs`.
 - README, guía de uso, documentación del laboratorio, matriz de capacidades y `.env.example`, con versiones en español e inglés.
 
 ## Fase 5 — Micro frontend [COMPLETA]
@@ -42,11 +42,20 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Servidor estático con MIME, CSP y protección de traversal.
 - Documentación bilingüe en `docs/frontend.md` y `docs/frontend.en.md`.
 
-## Fase 6 — Verificación [COMPLETA]
-- `npm test`: 48/48 pruebas.
+## Fase 6 — Acceso global, escenarios y contratos [COMPLETA]
+- Política global `AUTH_REQUIRED=true` con permisos `<dominio>:read/write`.
+- 80 usuarios semilla y 12 grupos con roles; permisos efectivos = roles directos + roles de grupo.
+- Escenarios 429/500/503 en todas las APIs y rate limit global configurable.
+- OpenAPI completamente bilingüe con cobertura validada en pruebas.
+- Documentación de autorización/escenarios en español e inglés.
+- CI en `.github/workflows/ci.yml` y pruebas de consistencia documental.
+- JSDoc de contratos, seguridad y decisiones arquitectónicas en todo el código de `src/` y `web/`.
+
+## Fase 7 — Verificación [COMPLETA]
+- `npm test`: 65/65 pruebas.
 - `npm run typecheck`: sin errores.
 - `npm run build`: OK, copia `schema.sql`.
-- Cobertura: persistencia, APIs, laboratorio, protocolos TLS/HTTP2/proxy y micro frontend.
+- Cobertura: persistencia, APIs, autorización/grupos, escenarios, OpenAPI bilingüe, laboratorio, protocolos TLS/HTTP2/proxy y micro frontend.
 
 ## Limitaciones conocidas
 - WebSocket no implementado (SSE sí).
@@ -55,5 +64,5 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), servidor `node:http`, 
 - Uploads se reflejan (multipart/binario) pero no se persisten archivos.
 - Métodos arbitrarios con cuerpo completo requieren HTTP/2 o métodos de extensión.
 - Reset de dominios con dependencias externas (identidad/RRHH) puede dejar referencias opcionales a NULL.
-- Rate limit global de APIs no incluido; el laboratorio ofrece rate limit configurable.
+- El rate limit global es en memoria y por proceso; no está pensado para despliegues distribuidos.
 - La UI es estática y deliberadamente simple: no incluye router SPA ni framework.

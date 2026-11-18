@@ -8,13 +8,14 @@ Languages: [Español](README.md) | **English**
 
 - Seven business HTTP APIs backed by SQLite: identity, projects, e-commerce, library, education, HR and finance.
 - CRUD, pagination, filters, search, sorting, field selection and relationships.
-- Bearer authentication, API keys, sessions, roles and permissions.
+- Global authentication with Bearer/API keys, direct roles, group roles and per-domain permissions.
+- Cross-cutting 429/500/503 scenarios, configurable rate limiting and header/query error injection.
 - Transactional operations: checkout, cancellation, returns, enrollment, vacations, invoicing and payments.
 - A standalone HTTP laboratory at `/test` for transport testing: compression, streaming, redirects, cookies, caching, ranges, errors, timeouts, rate limiting and concurrency.
 - A static micro frontend at `/ui/` with an overview, Request Lab, endpoint catalog, theme and language switcher. No framework and no build.
 - HTTP/1.1, local HTTPS, HTTP/2 over TLS and an optional local HTTP proxy.
 - Deterministic, persistent seed data with protected control endpoints.
-- Dynamic OpenAPI and bilingual documentation.
+- Fully bilingual OpenAPI and bilingual documentation.
 
 ## Quick start
 
@@ -32,7 +33,9 @@ Default services:
 | HTTP/1.1 | `http://127.0.0.1:4000` |
 | Web interface | `http://127.0.0.1:4000/ui/` |
 | Interactive documentation | `http://127.0.0.1:4000/docs` |
-| OpenAPI | `http://127.0.0.1:4000/openapi.json` |
+| English documentation | `http://127.0.0.1:4000/docs?lang=en` |
+| Spanish OpenAPI | `http://127.0.0.1:4000/openapi.json` |
+| English OpenAPI | `http://127.0.0.1:4000/openapi.en.json` |
 | HTTP laboratory | `http://127.0.0.1:4000/test` |
 | HTTPS | `https://localhost:4443` |
 | HTTP/2 (TLS) | `https://localhost:4444` |
@@ -69,10 +72,11 @@ It is vanilla JavaScript with ES modules: no framework, no UI dependencies and n
 |---|---|---|
 | Step-by-step guide | [docs/user-guide.md](docs/user-guide.md) | [docs/user-guide.en.md](docs/user-guide.en.md) |
 | Micro frontend | [docs/frontend.md](docs/frontend.md) | [docs/frontend.en.md](docs/frontend.en.md) |
+| Authorization and scenarios | [docs/auth-and-scenarios.md](docs/auth-and-scenarios.md) | [docs/auth-and-scenarios.en.md](docs/auth-and-scenarios.en.md) |
 | HTTP laboratory | [docs/http-lab.md](docs/http-lab.md) | [docs/http-lab.en.md](docs/http-lab.en.md) |
 | Capability matrix | [docs/capabilities.md](docs/capabilities.md) | [docs/capabilities.en.md](docs/capabilities.en.md) |
 | Delivery plan | [PLAN.md](PLAN.md) | [PLAN.en.md](PLAN.en.md) |
-| API specification | `GET /openapi.json` | `GET /openapi.json` |
+| API specification | `GET /openapi.json` | `GET /openapi.en.json` |
 
 ## Simulation credentials
 
@@ -89,6 +93,17 @@ It is vanilla JavaScript with ES modules: no framework, no UI dependencies and n
 | Laboratory Bearer | `local-admin-token` |
 
 All values can be configured through environment variables. They are simulation credentials, not real secrets.
+
+Additional scoped accounts (password `Password123!`):
+
+- `developer@simulator.local`: projects and identity reads.
+- `manager@simulator.local`: write access to several domains.
+- `auditor@simulator.local`: finance and HR reads.
+- `support@simulator.local`: identity and support.
+- `viewer2@simulator.local`: read-only.
+- `groupviewer@simulator.local`: no direct role; obtains permissions from the **Observers** group.
+
+The seed creates 80 users and 12 groups; groups can grant complete roles. Details: [docs/auth-and-scenarios.en.md](docs/auth-and-scenarios.en.md).
 
 ## Business APIs
 
@@ -156,10 +171,14 @@ Methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` and `OPTIONS`. `OPTIONS
 
 ### Authentication
 
-- `Authorization: Bearer <token>` for sessions and tokens.
-- `X-API-Key: <key>` for API keys.
-- Identity resources require `identity:read` for reads and `identity:write` for writes.
-- Other domains are open by default; `401`/`403` scenarios are available in identity and `/test/auth/*`.
+`AUTH_REQUIRED=true` is the default: every `/api/v1` route requires `Authorization: Bearer` or `X-API-Key`, except login, refresh, forgot/reset password and verify.
+
+- Domain reads require `<domain>:read`; writes require `<domain>:write`.
+- Effective permissions are the union of direct roles and group roles.
+- `groupviewer@simulator.local` has no direct role: it receives `viewer` from the **Observers** group.
+- Login, refresh, recovery and verification are public; logout, me and password change require identity.
+- Group roles are managed with `GET/POST/DELETE /api/v1/identity/groups/:id/roles`.
+- Global scenarios: `X-Simulate-Error: 429|500|503` or `?simulate_error=...`, plus rate limiting with `API_RATE_LIMIT_MAX`/`API_RATE_LIMIT_WINDOW_MS`.
 
 ```bash
 curl -s http://localhost:4000/health
@@ -168,6 +187,9 @@ TOKEN=$(curl -s -X POST http://localhost:4000/api/v1/identity/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@simulator.local","password":"Admin123!"}' |
   node -pe 'JSON.parse(fs.readFileSync(0)).data.access_token')
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  'http://localhost:4000/api/v1/shop/products?per_page=1'
 
 curl -s -H "Authorization: Bearer $TOKEN" \
   http://localhost:4000/api/v1/identity/auth/me
@@ -250,6 +272,10 @@ Copy `.env.example`. Environment variables take precedence; `.env` is loaded whe
 | `PROXY_PORT` | `8080` | Proxy port |
 | `UI_ENABLED` | `true` | Serve the micro frontend at `/ui/` |
 | `UI_DIR` | `./web` | UI asset directory |
+| `AUTH_REQUIRED` | `true` | Require authentication and permissions on `/api/v1` |
+| `API_RATE_LIMIT_MAX` | `0` | Global maximum per window; `0` disables it |
+| `API_RATE_LIMIT_WINDOW_MS` | `60000` | Global rate-limit window |
+| `FAULT_INJECTION_ENABLED` | `true` | Allow `X-Simulate-Error` |
 | `DB_PATH` | `./data/backend-simulator.sqlite` | SQLite path |
 | `SEED_SCALE` | `1` | Data scale (0.1–10) |
 | `MAX_BODY_BYTES` | `10485760` | Request body limit |
@@ -291,7 +317,7 @@ npm test
 npm run typecheck
 ```
 
-The 48 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, authentication, validation, ETag/412, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server and micro frontend helpers.
+The 65 tests use temporary SQLite databases and random ports; they do not touch the development database. They cover relational constraints, transactions, global authorization and groups, 429/500/503 scenarios, validation, ETag/412, bilingual OpenAPI, business operations, the HTTP laboratory, compression, ranges, streaming, HTTPS, HTTP/2, the proxy, the static server and bilingual documentation. Code under `src/` and `web/` includes JSDoc for contracts and decisions. CI: `.github/workflows/ci.yml`.
 
 ## Limits and security
 
@@ -302,6 +328,7 @@ This server is local-only:
 - Laboratory redirects only allow local paths.
 - Generated bodies and responses are limited by configuration.
 - The UI keeps its token in `sessionStorage` and loads no third-party assets.
+- `AUTH_REQUIRED=true` applies per-domain permissions; public endpoints are limited to authentication and metadata.
 - Destructive operations require `X-Control-Token`.
 - Queries use bound parameters and column/table allowlists.
 - Received code is never executed and user paths never access arbitrary files.

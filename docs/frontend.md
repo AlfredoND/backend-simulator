@@ -9,7 +9,8 @@ El proyecto incluye un micro frontend estático para operar el simulador desde e
 - **Resumen**: salud del backend, uptime, número de registros, dominios y conteo por dominio.
 - **Request Lab**: constructor de peticiones HTTP con método, ruta, headers, body, token Bearer, aborto y visualización de estado, tiempo, tamaño, headers y cuerpo.
 - **Catálogo de APIs**: endpoints de ejemplo por dominio, con búsqueda y carga directa en el Request Lab.
-- **Documentación**: enlaces a OpenAPI y Swagger UI, credenciales locales, comandos de arranque y límites del entorno.
+- **Documentación**: enlaces a OpenAPI (ES/EN) y Swagger UI, credenciales locales, comandos de arranque y límites del entorno.
+- **Autenticación**: el token demo `local-admin-token` está precargado y adjunto; puedes borrarlo para comprobar 401.
 - **Preferencias**: idioma español/inglés y tema claro/oscuro persistidos en el navegador.
 - **API base configurable**: permite usar la UI servida por el backend o servirla por separado.
 
@@ -58,9 +59,10 @@ web/
 
 1. La UI calcula la URL de la API a partir de la base configurada.
 2. `GET /health` y `GET /_control/stats` alimentan el resumen.
-3. El Request Lab ejecuta `fetch` con el método, headers y body indicados.
+3. El Request Lab ejecuta `fetch` con el método, headers, body y Bearer token indicados.
 4. La respuesta se muestra sin interpretar el contrato del backend: estado, headers y cuerpo real.
-5. El token Bearer se guarda solo en `sessionStorage`; tema, idioma y API base se guardan en `localStorage`.
+5. El token se guarda solo en `sessionStorage`; tema, idioma y API base se guardan en `localStorage`.
+6. Con `AUTH_REQUIRED=true` las peticiones a `/api/v1` necesitan permiso; el token demo se precarga para que el catálogo funcione al abrir la UI.
 
 ## Servidor estático del backend
 

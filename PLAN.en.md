@@ -33,7 +33,7 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - HTTPS with an auto-generated certificate.
 - HTTP/2 TLS on a dedicated port with HTTP/1.1 fallback.
 - Optional local HTTP proxy with absolute requests and CONNECT, restricted to local targets.
-- Dynamic OpenAPI at `/openapi.json` and UI at `/docs`.
+- Dynamic, bilingual OpenAPI at `/openapi.json`, `/openapi.en.json` and UI at `/docs`.
 - README, usage guide, laboratory documentation, capability matrix and `.env.example`, with Spanish and English versions.
 
 ## Phase 5 — Micro frontend [COMPLETE]
@@ -42,11 +42,20 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - Static server with MIME, CSP and path-traversal protection.
 - Bilingual documentation in `docs/frontend.md` and `docs/frontend.en.md`.
 
-## Phase 6 — Verification [COMPLETE]
-- `npm test`: 48/48 tests.
+## Phase 6 — Global access, scenarios and contracts [COMPLETE]
+- Global `AUTH_REQUIRED=true` policy with `<domain>:read/write` permissions.
+- 80 seed users and 12 groups with roles; effective permissions = direct roles + group roles.
+- 429/500/503 scenarios across every API and a configurable global rate limit.
+- Fully bilingual OpenAPI with test-validated coverage.
+- Authorization/scenario documentation in Spanish and English.
+- CI at `.github/workflows/ci.yml` and documentation consistency tests.
+- JSDoc for contracts, security and architectural decisions across `src/` and `web/`.
+
+## Phase 7 — Verification [COMPLETE]
+- `npm test`: 65/65 tests.
 - `npm run typecheck`: no errors.
 - `npm run build`: OK, copies `schema.sql`.
-- Coverage: persistence, APIs, laboratory, TLS/HTTP2/proxy protocols and micro frontend.
+- Coverage: persistence, APIs, authorization/groups, scenarios, bilingual OpenAPI, laboratory, TLS/HTTP2/proxy protocols and micro frontend.
 
 ## Known limitations
 - WebSocket not implemented (SSE is available).
@@ -55,5 +64,5 @@ Runtime: Node.js 24 + TypeScript, SQLite (`node:sqlite`), `node:http` server, HT
 - Uploads are reflected (multipart/binary) but files are not persisted.
 - Arbitrary methods with a complete body require HTTP/2 or extension methods.
 - Resetting domains with external dependencies (identity/HR) may leave optional NULL references.
-- No global API rate limit; the laboratory provides configurable rate limiting.
+- The global rate limit is in memory and per process; it is not designed for distributed deployments.
 - The UI is static and deliberately simple: no SPA router or framework.

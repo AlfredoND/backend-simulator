@@ -78,7 +78,7 @@ Environment variables take precedence over `.env`. See the full table in the [RE
 
 ## 5. Authentication
 
-The identity domain uses Bearer tokens and API keys. Simulation tokens are ready to use:
+With `AUTH_REQUIRED=true` (the default), **every** `/api/v1` route requires authentication and domain permissions. The only exceptions are login, refresh, forgot/reset password and verify. The identity domain uses Bearer tokens and API keys. Simulation tokens are ready to use:
 
 ```bash
 # Administrator token
@@ -117,13 +117,39 @@ Seed credentials:
 - `admin@simulator.local` / `Admin123!`
 - `viewer@simulator.local` / `Viewer123!`
 - Other users: `Password123!`
+- `developer@simulator.local`, `manager@simulator.local`, `auditor@simulator.local`, `support@simulator.local` and `viewer2@simulator.local`: scoped roles.
+- `groupviewer@simulator.local`: no direct role; receives permissions from the **Observers** group.
+
+Policy and groups:
+
+- Read: `<domain>:read`; write: `<domain>:write`.
+- Effective permissions combine direct and group roles.
+- Group roles are managed at `/api/v1/identity/groups/:id/roles`.
+- `GET /api/v1/identity/users/:id/permissions` shows the effective union.
+
+Global scenarios:
+
+```bash
+# Injected error in any domain
+curl -i -H 'Authorization: Bearer local-admin-token' \
+  -H 'X-Simulate-Error: 503' \
+  http://localhost:4000/api/v1/finance/accounts
+
+# Real rate limit (set API_RATE_LIMIT_MAX > 0)
+curl -i -H 'Authorization: Bearer local-admin-token' \
+  http://localhost:4000/api/v1/shop/products
+```
+
+Full details: [auth-and-scenarios.en.md](auth-and-scenarios.en.md) · [Español](auth-and-scenarios.md).
+
+The domain examples below include the administrator header.
 
 ## 6. Queries and pagination
 
 General pattern:
 
 ```bash
-curl -s 'http://localhost:4000/api/v1/shop/products?per_page=5&sort=-price_cents&fields=id,name,price_cents&status=active'
+curl -s -H 'Authorization: Bearer local-admin-token' 'http://localhost:4000/api/v1/shop/products?per_page=5&sort=-price_cents&fields=id,name,price_cents&status=active'
 ```
 
 Useful parameters:
@@ -142,36 +168,36 @@ Useful parameters:
 ### Projects: create a task and change its status
 
 ```bash
-TASK=$(curl -s -X POST http://localhost:4000/api/v1/projects/projects/1/tasks \
+TASK=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/projects/projects/1/tasks \
   -H 'Content-Type: application/json' \
   -d '{"title":"Prepare demo","priority":"high","estimate_minutes":60}')
 
 TASK_ID=$(printf '%s' "$TASK" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X PATCH "http://localhost:4000/api/v1/projects/tasks/$TASK_ID/status" \
+curl -s -H 'Authorization: Bearer local-admin-token' -X PATCH "http://localhost:4000/api/v1/projects/tasks/$TASK_ID/status" \
   -H 'Content-Type: application/json' \
   -d '{"status":"done"}'
 
-curl -s http://localhost:4000/api/v1/projects/projects/1/stats
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/projects/projects/1/stats
 ```
 
 ### E-commerce: cart and checkout
 
 ```bash
 CUSTOMER_ID=1
-VARIANT_ID=$(curl -s 'http://localhost:4000/api/v1/shop/inventory?per_page=100' |
+VARIANT_ID=$(curl -s -H 'Authorization: Bearer local-admin-token' 'http://localhost:4000/api/v1/shop/inventory?per_page=100' |
   node -pe "const d=JSON.parse(fs.readFileSync(0)).data; (d.find(r => r.quantity - r.reserved > 2) || {}).variant_id")
 
-CART=$(curl -s -X POST http://localhost:4000/api/v1/shop/carts \
+CART=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/shop/carts \
   -H 'Content-Type: application/json' \
   -d "{\"customer_id\":$CUSTOMER_ID}")
 CART_ID=$(printf '%s' "$CART" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X POST "http://localhost:4000/api/v1/shop/carts/$CART_ID/items" \
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST "http://localhost:4000/api/v1/shop/carts/$CART_ID/items" \
   -H 'Content-Type: application/json' \
   -d "{\"variant_id\":$VARIANT_ID,\"quantity\":1}"
 
-curl -s -X POST "http://localhost:4000/api/v1/shop/carts/$CART_ID/checkout" \
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST "http://localhost:4000/api/v1/shop/carts/$CART_ID/checkout" \
   -H 'Content-Type: application/json' \
   -d '{"shipping_address_id":1,"payment_method_id":1,"coupon_code":"SAVE10"}'
 ```
@@ -179,86 +205,88 @@ curl -s -X POST "http://localhost:4000/api/v1/shop/carts/$CART_ID/checkout" \
 Check stock first:
 
 ```bash
-curl -s http://localhost:4000/api/v1/shop/products/1/details
-curl -s http://localhost:4000/api/v1/shop/inventory/low-stock?threshold=5
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/shop/products/1/details
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/shop/inventory/low-stock?threshold=5
 ```
 
 ### Library: loan and return
 
 ```bash
-LOAN=$(curl -s -X POST http://localhost:4000/api/v1/library/loans \
+LOAN=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/library/loans \
   -H 'Content-Type: application/json' \
   -d '{"book_id":1,"reader_id":1,"days":14}')
 LOAN_ID=$(printf '%s' "$LOAN" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X POST "http://localhost:4000/api/v1/library/loans/$LOAN_ID/return"
-curl -s http://localhost:4000/api/v1/library/books/1/availability
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST "http://localhost:4000/api/v1/library/loans/$LOAN_ID/return"
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/library/books/1/availability
 ```
 
 ### Education: enrollment, attendance and transcript
 
 ```bash
-STUDENT=$(curl -s -X POST http://localhost:4000/api/v1/education/students \
+STUDENT=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/education/students \
   -H 'Content-Type: application/json' \
   -d '{"student_code":"GUIDE-001","full_name":"Guide Student","email":"guide.student@education.test","enrolled_at":"2026-09-01"}')
 STUDENT_ID=$(printf '%s' "$STUDENT" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X POST http://localhost:4000/api/v1/education/sections/1/enroll \
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/education/sections/1/enroll \
   -H 'Content-Type: application/json' \
   -d "{\"student_id\":$STUDENT_ID}"
 
-curl -s -X POST http://localhost:4000/api/v1/education/attendance/bulk \
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/education/attendance/bulk \
   -H 'Content-Type: application/json' \
   -d "{\"records\":[{\"student_id\":$STUDENT_ID,\"section_id\":1,\"attendance_date\":\"2026-11-10\",\"status\":\"present\"}]}"
 
-curl -s "http://localhost:4000/api/v1/education/students/$STUDENT_ID/transcript"
+curl -s -H 'Authorization: Bearer local-admin-token' "http://localhost:4000/api/v1/education/students/$STUDENT_ID/transcript"
 ```
 
 ### HR: vacations
 
 ```bash
-VACATION=$(curl -s -X POST http://localhost:4000/api/v1/hr/vacations/request \
+VACATION=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/hr/vacations/request \
   -H 'Content-Type: application/json' \
   -d '{"employee_id":1,"start_date":"2027-03-01","end_date":"2027-03-03","days":3,"reason":"Guide"}')
 VACATION_ID=$(printf '%s' "$VACATION" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X PATCH "http://localhost:4000/api/v1/hr/vacations/$VACATION_ID/decision" \
+curl -s -H 'Authorization: Bearer local-admin-token' -X PATCH "http://localhost:4000/api/v1/hr/vacations/$VACATION_ID/decision" \
   -H 'Content-Type: application/json' \
   -d '{"status":"approved"}'
 
-curl -s 'http://localhost:4000/api/v1/hr/vacations/balance/1?year=2027'
-curl -s http://localhost:4000/api/v1/hr/reports/payroll
+curl -s -H 'Authorization: Bearer local-admin-token' 'http://localhost:4000/api/v1/hr/vacations/balance/1?year=2027'
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/hr/reports/payroll
 ```
 
 ### Finance: invoice and payment
 
 ```bash
-INVOICE=$(curl -s -X POST http://localhost:4000/api/v1/finance/invoices \
+INVOICE=$(curl -s -H 'Authorization: Bearer local-admin-token' -X POST http://localhost:4000/api/v1/finance/invoices \
   -H 'Content-Type: application/json' \
   -d '{"customer_name":"Guide Customer","items":[{"description":"Service","quantity":2,"unit_price_cents":5000}]}')
 INVOICE_ID=$(printf '%s' "$INVOICE" | node -pe 'JSON.parse(fs.readFileSync(0)).data.id')
 
-curl -s -X POST "http://localhost:4000/api/v1/finance/invoices/$INVOICE_ID/pay" \
+curl -s -H 'Authorization: Bearer local-admin-token' -X POST "http://localhost:4000/api/v1/finance/invoices/$INVOICE_ID/pay" \
   -H 'Content-Type: application/json' \
   -d '{"account_id":2,"method":"transfer","reference":"GUIDE-PAY-1"}'
 
-curl -s http://localhost:4000/api/v1/finance/reports/balance
-curl -s 'http://localhost:4000/api/v1/finance/reports/expenses?group_by=category'
+curl -s -H 'Authorization: Bearer local-admin-token' http://localhost:4000/api/v1/finance/reports/balance
+curl -s -H 'Authorization: Bearer local-admin-token' 'http://localhost:4000/api/v1/finance/reports/expenses?group_by=category'
 ```
 
 ## 8. ETag, caching and optimistic concurrency
 
 ```bash
-PRODUCT=$(curl -s -D /tmp/product.headers http://localhost:4000/api/v1/shop/products/1)
+PRODUCT=$(curl -s -H 'Authorization: Bearer local-admin-token' -D /tmp/product.headers http://localhost:4000/api/v1/shop/products/1)
 ETAG=$(awk 'BEGIN{IGNORECASE=1} /^etag:/ {gsub("\r",""); print $2}' /tmp/product.headers)
 
 # 304 if unchanged
 curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Authorization: Bearer local-admin-token' \
   -H "If-None-Match: $ETAG" \
   http://localhost:4000/api/v1/shop/products/1
 
 # 412 if the version does not match
 curl -s -o /dev/null -w '%{http_code}\n' -X PATCH \
+  -H 'Authorization: Bearer local-admin-token' \
   -H 'Content-Type: application/json' \
   -H 'If-Match: "wrong"' \
   -d '{"description":"change"}' \
@@ -375,7 +403,7 @@ npm run typecheck
 npm run build
 ```
 
-The 48 tests create temporary SQLite databases and random ports; they do not modify your development database.
+The 65 tests create temporary SQLite databases and random ports; they do not modify your development database.
 
 ## 13. Common issues
 
@@ -428,6 +456,7 @@ The server closes HTTP, HTTPS, HTTP/2, proxy and SQLite cleanly.
 
 - [README (English)](../README.en.md) · [Español](../README.md)
 - [Micro frontend](frontend.en.md) · [Español](frontend.md)
+- [Authorization and scenarios](auth-and-scenarios.en.md) · [Español](auth-and-scenarios.md)
 - [HTTP laboratory](http-lab.en.md) · [Español](http-lab.md)
 - [Capability matrix](capabilities.en.md) · [Español](capabilities.md)
 - [OpenAPI](http://localhost:4000/openapi.json)

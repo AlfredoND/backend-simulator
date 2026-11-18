@@ -65,6 +65,11 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 | HTTP/2 | Yes | Dedicated TLS server, ALPN h2 | `tests/protocols.test.ts` |
 | HTTP proxy | Yes (local) | `PROXY_ENABLED`; absolute requests and CONNECT; local targets | `tests/protocols.test.ts` |
 | Static micro frontend | Yes | `/ui/`; overview, Request Lab, catalog, i18n and theme | `tests/ui.test.ts`, `tests/frontend.test.mjs` |
+| Global per-domain authorization | Yes | `AUTH_REQUIRED=true`; `<domain>:read/write` | `tests/auth-policy.test.ts` |
+| Group roles | Yes | `id_group_roles`, `/groups/:id/roles` | `tests/auth-policy.test.ts` |
+| 429/500/503 scenarios on every API | Yes | `X-Simulate-Error`, `simulate_error`, global rate limit | `tests/resilience.test.ts` |
+| Bilingual OpenAPI | Yes | `/openapi.json`, `/openapi.en.json`, `/docs?lang=en` | `tests/openapi.test.ts` |
+| Contract and architecture JSDoc | Yes | `src/` and `web/` | `npm run typecheck` |
 | HTTP/3 / QUIC | No | Out of scope | — |
 | Custom DNS | No | Out of scope | — |
 | Malformed HTTP responses | Yes (HTTP/1.1) | `/test/raw/*` | `tests/lab.test.ts` |
@@ -73,16 +78,16 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 
 | Scenario | Status | Evidence |
 |---|---|---|
-| 401 authentication | Yes | `/api/v1/identity/users` without a token |
-| 403 permissions | Yes | User POST with the viewer token |
+| 401 authentication | Yes | Any `/api/v1` without a token when `AUTH_REQUIRED=true` |
+| 403 permissions | Yes | Business POST with the viewer token or a read-only group |
 | 404 resource | Yes | Any missing resource |
 | 409 conflict | Yes | Duplicate emails, checkout without stock, duplicate reservations |
 | 412 precondition | Yes | Stale `If-Match` on resources |
 | 413 payload | Yes | `MAX_BODY_BYTES` |
 | 415 Content-Type | Yes | JSON bodies with a wrong type |
 | 422 validation | Yes | Unknown fields, types and limits |
-| 429 limit | Yes | Laboratory; business APIs do not apply a global rate limit |
-| Controlled 500/503 | Yes | `/test/error/500`, `/test/error/503` |
+| 429 limit | Yes | `X-Simulate-Error: 429` or `API_RATE_LIMIT_MAX` on any `/api/v1` |
+| Controlled 500/503 | Yes | `/test/error/*` and `X-Simulate-Error` on any `/api/v1` |
 | Transactional rollback | Yes | Checkout, cancellation, return, payments, invoices |
 | NULL data | Yes | Profiles, dates, optional references |
 | Unicode and long text | Yes | Names, descriptions, bios |
@@ -94,7 +99,9 @@ Legend: **Yes** = real scenario implemented and covered by tests; **Partial** = 
 ## Verification
 
 ```text
-npm test       48 tests, 48 pass
+npm test       65 tests, 65 pass
+npm run typecheck  no errors
+npm run build      OK
 npm run typecheck   no errors
 npm run build       compiles and copies schema.sql
 ```
