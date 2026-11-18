@@ -98,7 +98,7 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   'Finance · Payments': 'Pagos.',
   'Finance · Budgets': 'Presupuestos.',
   'Finance · Reports': 'Balances y agregados.',
-  'Control': 'Estadísticas, reseteo y datos adicionales.',
+  'Control': 'Estadísticas, reseteo, modo de datos y datos adicionales.',
   'HTTP Lab': 'Laboratorio de transporte HTTP independiente.',
   'General': 'Información del servicio.',
 };

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { Db } from '../src/db/index.js';
 import { loadConfig } from '../src/core/config.js';
 import { ensureSeeded } from '../src/db/seed.js';
+import { CONTROL_TOKEN, startTestServer, type TestServer } from './helpers.js';
 
 function createDb() {
   const dir = mkdtempSync(join(tmpdir(), 'backend-sim-mode-'));
@@ -16,6 +17,23 @@ function createDb() {
   db.initSchema();
   ensureSeeded(db, config);
   return { dir, path, config, db };
+}
+
+let productCounter = 0;
+
+async function createProduct(server: TestServer, prefix: string): Promise<number> {
+  const unique = `${prefix}-${Date.now()}-${++productCounter}`;
+  const response = await server.json('POST', '/api/v1/shop/products', {
+    body: {
+      sku: unique,
+      name: `Producto ${unique}`,
+      slug: unique.toLowerCase(),
+      category_id: 1,
+      price_cents: 1000,
+    },
+  });
+  assert.equal(response.status, 201, JSON.stringify(response.body));
+  return response.body.data.id;
 }
 
 test('congela, restaura y descongela sin tocar la base persistente', () => {
@@ -69,5 +87,77 @@ test('un cierre en congelado deja intacta la base persistente', () => {
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('control: expone el modo, protege acciones y valida transiciones', async () => {
+  const server = await startTestServer();
+  const token = { 'X-Control-Token': CONTROL_TOKEN };
+  try {
+    let res = await server.json('GET', '/_control/mode');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.data.mode, 'persistent');
+    assert.equal(res.body.data.frozen_at, null);
+    assert.equal((await server.json('POST', '/_control/freeze')).status, 401);
+    res = await server.json('POST', '/_control/freeze', { headers: token });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.data.mode, 'frozen');
+    assert.equal((await server.json('POST', '/_control/freeze', { headers: token })).status, 409);
+    const stats = await server.json('GET', '/_control/stats');
+    assert.equal(stats.body.data.data_mode.mode, 'frozen');
+    assert.equal((await server.json('POST', '/_control/unfreeze', { headers: token })).status, 200);
+    assert.equal((await server.json('POST', '/_control/unfreeze', { headers: token })).status, 409);
+  } finally {
+    await server.close();
+  }
+});
+
+test('control: los cambios congelados no llegan a la base persistente', async () => {
+  const server = await startTestServer();
+  const token = { 'X-Control-Token': CONTROL_TOKEN };
+  try {
+    const marker = await createProduct(server, 'PERSIST');
+    assert.equal((await server.json('POST', '/_control/freeze', { headers: token })).status, 200);
+    const inside = await createProduct(server, 'INSIDE');
+    assert.equal((await server.json('POST', '/_control/unfreeze', { headers: token })).status, 200);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 200);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${inside}`)).status, 404);
+
+    assert.equal((await server.json('POST', '/_control/freeze', { headers: token })).status, 200);
+    const restored = await createProduct(server, 'RESTORED');
+    const restore = await server.json('POST', '/_control/restore', { headers: token });
+    assert.equal(restore.status, 200);
+    assert.equal(restore.body.data.restored, 'snapshot');
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${restored}`)).status, 404);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 200);
+    assert.equal((await server.json('POST', '/_control/unfreeze', { headers: token })).status, 200);
+  } finally {
+    await server.close();
+  }
+});
+
+test('control: reset y restore aíslan la copia congelada', async () => {
+  const server = await startTestServer();
+  const token = { 'X-Control-Token': CONTROL_TOKEN };
+  try {
+    const marker = await createProduct(server, 'ISOLATED');
+    assert.equal((await server.json('POST', '/_control/freeze', { headers: token })).status, 200);
+    const frozen = await createProduct(server, 'SHOP-COPY');
+    const reset = await server.json('POST', '/_control/reset/shop', { headers: token });
+    assert.equal(reset.status, 200);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 404);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${frozen}`)).status, 404);
+    const restored = await server.json('POST', '/_control/restore', { headers: token });
+    assert.equal(restored.status, 200);
+    assert.equal(restored.body.data.restored, 'snapshot');
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 200);
+    assert.equal((await server.json('POST', '/_control/unfreeze', { headers: token })).status, 200);
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 200);
+    const seed = await server.json('POST', '/_control/restore', { headers: token });
+    assert.equal(seed.status, 200);
+    assert.equal(seed.body.data.restored, 'seed');
+    assert.equal((await server.json('GET', `/api/v1/shop/products/${marker}`)).status, 404);
+  } finally {
+    await server.close();
   }
 });

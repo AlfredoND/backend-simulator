@@ -10,7 +10,7 @@ import type { Router } from '../http/router.js';
 import type { Ctx } from '../http/router.js';
 import type { RequestContext } from '../http/index.js';
 import { readJsonBody, sendJson } from '../http/index.js';
-import { HttpError, badRequest, notFound } from '../core/errors.js';
+import { HttpError, badRequest, conflict, notFound } from '../core/errors.js';
 import { DOMAINS, DOMAIN_TABLES } from '../db/domain-tables.js';
 import { resetAll, resetDomain, hashPassword } from '../db/seed.js';
 import { Validator } from '../core/validate.js';
@@ -56,6 +56,7 @@ function stats(ctx: Ctx) {
   }
   return {
     database: (ctx as RequestContext).app.config.dbPath,
+    data_mode: db.state(),
     domains,
     total_records: total,
     schema_version: db.get<{ value: string }>("SELECT value FROM _meta WHERE key = 'schema_version'")?.value ?? null,
@@ -180,13 +181,63 @@ export function registerControlRoutes(router: Router): void {
     sendJson(ctx, 200, { data: stats(ctx) });
   }, { summary: 'Estadísticas de registros por tabla y dominio', tag: 'Control' });
 
+  router.add('GET', '/_control/mode', (ctx) => {
+    sendJson(ctx, 200, { data: dbOf(ctx).state() });
+  }, {
+    summary: 'Estado del modo de datos',
+    summaryEn: 'Data mode status',
+    tag: 'Control',
+  });
+
+  router.add('POST', '/_control/freeze', (ctx) => {
+    requireControl(ctx);
+    const db = dbOf(ctx);
+    if (db.mode === 'frozen') throw conflict('La base ya está congelada');
+    sendJson(ctx, 200, { data: db.freeze() });
+  }, {
+    summary: 'Congela la base actual en una copia descartable',
+    summaryEn: 'Freeze the current database into a disposable copy',
+    tag: 'Control',
+    security: [{ controlToken: [] }],
+  });
+
+  router.add('POST', '/_control/unfreeze', (ctx) => {
+    requireControl(ctx);
+    const db = dbOf(ctx);
+    if (db.mode !== 'frozen') throw conflict('La base no está congelada');
+    sendJson(ctx, 200, { data: db.unfreeze() });
+  }, {
+    summary: 'Descarta la copia congelada y vuelve a la base persistente',
+    summaryEn: 'Discard the frozen copy and return to the persistent database',
+    tag: 'Control',
+    security: [{ controlToken: [] }],
+  });
+
+  router.add('POST', '/_control/restore', (ctx) => {
+    requireControl(ctx);
+    const db = dbOf(ctx);
+    if (db.mode === 'frozen') {
+      sendJson(ctx, 200, { data: { ...db.restoreFrozen(), restored: 'snapshot' } });
+      return;
+    }
+    resetAll(db, (ctx as RequestContext).app.config);
+    sendJson(ctx, 200, { data: { ...db.state(), restored: 'seed' } });
+  }, {
+    summary: 'Restaura la imagen congelada o los datos semilla',
+    summaryEn: 'Restore the frozen image or seed data',
+    tag: 'Control',
+    security: [{ controlToken: [] }],
+  });
+
   router.add('POST', '/_control/reset/:domain', (ctx) => {
     requireControl(ctx);
     const domain = String(ctx.params.domain);
     if (!DOMAINS.includes(domain)) throw notFound(`Dominio desconocido: ${domain}`);
     const db = dbOf(ctx);
     resetDomain(db, domain, (ctx as RequestContext).app.config);
-    sendJson(ctx, 200, { data: { reset: domain, tables: DOMAIN_TABLES[domain].length, stats: stats(ctx) } });
+    sendJson(ctx, 200, {
+      data: { reset: domain, mode: db.mode, tables: DOMAIN_TABLES[domain].length, stats: stats(ctx) },
+    });
   }, { summary: 'Restaura un dominio a sus datos semilla', tag: 'Control', security: [{ controlToken: [] }] });
 
   router.add('POST', '/_control/reset', async (ctx) => {
@@ -204,11 +255,11 @@ export function registerControlRoutes(router: Router): void {
     if (domain) {
       if (!DOMAINS.includes(domain)) throw notFound(`Dominio desconocido: ${domain}`);
       resetDomain(db, domain, config);
-      sendJson(ctx, 200, { data: { reset: domain, stats: stats(ctx) } });
+      sendJson(ctx, 200, { data: { reset: domain, mode: db.mode, stats: stats(ctx) } });
       return;
     }
     resetAll(db, config);
-    sendJson(ctx, 200, { data: { reset: 'all', stats: stats(ctx) } });
+    sendJson(ctx, 200, { data: { reset: 'all', mode: db.mode, stats: stats(ctx) } });
   }, { summary: 'Restaura todos los datos o un dominio concreto', tag: 'Control', security: [{ controlToken: [] }] });
 
   router.add('POST', '/_control/seed', async (ctx) => {
@@ -237,6 +288,7 @@ export function registerControlRoutes(router: Router): void {
         max_page_size: app.config.maxPageSize,
         max_delay_ms: app.config.maxDelayMs,
         seed_scale: app.config.seedScale,
+        data_mode: app.db.mode,
       },
     });
   }, { summary: 'Configuración pública no sensible', tag: 'Control' });

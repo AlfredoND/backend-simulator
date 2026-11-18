@@ -66,7 +66,7 @@ export const TAG_DESCRIPTIONS_EN: Record<string, string> = {
   'Finance · Payments': 'Payments.',
   'Finance · Budgets': 'Budgets.',
   'Finance · Reports': 'Balances and aggregations.',
-  'Control': 'Statistics, reset and extra data.',
+  'Control': 'Statistics, reset, data mode and extra data.',
   'HTTP Lab': 'Standalone HTTP transport laboratory.',
   'General': 'Service information.',
 };
